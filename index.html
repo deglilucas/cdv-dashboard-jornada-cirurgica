@@ -66,25 +66,22 @@
 <body class="min-h-screen flex flex-col custom-scrollbar">
 
     <!-- Navbar Limpa (Tom Claro) -->
-    <header class="bg-white sticky top-0 z-50 border-b border-slate-200 px-6 py-4 flex flex-wrap items-center justify-between gap-4 shadow-sm">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
-                <i data-lucide="eye" class="w-6 h-6"></i>
+    <header class="bg-white sticky top-0 z-50 border-b border-slate-200 px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+        <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
+                <i data-lucide="eye" class="w-5 h-5"></i>
             </div>
-            <div>
-                <h1 class="text-xl font-bold text-slate-900 tracking-tight">Jornada Cirúrgica Oftalmológica</h1>
-                <p class="text-xs text-slate-500">Dashboard de Acompanhamento de Pacientes e Gestão de Clínicas Parceiras</p>
-            </div>
+            <h1 class="text-base font-bold text-slate-900 tracking-tight">Jornada Cirúrgica Oftalmológica</h1>
         </div>
 
-        <div class="flex items-center gap-3 no-print">
-            <label class="cursor-pointer px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl flex items-center gap-2 transition shadow-md shadow-indigo-600/20">
-                <i data-lucide="file-up" class="w-4 h-4"></i>
-                Carregar Nova Planilha (.xlsx)
+        <div class="flex items-center gap-2 no-print">
+            <label class="cursor-pointer px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition shadow-md shadow-indigo-600/20">
+                <i data-lucide="file-up" class="w-3.5 h-3.5"></i>
+                Carregar Planilha (.xlsx/.csv)
                 <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" class="hidden">
             </label>
-            <button onclick="exportReport()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-2 border border-slate-200 transition">
-                <i data-lucide="printer" class="w-4 h-4"></i>
+            <button onclick="exportReport()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                <i data-lucide="printer" class="w-3.5 h-3.5"></i>
                 <span id="exportBtnLabel">Exportar / Imprimir Relatório de Consultas</span>
             </button>
         </div>
@@ -94,18 +91,18 @@
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
 
         <!-- Navegação por Página / Seção (fixa ao rolar, fica sempre visível) -->
-        <div id="tabNavBar" class="sticky z-40 bg-slate-50/95 backdrop-blur-sm flex items-center gap-2 py-2 no-print" style="top: var(--header-h, 0px);">
-            <button id="navTabConsultas" onclick="switchTab('consultas')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
-                <i data-lucide="stethoscope" class="w-4 h-4"></i>
-                Página 1 · Análise de Consultas
+        <div id="tabNavBar" class="sticky z-40 bg-slate-50/95 backdrop-blur-sm flex items-center gap-1.5 py-1 no-print" style="top: var(--header-h, 0px);">
+            <button id="navTabConsultas" onclick="switchTab('consultas')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+                <i data-lucide="stethoscope" class="w-3.5 h-3.5"></i>
+                Consultas
             </button>
-            <button id="navTabNps" onclick="switchTab('nps')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
-                <i data-lucide="heart-handshake" class="w-4 h-4"></i>
-                Página 2 · Análise de NPS
+            <button id="navTabNps" onclick="switchTab('nps')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+                <i data-lucide="heart-handshake" class="w-3.5 h-3.5"></i>
+                NPS
             </button>
-            <button id="navTabFaturamento" onclick="switchTab('faturamento')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
-                <i data-lucide="receipt" class="w-4 h-4"></i>
-                Página 3 · Pendências de Faturamento
+            <button id="navTabFaturamento" onclick="switchTab('faturamento')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+                <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
+                Faturamento
             </button>
         </div>
 
@@ -115,63 +112,60 @@
         <div id="tabConsultas" class="space-y-6">
 
         <!-- Top Bar Info & Filters (fixa logo abaixo da navegação de páginas) -->
-        <div class="white-card rounded-2xl p-5 space-y-4 sticky z-30" style="top: calc(var(--header-h, 0px) + var(--tabnav-h, 0px));">
-            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                <div>
-                    <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                        <i data-lucide="filter" class="w-4 h-4 text-indigo-600"></i>
-                        Filtros de Análise Periódica
-                    </h2>
-                    <p class="text-xs text-slate-500">Filtre por clínica parceira, tipo de cirurgia ou status específico</p>
-                </div>
-                <div class="flex items-center gap-2 text-xs text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 font-medium">
-                    <i data-lucide="database" class="w-3.5 h-3.5 text-indigo-600"></i>
+        <div class="white-card rounded-2xl p-3 space-y-2 sticky z-30" style="top: calc(var(--header-h, 0px) + var(--tabnav-h, 0px));">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <h2 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <i data-lucide="filter" class="w-3.5 h-3.5 text-indigo-600"></i>
+                    Filtros
+                </h2>
+                <div class="flex items-center gap-1.5 text-[11px] text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-medium">
+                    <i data-lucide="database" class="w-3 h-3 text-indigo-600"></i>
                     <span id="dataCountLabel">Carregando dados...</span>
                 </div>
             </div>
 
-            <p class="hidden text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2" id="unknownStatusWarning"></p>
+            <p class="hidden text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5" id="unknownStatusWarning"></p>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
                 <!-- Filtro Clínica -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Clínica Parceira / Unidade</label>
-                    <select id="filterClinic" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
-                        <option value="">Todas as Clínicas Parceiras</option>
+                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Clínica</label>
+                    <select id="filterClinic" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-1.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
+                        <option value="">Todas as Clínicas</option>
                     </select>
                 </div>
 
                 <!-- Filtro Especialidade / Cirurgia -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Tipo de Cirurgia / Procedimento</label>
-                    <select id="filterSurgery" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
-                        <option value="">Todas as Cirurgias</option>
+                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Especialidade</label>
+                    <select id="filterSurgery" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-1.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
+                        <option value="">Todas</option>
                     </select>
                 </div>
 
                 <!-- Filtro Status da Jornada -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Status da Jornada na Clínica</label>
-                    <select id="filterStatus" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
-                        <option value="">Todos os Status</option>
+                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Status da Jornada</label>
+                    <select id="filterStatus" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-1.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
+                        <option value="">Todos</option>
                     </select>
                 </div>
 
                 <!-- Filtro Atendente / SDR -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Responsável / Atendente</label>
-                    <select id="filterUser" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
-                        <option value="">Todos os Responsáveis</option>
+                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Responsável</label>
+                    <select id="filterUser" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-1.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
+                        <option value="">Todos</option>
                     </select>
                 </div>
 
                 <!-- Filtro Período (Data da Consulta) -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Período (Data da Consulta)</label>
-                    <div class="flex items-center gap-1.5">
-                        <input type="date" id="filterDateStart" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
-                        <span class="text-slate-400 text-xs">até</span>
-                        <input type="date" id="filterDateEnd" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Período (Consulta)</label>
+                    <div class="flex items-center gap-1">
+                        <input type="date" id="filterDateStart" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-[11px] rounded-lg p-1.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
+                        <span class="text-slate-400 text-[10px]">até</span>
+                        <input type="date" id="filterDateEnd" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-[11px] rounded-lg p-1.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
                     </div>
                 </div>
             </div>
@@ -249,7 +243,7 @@
                     </div>
                     <div>
                         <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                            Insights Estratégicos da IA
+                            Insights - Teste/Em Produção
                             <span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold uppercase">Automático</span>
                         </h3>
                         <p class="text-xs text-slate-500">Ações prioritárias sugeridas com base nos dados atuais da jornada</p>
@@ -434,47 +428,44 @@
         </div>
 
         <!-- NPS: Upload & Filtros (fixa logo abaixo da navegação de páginas) -->
-        <div class="white-card rounded-2xl p-5 space-y-4 border-teal-200 sticky z-30" style="top: calc(var(--header-h, 0px) + var(--tabnav-h, 0px));">
-            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                <div>
-                    <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                        <i data-lucide="filter" class="w-4 h-4 text-teal-600"></i>
-                        Filtros da Base de NPS
-                    </h3>
-                    <p class="text-xs text-slate-500">Filtre por clínica e pelo período de realização da cirurgia</p>
-                </div>
-                <div class="flex items-center gap-3 no-print">
-                    <div class="flex items-center gap-2 text-xs text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 font-medium">
-                        <i data-lucide="database" class="w-3.5 h-3.5 text-teal-600"></i>
+        <div class="white-card rounded-2xl p-3 space-y-2 border-teal-200 sticky z-30" style="top: calc(var(--header-h, 0px) + var(--tabnav-h, 0px));">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <i data-lucide="filter" class="w-3.5 h-3.5 text-teal-600"></i>
+                    Filtros de NPS
+                </h3>
+                <div class="flex items-center gap-2 no-print">
+                    <div class="flex items-center gap-1.5 text-[11px] text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-medium">
+                        <i data-lucide="database" class="w-3 h-3 text-teal-600"></i>
                         <span id="npsDataCountLabel">Nenhuma planilha de NPS carregada</span>
                     </div>
-                    <label class="cursor-pointer px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-xl flex items-center gap-2 transition shadow-md shadow-teal-600/20">
-                        <i data-lucide="file-up" class="w-4 h-4"></i>
-                        Carregar Planilha de NPS (.xlsx)
+                    <label class="cursor-pointer px-2.5 py-1 bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-semibold rounded-lg flex items-center gap-1.5 transition shadow-md shadow-teal-600/20">
+                        <i data-lucide="file-up" class="w-3.5 h-3.5"></i>
+                        Carregar NPS (.xlsx/.csv)
                         <input type="file" id="npsFileInput" accept=".xlsx, .xls, .csv" class="hidden">
                     </label>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Clínica Parceira / Unidade</label>
-                    <select id="npsFilterClinic" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition">
-                        <option value="">Todas as Clínicas Parceiras</option>
+                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Clínica</label>
+                    <select id="npsFilterClinic" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-1.5 focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition">
+                        <option value="">Todas as Clínicas</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Período (Data da Cirurgia)</label>
-                    <div class="flex items-center gap-1.5">
-                        <input type="date" id="npsDateStart" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition">
-                        <span class="text-slate-400 text-xs">até</span>
-                        <input type="date" id="npsDateEnd" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition">
+                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Período (Cirurgia)</label>
+                    <div class="flex items-center gap-1">
+                        <input type="date" id="npsDateStart" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-[11px] rounded-lg p-1.5 focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition">
+                        <span class="text-slate-400 text-[10px]">até</span>
+                        <input type="date" id="npsDateEnd" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-[11px] rounded-lg p-1.5 focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Especialidade</label>
-                    <select id="npsFilterSurgery" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition">
-                        <option value="">Todas as Especialidades</option>
+                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Especialidade</label>
+                    <select id="npsFilterSurgery" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-1.5 focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition">
+                        <option value="">Todas</option>
                     </select>
                 </div>
             </div>
@@ -560,6 +551,25 @@
             </div>
         </div>
 
+        <!-- NPS: Destaques (Detratores + Comentários Negativos) -->
+        <div class="white-card rounded-2xl p-6 space-y-4 border-l-4 border-l-rose-500">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center shadow-md shadow-rose-600/20">
+                        <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Destaques que Precisam de Atenção</h3>
+                        <p class="text-xs text-slate-500">Detratores (nota até 6) e respostas com sinais de insatisfação, identificados por um filtro de palavras-chave — base para os futuros insights de IA desta página</p>
+                    </div>
+                </div>
+                <span class="text-xs text-slate-400 font-medium" id="npsDestaquesCountLabel">0 destaque(s)</span>
+            </div>
+            <div class="space-y-2 max-h-[420px] overflow-y-auto custom-scrollbar pr-1" id="npsDestaquesContainer">
+                <!-- Populado via JS -->
+            </div>
+        </div>
+
         <!-- NPS: Tabela Detalhada para Montagem do Relatório da Clínica -->
         <div class="white-card rounded-2xl p-6 space-y-4">
             <div>
@@ -620,46 +630,43 @@
             </div>
 
             <!-- Faturamento: Filtros (fixos logo abaixo da navegação de páginas) -->
-            <div class="white-card rounded-2xl p-5 space-y-4 border-amber-200 sticky z-30" style="top: calc(var(--header-h, 0px) + var(--tabnav-h, 0px));">
-                <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                            <i data-lucide="filter" class="w-4 h-4 text-amber-600"></i>
-                            Filtros de Pendências
-                        </h3>
-                        <p class="text-xs text-slate-500">Filtre por clínica, especialidade e período da cirurgia realizada</p>
-                    </div>
-                    <div class="flex items-center gap-3 no-print">
-                        <div class="flex items-center gap-2 text-xs text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 font-medium">
-                            <i data-lucide="database" class="w-3.5 h-3.5 text-amber-600"></i>
+            <div class="white-card rounded-2xl p-3 space-y-2 border-amber-200 sticky z-30" style="top: calc(var(--header-h, 0px) + var(--tabnav-h, 0px));">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="filter" class="w-3.5 h-3.5 text-amber-600"></i>
+                        Filtros de Pendências
+                    </h3>
+                    <div class="flex items-center gap-2 no-print">
+                        <div class="flex items-center gap-1.5 text-[11px] text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-medium">
+                            <i data-lucide="database" class="w-3 h-3 text-amber-600"></i>
                             <span id="faturamentoCountLabel">0 pendência(s) no filtro</span>
                         </div>
-                        <button onclick="downloadFaturamentoReport()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-xl flex items-center gap-2 transition shadow-md shadow-amber-600/20">
-                            <i data-lucide="download" class="w-4 h-4"></i>
-                            Baixar Relatório (.xlsx)
+                        <button onclick="downloadFaturamentoReport()" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-semibold rounded-lg flex items-center gap-1.5 transition shadow-md shadow-amber-600/20">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            Baixar (.xlsx)
                         </button>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Clínica Parceira / Unidade</label>
-                        <select id="faturamentoFilterClinic" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-amber-500 focus:bg-white outline-none transition">
-                            <option value="">Todas as Clínicas Parceiras</option>
+                        <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Clínica</label>
+                        <select id="faturamentoFilterClinic" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-1.5 focus:ring-2 focus:ring-amber-500 focus:bg-white outline-none transition">
+                            <option value="">Todas as Clínicas</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Especialidade</label>
-                        <select id="faturamentoFilterSurgery" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-amber-500 focus:bg-white outline-none transition">
-                            <option value="">Todas as Especialidades</option>
+                        <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Especialidade</label>
+                        <select id="faturamentoFilterSurgery" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-1.5 focus:ring-2 focus:ring-amber-500 focus:bg-white outline-none transition">
+                            <option value="">Todas</option>
                         </select>
                     </div>
-                    <div class="sm:col-span-2">
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Período (Data da Cirurgia Realizada)</label>
-                        <div class="flex items-center gap-1.5">
-                            <input type="date" id="faturamentoDateStart" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-amber-500 focus:bg-white outline-none transition">
-                            <span class="text-slate-400 text-xs">até</span>
-                            <input type="date" id="faturamentoDateEnd" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-amber-500 focus:bg-white outline-none transition">
+                    <div class="col-span-2 sm:col-span-2">
+                        <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Período (Cirurgia Realizada)</label>
+                        <div class="flex items-center gap-1">
+                            <input type="date" id="faturamentoDateStart" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-[11px] rounded-lg p-1.5 focus:ring-2 focus:ring-amber-500 focus:bg-white outline-none transition">
+                            <span class="text-slate-400 text-[10px]">até</span>
+                            <input type="date" id="faturamentoDateEnd" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-[11px] rounded-lg p-1.5 focus:ring-2 focus:ring-amber-500 focus:bg-white outline-none transition">
                         </div>
                     </div>
                 </div>
@@ -1765,7 +1772,49 @@
             document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
         }
 
-        // LEITOR ROBUSTO DE PLANILHA (SHEETJS)
+        // ================================================================
+        // COMPATIBILIDADE DE FORMATOS DE PLANILHA
+        // O Farol/Metabase exporta os dados de consulta em mais de um layout
+        // de colunas (ex.: exportação "completa" vs. exportação "resumida"
+        // do Metabase). Em vez de espalhar candidatos extras em cada leitura
+        // de campo, normalizamos os cabeçalhos alternativos para os nomes
+        // canônicos já usados em todo o dashboard, uma única vez, na entrada.
+        // ================================================================
+        const HEADER_ALIASES = {
+            'Id paciente': 'clientes_id',
+            'Paciente (nome)': 'clientes',
+            'Data da consulta': 'agendamento_data',
+            'Observações da Consulta': 'agendamento_obs',
+            // "Status da consulta" é COMPARECEU/FALTOU — nunca deve virar o
+            // status da jornada cirúrgica, por isso mapeamos pro mesmo nome
+            // que já é tratado como campo de presença em todo o dashboard.
+            'Status da consulta': 'agendamento_status',
+            'Cirg data 1': 'agendamento_cirg_data_clinica_r',
+            'Cirg data 1 status': 'agendamento_cirg_status_clinica',
+            'Cirg data 2': 'agendamento_cirg_data_clinica_2',
+            'Cirg data 2 status': 'agendamento_cirg_status_clinica_2',
+            'Cirg data 3': 'agendamento_cirg_data_clinica_r_3',
+            'Cirg data 3 status': 'agendamento_cirg_status_clinica_3',
+            'Cirg data 4': 'agendamento_cirg_data_clinica_r_4',
+            'Cirg data 4 status': 'agendamento_cirg_status_clinica_4',
+            'Cirg data 5': 'agendamento_cirg_data_clinica_r_5',
+            'Cirg data 5 status': 'agendamento_cirg_status_clinica_5',
+            'Médico': 'medicos',
+            'Clínica': 'clinicas',
+            'Especialidade': 'especialidades',
+            'Responsável pelo paciente': 'user'
+            // Colunas sem equivalente hoje no dashboard (Tipo de agendamento,
+            // Hora da consulta, Segundo olho, Motivo falta, Data/Status da
+            // cirurgia legados, Campanha, Telefones, Data do cadastro,
+            // Responsável pelo agendamento, Unsubscribed) ficam com o nome
+            // original — não atrapalham, só não são usadas ainda.
+        };
+
+        function normalizeHeaders(headers) {
+            return headers.map(h => HEADER_ALIASES[h] || h);
+        }
+
+        // LEITOR ROBUSTO DE PLANILHA (SHEETJS) — aceita .xlsx, .xls e .csv
         function handleFileUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -1774,7 +1823,10 @@
             reader.onload = function(evt) {
                 try {
                     const data = new Uint8Array(evt.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
+                    // codepage 65001 = UTF-8 — necessário para .csv (que não
+                    // carrega informação de codificação própria, ao contrário
+                    // do .xlsx); mantém acentos corretos em ambos os formatos.
+                    const workbook = XLSX.read(data, { type: 'array', codepage: 65001, raw: true });
                     const firstSheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[firstSheetName];
 
@@ -1785,7 +1837,7 @@
                         return;
                     }
 
-                    const headers = rawRows[0].map(h => String(h || '').trim());
+                    const headers = normalizeHeaders(rawRows[0].map(h => String(h || '').trim()));
                     const parsedRecords = [];
 
                     for (let r = 1; r < rawRows.length; r++) {
@@ -1817,7 +1869,7 @@
                     }
                 } catch (err) {
                     console.error('Erro na leitura da planilha:', err);
-                    alert('Ocorreu um erro ao processar o arquivo. Certifique-se de que é um arquivo de Excel (.xlsx ou .xls) válido.');
+                    alert('Ocorreu um erro ao processar o arquivo. Certifique-se de que é um arquivo de Excel (.xlsx, .xls) ou CSV (.csv) válido.');
                 }
             };
             reader.readAsArrayBuffer(file);
@@ -1837,7 +1889,7 @@
             reader.onload = function(evt) {
                 try {
                     const data = new Uint8Array(evt.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
+                    const workbook = XLSX.read(data, { type: 'array', codepage: 65001, raw: true });
                     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
                     const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
 
@@ -1846,7 +1898,7 @@
                         return;
                     }
 
-                    const headers = rawRows[0].map(h => String(h || '').trim());
+                    const headers = normalizeHeaders(rawRows[0].map(h => String(h || '').trim()));
                     const parsedRecords = [];
 
                     for (let r = 1; r < rawRows.length; r++) {
@@ -1877,7 +1929,7 @@
                     }
                 } catch (err) {
                     console.error('Erro na leitura da planilha de NPS:', err);
-                    alert('Ocorreu um erro ao processar o arquivo de NPS. Certifique-se de que é um arquivo de Excel (.xlsx ou .xls) válido.');
+                    alert('Ocorreu um erro ao processar o arquivo de NPS. Certifique-se de que é um arquivo de Excel (.xlsx, .xls) ou CSV (.csv) válido.');
                 }
             };
             reader.readAsArrayBuffer(file);
@@ -1964,6 +2016,7 @@
             renderNpsGauge(Math.max(0, npsScore));
             renderNpsClinicsChart();
             renderNpsCategories();
+            renderNpsDestaques();
             renderNpsTable();
         }
 
@@ -2095,6 +2148,95 @@
                 `;
             }).join('');
             lucide.createIcons();
+        }
+
+        // ================================================================
+        // NPS: DESTAQUES (Detratores + Comentários Negativos)
+        // Lista inicial de palavras-chave contextualizadas para cirurgia
+        // oftalmológica — ponto de partida para refinar depois; qualquer
+        // campo de texto da avaliação é varrido (não depende de existir uma
+        // coluna de "comentário" com nome fixo, já que nem todo formato de
+        // planilha de NPS tem esse campo).
+        // ================================================================
+        const NPS_NEGATIVE_KEYWORDS = [
+            'mal atendimento', 'mal atendida', 'mal atendido', 'mau atendimento',
+            'cirurgia deu errado', 'deu errado', 'piorou', 'ficou pior', 'perdi a visao', 'perda de visao',
+            'nao to enxergando', 'nao estou enxergando', 'nao consigo enxergar', 'visao pior', 'embaçad',
+            'fiquei com dor', 'muita dor', 'dor forte', 'dor insuportavel', 'sentindo dor', 'com dor',
+            'nao fui bem acompanhado', 'nao fui bem acompanhada', 'sem acompanhamento', 'abandonado', 'abandonada',
+            'nao retornaram', 'nao me atenderam', 'ninguem me atendeu', 'nao me atenderam bem',
+            'infeccao', 'inflamacao', 'complicacao', 'complicou',
+            'nao recomendo', 'pessimo', 'pessima', 'horrivel', 'terrivel',
+            'descaso', 'desrespeito', 'grosseria', 'grosseiro', 'grosseira', 'mal educado', 'mal educada',
+            'demorou muito', 'demora demais', 'cancelaram', 'cancelamento', 'reclamacao',
+            'insatisfeito', 'insatisfeita', 'decepcionado', 'decepcionada', 'arrependido', 'arrependida'
+        ];
+
+        // Campos que sabidamente não são texto livre — pular na varredura evita
+        // falso positivo (ex: um CEP ou telefone batendo por acaso com um número).
+        const NPS_NON_TEXT_FIELDS = new Set(['Nota', 'Telefone', 'Telefone 1', 'Telefone 2', 'CEP', 'Data da Cirurgia', 'Data da Aval.']);
+
+        function normalizeFreeText(s) {
+            return (s || '').toString().toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+        }
+
+        function findNegativeKeywords(item) {
+            const found = [];
+            Object.keys(item).forEach(key => {
+                if (NPS_NON_TEXT_FIELDS.has(key)) return;
+                const text = normalizeFreeText(item[key]);
+                if (!text) return;
+                NPS_NEGATIVE_KEYWORDS.forEach(kw => {
+                    if (text.includes(normalizeFreeText(kw)) && !found.includes(kw)) found.push(kw);
+                });
+            });
+            return found;
+        }
+
+        function renderNpsDestaques() {
+            const container = document.getElementById('npsDestaquesContainer');
+            const highlights = [];
+
+            npsFilteredData.forEach(item => {
+                const nota = npsGetNota(item);
+                const isDetrator = nota !== null && nota < 7;
+                const keywords = findNegativeKeywords(item);
+                if (isDetrator || keywords.length > 0) {
+                    highlights.push({ item, nota, isDetrator, keywords });
+                }
+            });
+
+            document.getElementById('npsDestaquesCountLabel').textContent = `${highlights.length} destaque(s)`;
+
+            if (highlights.length === 0) {
+                container.innerHTML = '<p class="text-xs text-slate-400 text-center py-6">Nenhum destaque negativo encontrado no filtro atual.</p>';
+                return;
+            }
+
+            const MAX_DESTAQUES = 50;
+            container.innerHTML = highlights.slice(0, MAX_DESTAQUES).map(h => {
+                const nome = getItemProp(h.item, ['Cliente']) || 'Sem Nome';
+                const clinica = getItemProp(h.item, ['Clínica']);
+                const medico = getItemProp(h.item, ['Médico']);
+
+                const tags = [];
+                if (h.isDetrator) {
+                    tags.push(`<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300 whitespace-nowrap">DETRATOR (nota ${h.nota})</span>`);
+                }
+                h.keywords.forEach(kw => {
+                    tags.push(`<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 whitespace-nowrap">"${kw}"</span>`);
+                });
+
+                return `
+                    <div class="p-3 rounded-xl border border-rose-200 bg-rose-50/40 flex flex-wrap items-center justify-between gap-2">
+                        <div class="text-xs">
+                            <span class="font-bold text-slate-900">${nome}</span>
+                            <span class="text-slate-500"> — ${clinica || 'Sem Clínica'}${medico ? ' · ' + medico : ''}</span>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5">${tags.join('')}</div>
+                    </div>
+                `;
+            }).join('') + (highlights.length > MAX_DESTAQUES ? `<p class="text-[11px] text-slate-400 text-center pt-2">Mostrando ${MAX_DESTAQUES} de ${highlights.length} destaques.</p>` : '');
         }
 
         function renderNpsTable(exportAll = false) {
