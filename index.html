@@ -1,0 +1,2209 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Jornada do Paciente - Cirurgias Oftalmológicas</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Fontes Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Chart.js & SheetJS (xlsx) & Lucide Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#4f46e5',
+                            600: '#4338ca',
+                            700: '#3730a3',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #0f172a; }
+        .white-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; color: black !important; }
+            .white-card { background: white !important; border: 1px solid #ccc !important; color: black !important; box-shadow: none !important; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col custom-scrollbar">
+
+    <!-- Navbar Limpa (Tom Claro) -->
+    <header class="bg-white sticky top-0 z-50 border-b border-slate-200 px-6 py-4 flex flex-wrap items-center justify-between gap-4 shadow-sm">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
+                <i data-lucide="eye" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-slate-900 tracking-tight">Jornada Cirúrgica Oftalmológica</h1>
+                <p class="text-xs text-slate-500">Dashboard de Acompanhamento de Pacientes e Gestão de Clínicas Parceiras</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 no-print">
+            <label class="cursor-pointer px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl flex items-center gap-2 transition shadow-md shadow-indigo-600/20">
+                <i data-lucide="file-up" class="w-4 h-4"></i>
+                Carregar Nova Planilha (.xlsx)
+                <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" class="hidden">
+            </label>
+            <button onclick="exportReport()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-2 border border-slate-200 transition">
+                <i data-lucide="printer" class="w-4 h-4"></i>
+                <span id="exportBtnLabel">Exportar / Imprimir Relatório de Consultas</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
+
+        <!-- Navegação por Página / Seção (fixa ao rolar, fica sempre visível) -->
+        <div id="tabNavBar" class="sticky z-40 bg-slate-50/95 backdrop-blur-sm flex items-center gap-2 py-2 no-print" style="top: var(--header-h, 0px);">
+            <button id="navTabConsultas" onclick="switchTab('consultas')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
+                <i data-lucide="stethoscope" class="w-4 h-4"></i>
+                Página 1 · Análise de Consultas
+            </button>
+            <button id="navTabNps" onclick="switchTab('nps')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
+                <i data-lucide="heart-handshake" class="w-4 h-4"></i>
+                Página 2 · Análise de NPS
+            </button>
+            <button id="navTabFaturamento" onclick="switchTab('faturamento')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
+                <i data-lucide="receipt" class="w-4 h-4"></i>
+                Página 3 · Pendências de Faturamento
+            </button>
+        </div>
+
+        <!-- ================================================================ -->
+        <!-- PÁGINA 1: ANÁLISE DE CONSULTAS / JORNADA CIRÚRGICA                -->
+        <!-- ================================================================ -->
+        <div id="tabConsultas" class="space-y-6">
+
+        <!-- Top Bar Info & Filters (fixa logo abaixo da navegação de páginas) -->
+        <div class="white-card rounded-2xl p-5 space-y-4 sticky z-30" style="top: calc(var(--header-h, 0px) + var(--tabnav-h, 0px));">
+            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                <div>
+                    <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                        <i data-lucide="filter" class="w-4 h-4 text-indigo-600"></i>
+                        Filtros de Análise Periódica
+                    </h2>
+                    <p class="text-xs text-slate-500">Filtre por clínica parceira, tipo de cirurgia ou status específico</p>
+                </div>
+                <div class="flex items-center gap-2 text-xs text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 font-medium">
+                    <i data-lucide="database" class="w-3.5 h-3.5 text-indigo-600"></i>
+                    <span id="dataCountLabel">Carregando dados...</span>
+                </div>
+            </div>
+
+            <p class="hidden text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2" id="unknownStatusWarning"></p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <!-- Filtro Clínica -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Clínica Parceira / Unidade</label>
+                    <select id="filterClinic" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
+                        <option value="">Todas as Clínicas Parceiras</option>
+                    </select>
+                </div>
+
+                <!-- Filtro Especialidade / Cirurgia -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Tipo de Cirurgia / Procedimento</label>
+                    <select id="filterSurgery" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
+                        <option value="">Todas as Cirurgias</option>
+                    </select>
+                </div>
+
+                <!-- Filtro Status da Jornada -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Status da Jornada na Clínica</label>
+                    <select id="filterStatus" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
+                        <option value="">Todos os Status</option>
+                    </select>
+                </div>
+
+                <!-- Filtro Atendente / SDR -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Responsável / Atendente</label>
+                    <select id="filterUser" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
+                        <option value="">Todos os Responsáveis</option>
+                    </select>
+                </div>
+
+                <!-- Filtro Período (Data da Consulta) -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Período (Data da Consulta)</label>
+                    <div class="flex items-center gap-1.5">
+                        <input type="date" id="filterDateStart" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
+                        <span class="text-slate-400 text-xs">até</span>
+                        <input type="date" id="filterDateEnd" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metric KPI Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+            <!-- Total Compareceram -->
+            <div class="white-card rounded-2xl p-5 relative overflow-hidden group">
+                <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Total Atendidos</div>
+                <div class="text-3xl font-extrabold text-slate-900" id="kpiTotal">0</div>
+                <div class="text-[11px] text-indigo-600 font-semibold mt-2 flex items-center gap-1">
+                    <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+                    Pacientes em Acompanhamento
+                </div>
+            </div>
+
+            <!-- Sem Status / Aguardando Retorno (pior caso: não sabemos o status atual) -->
+            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-slate-300 bg-slate-100/60">
+                <div class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Sem Status / Aguard. Retorno</div>
+                <div class="text-3xl font-extrabold text-slate-700" id="kpiSemStatus">0</div>
+                <div class="text-[11px] text-slate-500 font-semibold mt-2 flex items-center gap-1">
+                    <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
+                    Não sabemos o status atual
+                </div>
+            </div>
+
+            <!-- Exames Pendentes -->
+            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-amber-200 bg-amber-50/30">
+                <div class="text-xs font-bold text-amber-800 uppercase tracking-wider mb-1">Fase de Exames</div>
+                <div class="text-3xl font-extrabold text-amber-600" id="kpiExams">0</div>
+                <div class="text-[11px] text-amber-700 font-semibold mt-2 flex items-center gap-1">
+                    <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                    Exames Pendentes / Agendados
+                </div>
+            </div>
+
+            <!-- Gargalo: Aguardando Clínica Agendar -->
+            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-rose-200 bg-rose-50/30">
+                <div class="text-xs font-bold text-rose-800 uppercase tracking-wider mb-1">Gargalo de Agendamento</div>
+                <div class="text-3xl font-extrabold text-rose-600" id="kpiAguardandoClinica">0</div>
+                <div class="text-[11px] text-rose-700 font-semibold mt-2 flex items-center gap-1">
+                    <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
+                    Aguardando Clínica Agendar
+                </div>
+            </div>
+
+            <!-- Cirurgias Agendadas -->
+            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-blue-200 bg-blue-50/30">
+                <div class="text-xs font-bold text-blue-800 uppercase tracking-wider mb-1">Cirurgia Agendada</div>
+                <div class="text-3xl font-extrabold text-blue-600" id="kpiAgendadas">0</div>
+                <div class="text-[11px] text-blue-700 font-semibold mt-2 flex items-center gap-1">
+                    <i data-lucide="calendar-check" class="w-3.5 h-3.5"></i>
+                    Data Cirúrgica Confirmada
+                </div>
+            </div>
+
+            <!-- Cirurgia Realizada -->
+            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-emerald-200 bg-emerald-50/30">
+                <div class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-1">Cirurgia Realizada</div>
+                <div class="text-3xl font-extrabold text-emerald-600" id="kpiRealizadas">0</div>
+                <div class="text-[11px] text-emerald-700 font-semibold mt-2 flex items-center gap-1">
+                    <i data-lucide="award" class="w-3.5 h-3.5"></i>
+                    Sucesso (1º ou 2º Olho)
+                </div>
+            </div>
+        </div>
+
+        <!-- SEÇÃO DE INSIGHTS ESTRATÉGICOS DA IA -->
+        <div class="white-card rounded-2xl p-6 border-l-4 border-l-indigo-600 bg-gradient-to-r from-indigo-50/40 via-white to-white space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-600/20">
+                        <i data-lucide="bot" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            Insights Estratégicos da IA
+                            <span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold uppercase">Automático</span>
+                        </h3>
+                        <p class="text-xs text-slate-500">Ações prioritárias sugeridas com base nos dados atuais da jornada</p>
+                    </div>
+                </div>
+                <span class="text-xs text-slate-400 font-medium">Recomendações Práticas</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="aiInsightsContainer">
+                <!-- Dynamic AI Insights cards generated here -->
+            </div>
+        </div>
+
+        <!-- Funil da Jornada Cirúrgica -->
+        <div class="white-card rounded-2xl p-6 space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="git-commit" class="w-5 h-5 text-indigo-600"></i>
+                    Funil da Jornada de Atendimento até a Cirurgia
+                </h3>
+                <span class="text-xs text-slate-500 font-medium">Visão Geral do Fluxo dos Pacientes</span>
+            </div>
+
+            <div id="funnelContainer" class="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-3">
+                <!-- Populated dynamically via JS -->
+            </div>
+        </div>
+
+        <!-- Distribuição dos Pacientes por Status (Seção Dedicada) -->
+        <div class="white-card rounded-2xl p-6 space-y-5">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="pie-chart" class="w-5 h-5 text-indigo-600"></i>
+                        Distribuição dos Pacientes por Status
+                    </h3>
+                    <p class="text-xs text-slate-500">Visão consolidada de onde cada paciente está na jornada</p>
+                </div>
+            </div>
+
+            <div class="flex flex-col lg:flex-row items-center gap-8">
+                <div class="relative w-full lg:w-[340px] h-[340px] shrink-0 flex items-center justify-center">
+                    <canvas id="chartStatus"></canvas>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <span class="text-4xl font-extrabold text-slate-900" id="statusDonutTotal">0</span>
+                        <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mt-1">Pacientes</span>
+                    </div>
+                </div>
+                <div class="w-full flex-1 space-y-2.5" id="statusLegendContainer">
+                    <!-- Legenda customizada populada via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Distribuição por Tipo de Cirurgia -->
+        <div class="white-card rounded-2xl p-6 space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="activity" class="w-5 h-5 text-violet-600"></i>
+                    Distribuição por Tipo de Cirurgia / Especialidade
+                </h3>
+            </div>
+            <div class="relative min-h-[280px]">
+                <canvas id="chartSurgeries"></canvas>
+            </div>
+        </div>
+
+        <!-- Graphic 3: Performance por Clínica Parceira -->
+        <div class="white-card rounded-2xl p-6 space-y-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="building-2" class="w-5 h-5 text-indigo-600"></i>
+                        Acompanhamento por Clínica Parceira (Top Unidades)
+                    </h3>
+                    <p class="text-xs text-slate-500">Comparativo do volume de pacientes em cada parceiro</p>
+                </div>
+            </div>
+            <div class="relative min-h-[320px]">
+                <canvas id="chartClinics"></canvas>
+            </div>
+        </div>
+
+        <!-- Tabela de Gestão de Clínicas Parceiras -->
+        <div class="white-card rounded-2xl p-6 space-y-4">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="clipboard-list" class="w-5 h-5 text-indigo-600"></i>
+                        Relatório Consolidado para Envio à Gestão das Clínicas
+                    </h3>
+                    <p class="text-xs text-slate-500">Resumo de pendências e conversões para reuniões de alinhamento com diretores</p>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left text-xs text-slate-700">
+                    <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200">
+                        <tr>
+                            <th class="p-3">Clínica Parceira</th>
+                            <th class="p-3 text-center">Total Pacientes</th>
+                            <th class="p-3 text-center text-slate-500">Sem Status</th>
+                            <th class="p-3 text-center text-amber-700 font-bold">Exames Pendentes</th>
+                            <th class="p-3 text-center text-rose-700 font-bold">Aguardando Clínica</th>
+                            <th class="p-3 text-center text-blue-700 font-bold">Cirurgia Agendada</th>
+                            <th class="p-3 text-center text-emerald-700 font-bold">Cirurgia Realizada</th>
+                            <th class="p-3 text-center text-slate-500">Desistiu</th>
+                            <th class="p-3 text-center text-slate-500">Sem Indicação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clinicTableBody" class="divide-y divide-slate-100 font-medium">
+                        <!-- Populated via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tabela Detalhada de Pacientes -->
+        <div class="white-card rounded-2xl p-6 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="search" class="w-5 h-5 text-indigo-600"></i>
+                        Lista Detalhada dos Pacientes
+                    </h3>
+                    <p class="text-xs text-slate-500">Consulte informações individuais, médicos e observações clínicas</p>
+                </div>
+                <div class="relative w-full sm:w-72">
+                    <input type="text" id="tableSearch" placeholder="Buscar paciente, médico ou obs..."
+                        class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl pl-9 pr-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left text-xs text-slate-700">
+                    <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200">
+                        <tr>
+                            <th class="p-3">ID / Paciente</th>
+                            <th class="p-3">Data Contato</th>
+                            <th class="p-3">Cirurgia</th>
+                            <th class="p-3">Clínica Parceira</th>
+                            <th class="p-3">Status da Jornada</th>
+                            <th class="p-3">Médico / Equipe</th>
+                            <th class="p-3">Atendente</th>
+                        </tr>
+                    </thead>
+                    <tbody id="patientTableBody" class="divide-y divide-slate-100">
+                        <!-- Populated via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 text-xs text-slate-500 font-medium no-print">
+                <span id="paginationInfo">Mostrando 0 de 0 pacientes</span>
+                <div class="flex gap-2">
+                    <button id="prevPageBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 disabled:opacity-40 border border-slate-200">Anterior</button>
+                    <button id="nextPageBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 disabled:opacity-40 border border-slate-200">Próximo</button>
+                </div>
+            </div>
+            <p class="hidden print:block text-[11px] text-slate-500 font-medium pt-2" id="patientPrintCount"></p>
+        </div>
+
+        </div>
+        <!-- FIM PÁGINA 1 -->
+
+        <!-- ================================================================ -->
+        <!-- PÁGINA 2: SEÇÃO DEDICADA DE NPS (base de dados independente)      -->
+        <!-- ================================================================ -->
+        <div id="tabNps" class="space-y-6 hidden">
+
+        <div class="pt-4 border-t-2 border-dashed border-slate-200">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-9 h-9 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-md shadow-teal-600/20">
+                    <i data-lucide="heart-handshake" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900 tracking-tight">Relatório de NPS por Clínica</h2>
+                    <p class="text-xs text-slate-500">Base própria (planilha de avaliações) — use para montar o relatório de satisfação enviado à clínica no mesmo período do relatório de consultas</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NPS: Upload & Filtros (fixa logo abaixo da navegação de páginas) -->
+        <div class="white-card rounded-2xl p-5 space-y-4 border-teal-200 sticky z-30" style="top: calc(var(--header-h, 0px) + var(--tabnav-h, 0px));">
+            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                        <i data-lucide="filter" class="w-4 h-4 text-teal-600"></i>
+                        Filtros da Base de NPS
+                    </h3>
+                    <p class="text-xs text-slate-500">Filtre por clínica e pelo período de realização da cirurgia</p>
+                </div>
+                <div class="flex items-center gap-3 no-print">
+                    <div class="flex items-center gap-2 text-xs text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 font-medium">
+                        <i data-lucide="database" class="w-3.5 h-3.5 text-teal-600"></i>
+                        <span id="npsDataCountLabel">Nenhuma planilha de NPS carregada</span>
+                    </div>
+                    <label class="cursor-pointer px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-xl flex items-center gap-2 transition shadow-md shadow-teal-600/20">
+                        <i data-lucide="file-up" class="w-4 h-4"></i>
+                        Carregar Planilha de NPS (.xlsx)
+                        <input type="file" id="npsFileInput" accept=".xlsx, .xls, .csv" class="hidden">
+                    </label>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Clínica Parceira / Unidade</label>
+                    <select id="npsFilterClinic" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition">
+                        <option value="">Todas as Clínicas Parceiras</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Período (Data da Cirurgia)</label>
+                    <div class="flex items-center gap-1.5">
+                        <input type="date" id="npsDateStart" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition">
+                        <span class="text-slate-400 text-xs">até</span>
+                        <input type="date" id="npsDateEnd" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Especialidade</label>
+                    <select id="npsFilterSurgery" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition">
+                        <option value="">Todas as Especialidades</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- NPS: KPI Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="white-card rounded-2xl p-5 relative overflow-hidden group">
+                <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Avaliações no Período</div>
+                <div class="text-3xl font-extrabold text-slate-900" id="npsKpiTotal">0</div>
+                <div class="text-[11px] text-teal-600 font-semibold mt-2 flex items-center gap-1">
+                    <i data-lucide="clipboard-check" class="w-3.5 h-3.5"></i>
+                    Respostas de Pacientes
+                </div>
+            </div>
+            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-emerald-200 bg-emerald-50/30">
+                <div class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-1">Promotores (Nota 9-10)</div>
+                <div class="text-3xl font-extrabold text-emerald-600" id="npsKpiPromoters">0%</div>
+                <div class="text-[11px] text-emerald-700 font-semibold mt-2 flex items-center gap-1">
+                    <i data-lucide="thumbs-up" class="w-3.5 h-3.5"></i>
+                    Pacientes muito satisfeitos
+                </div>
+            </div>
+            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-amber-200 bg-amber-50/30">
+                <div class="text-xs font-bold text-amber-800 uppercase tracking-wider mb-1">Neutros (Nota 7-8)</div>
+                <div class="text-3xl font-extrabold text-amber-600" id="npsKpiPassives">0%</div>
+                <div class="text-[11px] text-amber-700 font-semibold mt-2 flex items-center gap-1">
+                    <i data-lucide="minus-circle" class="w-3.5 h-3.5"></i>
+                    Satisfação intermediária
+                </div>
+            </div>
+            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-rose-200 bg-rose-50/30">
+                <div class="text-xs font-bold text-rose-800 uppercase tracking-wider mb-1">Detratores (Nota 0-6)</div>
+                <div class="text-3xl font-extrabold text-rose-600" id="npsKpiDetractors">0%</div>
+                <div class="text-[11px] text-rose-700 font-semibold mt-2 flex items-center gap-1">
+                    <i data-lucide="thumbs-down" class="w-3.5 h-3.5"></i>
+                    Pacientes insatisfeitos
+                </div>
+            </div>
+            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-slate-300 bg-slate-100/60">
+                <div class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Nota Ausente</div>
+                <div class="text-3xl font-extrabold text-slate-700" id="npsKpiNotaAusente">0</div>
+                <div class="text-[11px] text-slate-500 font-semibold mt-2 flex items-center gap-1">
+                    <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
+                    Com avaliação, sem nota
+                </div>
+            </div>
+        </div>
+        <p class="text-[11px] text-slate-400 font-medium -mt-2">Promotores/Neutros/Detratores são calculados apenas sobre as avaliações com nota preenchida (não entram no cálculo os registros "Nota Ausente").</p>
+
+        <!-- NPS: Gauge Geral + Ranking por Clínica -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="white-card rounded-2xl p-6 space-y-2 flex flex-col items-center">
+                <h3 class="text-base font-bold text-slate-900 flex items-center gap-2 self-start">
+                    <i data-lucide="gauge" class="w-5 h-5 text-teal-600"></i>
+                    NPS Geral (Data da Cirurgia)
+                </h3>
+                <div id="npsGaugeContainer" class="w-full flex items-center justify-center pt-2"></div>
+            </div>
+
+            <div class="white-card rounded-2xl p-6 space-y-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="building-2" class="w-5 h-5 text-teal-600"></i>
+                        NPS por Clínica Parceira
+                    </h3>
+                    <p class="text-xs text-slate-500">Ranking de satisfação — não confundir com a distribuição de status acima</p>
+                </div>
+                <div class="relative min-h-[280px]">
+                    <canvas id="chartNpsClinics"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- NPS: Breakdown de Categorias -->
+        <div class="white-card rounded-2xl p-6 space-y-4">
+            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                <i data-lucide="list-checks" class="w-5 h-5 text-teal-600"></i>
+                Avaliação por Categoria (% "Gostei")
+            </h3>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4" id="npsCategoryContainer">
+                <!-- Populado via JS -->
+            </div>
+        </div>
+
+        <!-- NPS: Tabela Detalhada para Montagem do Relatório da Clínica -->
+        <div class="white-card rounded-2xl p-6 space-y-4">
+            <div>
+                <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="file-text" class="w-5 h-5 text-teal-600"></i>
+                    Avaliações Detalhadas (Base para Envio à Clínica)
+                </h3>
+                <p class="text-xs text-slate-500">Filtre por clínica e período acima para gerar o relatório de NPS individual daquela unidade</p>
+            </div>
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left text-xs text-slate-700">
+                    <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200">
+                        <tr>
+                            <th class="p-3">Paciente</th>
+                            <th class="p-3">Clínica</th>
+                            <th class="p-3">Médico</th>
+                            <th class="p-3 text-center">Nota</th>
+                            <th class="p-3">Data da Cirurgia</th>
+                            <th class="p-3">Data da Avaliação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="npsTableBody" class="divide-y divide-slate-100">
+                        <!-- Populated via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 text-xs text-slate-500 font-medium no-print">
+                <span id="npsPaginationInfo">Mostrando 0 de 0 avaliações</span>
+                <div class="flex gap-2">
+                    <button id="npsPrevPageBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 disabled:opacity-40 border border-slate-200">Anterior</button>
+                    <button id="npsNextPageBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 disabled:opacity-40 border border-slate-200">Próximo</button>
+                </div>
+            </div>
+            <p class="hidden print:block text-[11px] text-slate-500 font-medium pt-2" id="npsPrintCount"></p>
+        </div>
+
+        </div>
+        <!-- FIM PÁGINA 2 -->
+
+        <!-- ================================================================ -->
+        <!-- PÁGINA 3: PENDÊNCIAS DE FATURAMENTO (baseado no campo "lock")     -->
+        <!-- Mesma base de dados da Página 1 (rawData) — cirurgias já         -->
+        <!-- realizadas mas ainda não reportadas/pagas no financeiro mensal.  -->
+        <!-- ================================================================ -->
+        <div id="tabFaturamento" class="space-y-6 hidden">
+
+            <div class="pt-4 border-t-2 border-dashed border-slate-200">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-9 h-9 rounded-xl bg-amber-600 text-white flex items-center justify-center shadow-md shadow-amber-600/20">
+                        <i data-lucide="receipt" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 tracking-tight">Pendências de Faturamento</h2>
+                        <p class="text-xs text-slate-500">Cirurgias já realizadas cujo campo de trava (lock) ainda está vazio — ou seja, ainda não foram reportadas/pagas no relatório financeiro mensal da clínica</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Faturamento: Filtros (fixos logo abaixo da navegação de páginas) -->
+            <div class="white-card rounded-2xl p-5 space-y-4 border-amber-200 sticky z-30" style="top: calc(var(--header-h, 0px) + var(--tabnav-h, 0px));">
+                <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                            <i data-lucide="filter" class="w-4 h-4 text-amber-600"></i>
+                            Filtros de Pendências
+                        </h3>
+                        <p class="text-xs text-slate-500">Filtre por clínica, especialidade e período da cirurgia realizada</p>
+                    </div>
+                    <div class="flex items-center gap-3 no-print">
+                        <div class="flex items-center gap-2 text-xs text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 font-medium">
+                            <i data-lucide="database" class="w-3.5 h-3.5 text-amber-600"></i>
+                            <span id="faturamentoCountLabel">0 pendência(s) no filtro</span>
+                        </div>
+                        <button onclick="downloadFaturamentoReport()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-xl flex items-center gap-2 transition shadow-md shadow-amber-600/20">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            Baixar Relatório (.xlsx)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Clínica Parceira / Unidade</label>
+                        <select id="faturamentoFilterClinic" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-amber-500 focus:bg-white outline-none transition">
+                            <option value="">Todas as Clínicas Parceiras</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Especialidade</label>
+                        <select id="faturamentoFilterSurgery" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-amber-500 focus:bg-white outline-none transition">
+                            <option value="">Todas as Especialidades</option>
+                        </select>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Período (Data da Cirurgia Realizada)</label>
+                        <div class="flex items-center gap-1.5">
+                            <input type="date" id="faturamentoDateStart" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-amber-500 focus:bg-white outline-none transition">
+                            <span class="text-slate-400 text-xs">até</span>
+                            <input type="date" id="faturamentoDateEnd" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-amber-500 focus:bg-white outline-none transition">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Faturamento: Tabela -->
+            <div class="white-card rounded-2xl p-6 space-y-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="clipboard-list" class="w-5 h-5 text-amber-600"></i>
+                        Cirurgias Realizadas e Ainda Não Reportadas/Pagas
+                    </h3>
+                    <p class="text-xs text-slate-500">Cada linha é um procedimento (1º ou 2º olho) com status "realizou" cuja aba correspondente ainda não tem o campo de trava preenchido</p>
+                </div>
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left text-xs text-slate-700">
+                        <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200">
+                            <tr>
+                                <th class="p-3">Paciente</th>
+                                <th class="p-3">Clínica</th>
+                                <th class="p-3">Especialidade</th>
+                                <th class="p-3">Procedimento</th>
+                                <th class="p-3">Data da Cirurgia</th>
+                                <th class="p-3">Médico</th>
+                            </tr>
+                        </thead>
+                        <tbody id="faturamentoTableBody" class="divide-y divide-slate-100">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex items-center justify-between pt-2 text-xs text-slate-500 font-medium no-print">
+                    <span id="faturamentoPaginationInfo">Mostrando 0 de 0 pendências</span>
+                    <div class="flex gap-2">
+                        <button id="faturamentoPrevPageBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 disabled:opacity-40 border border-slate-200">Anterior</button>
+                        <button id="faturamentoNextPageBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 disabled:opacity-40 border border-slate-200">Próximo</button>
+                    </div>
+                </div>
+                <p class="hidden print:block text-[11px] text-slate-500 font-medium pt-2" id="faturamentoPrintCount"></p>
+            </div>
+
+        </div>
+        <!-- FIM PÁGINA 3 -->
+
+    </main>
+
+    <!-- Botão flutuante "voltar ao topo" — visível em todas as páginas -->
+    <button id="backToTopBtn" onclick="window.scrollTo({top:0, behavior:'smooth'})"
+        class="no-print hidden fixed bottom-6 right-6 z-50 w-11 h-11 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/30 flex items-center justify-center transition">
+        <i data-lucide="arrow-up" class="w-5 h-5"></i>
+    </button>
+
+    <!-- Data Injection & Robust Importer -->
+    <script>
+        // Nenhuma planilha carregada ainda — inicia vazio até o upload
+        let rawData = [];
+
+        // State Variables
+        let filteredData = [...rawData];
+        let currentPage = 1;
+        const pageSize = 15;
+
+        // Chart instances
+        let chartStatusInstance = null;
+        let chartSurgeriesInstance = null;
+        let chartClinicsInstance = null;
+        let chartNpsClinicsInstance = null;
+
+        // Paleta de cores compartilhada pelos gráficos de status
+        const STATUS_COLORS = [
+            '#4f46e5', '#d97706', '#e11d48', '#2563eb', '#059669',
+            '#7c3aed', '#db2777', '#475569', '#0d9488', '#ea580c'
+        ];
+
+        // NPS: Data (base independente, planilha própria de avaliações)
+        let npsRawData = [];
+        let npsFilteredData = [];
+        let npsCurrentPage = 1;
+
+        // Mede a altura real do header e da barra de navegação de páginas para
+        // que os filtros "grudados" (sticky) parem exatamente abaixo deles,
+        // mesmo quando o header quebra linha em telas menores.
+        function updateStickyOffsets() {
+            const header = document.querySelector('header');
+            const tabNavBar = document.getElementById('tabNavBar');
+            if (header) document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+            if (tabNavBar) document.documentElement.style.setProperty('--tabnav-h', tabNavBar.offsetHeight + 'px');
+        }
+
+        // On DOM Load
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            populateFilterDropdowns();
+            setupEventListeners();
+            updateDashboard();
+            npsUpdateDashboard();
+            populateFaturamentoFilters();
+            applyFaturamentoFilters();
+            updateTabNav();
+            updateStickyOffsets();
+            window.addEventListener('resize', updateStickyOffsets);
+        });
+
+        // Converte datas em formato dd/mm/yyyy ou serial do Excel para um objeto Date
+        function parseFlexibleDate(value) {
+            if (value === undefined || value === null || value === '') return null;
+            if (typeof value === 'number' || /^\d+(\.\d+)?$/.test(String(value).trim())) {
+                const serial = parseFloat(value);
+                if (!isNaN(serial) && serial > 0) {
+                    return new Date(Math.round((serial - 25569) * 86400 * 1000));
+                }
+            }
+            const str = String(value).trim();
+            const brMatch = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+            if (brMatch) {
+                return new Date(parseInt(brMatch[3], 10), parseInt(brMatch[2], 10) - 1, parseInt(brMatch[1], 10));
+            }
+            const isoMatch = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+            if (isoMatch) {
+                return new Date(parseInt(isoMatch[1], 10), parseInt(isoMatch[2], 10) - 1, parseInt(isoMatch[3], 10));
+            }
+            return null;
+        }
+
+        function isWithinPeriod(date, startStr, endStr) {
+            if (!date || isNaN(date.getTime())) return !startStr && !endStr;
+            if (startStr) {
+                const start = new Date(startStr + 'T00:00:00');
+                if (date < start) return false;
+            }
+            if (endStr) {
+                const end = new Date(endStr + 'T23:59:59');
+                if (date > end) return false;
+            }
+            return true;
+        }
+
+        // ================================================================
+        // CLASSIFICAÇÃO OFICIAL DE STATUS (lista fechada do Farol)
+        // Fonte: "Descrição de status pós consulta.pdf" — 12 status possíveis.
+        // Todas as telas do dashboard usam ESTA função como fonte única de
+        // verdade, para nunca haver contagem divergente entre KPI/Funil/Tabelas.
+        // ================================================================
+        function normalizeStatusText(s) {
+            return (s || '').toString().trim().toUpperCase()
+                .normalize('NFD').replace(/[̀-ͯ]/g, '')
+                .replace(/[ºª]/g, '')
+                .replace(/\s+/g, ' ');
+        }
+
+        // Chave = texto oficial normalizado (sem acento/º) → código interno
+        const STATUS_CANONICAL = {
+            'AGUARDANDO RETORNO': 'AGUARDANDO_RETORNO',
+            'CIRURGIA - AGENDOU': 'CIRURGIA_AGENDOU',
+            'CIRURGIA - AGUARDANDO A CLINICA AGENDAR': 'AGUARDANDO_CLINICA_AGENDAR',
+            'CIRURGIA - REALIZOU 1 OLHO': 'CIRURGIA_REALIZOU_1',
+            'CIRURGIA - REALIZOU 2 OLHO': 'CIRURGIA_REALIZOU_2',
+            'ENCERROU - DESISTIU DE OPERAR': 'ENCERROU_DESISTIU',
+            'ENCERROU - SEM INDICACAO CIRURGICA': 'ENCERROU_SEM_INDICACAO',
+            'EXAMES - REALIZOU E PENDENTE RETORNO': 'EXAMES_REALIZOU_PENDENTE_RETORNO',
+            'EXAMES CLINICOS - AGENDADOS': 'EXAMES_CLINICO_AGENDADOS',
+            'EXAMES CLINICOS - PENDENTE': 'EXAMES_CLINICO_PENDENTE',
+            'EXAMES OFTALMOS - AGENDADOS': 'EXAMES_OFT_AGENDADOS',
+            'EXAMES OFTALMOS - PENDENTE': 'EXAMES_OFT_PENDENTE'
+        };
+
+        // Fallback difuso, só usado se o texto não bater exatamente com a lista oficial
+        // (ex.: variação de digitação). Mantém o dashboard funcional mesmo assim,
+        // mas o status entra no alerta de "status não reconhecido".
+        const STATUS_FUZZY_FALLBACK = [
+            { code: 'AGUARDANDO_RETORNO', test: s => s.includes('AGUARDANDO RETORNO') },
+            { code: 'CIRURGIA_REALIZOU_2', test: s => s.includes('REALIZOU') && s.includes('2') },
+            { code: 'CIRURGIA_REALIZOU_1', test: s => s.includes('REALIZOU') && s.includes('1') },
+            { code: 'AGUARDANDO_CLINICA_AGENDAR', test: s => s.includes('AGUARDANDO') && s.includes('CLINICA') },
+            { code: 'CIRURGIA_AGENDOU', test: s => s.includes('CIRURGIA') && s.includes('AGENDOU') },
+            { code: 'EXAMES_REALIZOU_PENDENTE_RETORNO', test: s => s.includes('EXAMES') && s.includes('REALIZOU') },
+            { code: 'EXAMES_OFT_AGENDADOS', test: s => s.includes('OFTALM') && s.includes('AGENDAD') },
+            { code: 'EXAMES_OFT_PENDENTE', test: s => s.includes('OFTALM') && s.includes('PENDENTE') },
+            { code: 'EXAMES_CLINICO_AGENDADOS', test: s => s.includes('CLINIC') && s.includes('AGENDAD') },
+            { code: 'EXAMES_CLINICO_PENDENTE', test: s => s.includes('CLINIC') && s.includes('PENDENTE') },
+            { code: 'ENCERROU_DESISTIU', test: s => s.includes('ENCERROU') && s.includes('DESISTIU') },
+            { code: 'ENCERROU_SEM_INDICACAO', test: s => s.includes('ENCERROU') && s.includes('SEM INDICA') }
+        ];
+
+        function classifyStatus(rawStatus) {
+            const s = normalizeStatusText(rawStatus);
+            if (!s) return 'VAZIO';
+            if (STATUS_CANONICAL[s]) return STATUS_CANONICAL[s];
+            const fuzzy = STATUS_FUZZY_FALLBACK.find(f => f.test(s));
+            return fuzzy ? fuzzy.code : 'OUTROS';
+        }
+
+        // Agrupamento usado por KPIs/Funil/Tabelas — cada paciente cai em UM único grupo.
+        function statusGroup(code) {
+            switch (code) {
+                case 'VAZIO':
+                case 'AGUARDANDO_RETORNO':
+                    return 'SEM_STATUS'; // pior caso: não sabemos o status atual do paciente
+                case 'EXAMES_OFT_PENDENTE':
+                case 'EXAMES_OFT_AGENDADOS':
+                case 'EXAMES_CLINICO_PENDENTE':
+                case 'EXAMES_CLINICO_AGENDADOS':
+                case 'EXAMES_REALIZOU_PENDENTE_RETORNO':
+                    return 'EXAMES';
+                case 'AGUARDANDO_CLINICA_AGENDAR':
+                    return 'AGUARDANDO_CLINICA';
+                case 'CIRURGIA_AGENDOU':
+                    return 'CIRURGIA_AGENDADA';
+                case 'CIRURGIA_REALIZOU_1':
+                case 'CIRURGIA_REALIZOU_2':
+                    return 'CIRURGIA_REALIZADA';
+                case 'ENCERROU_DESISTIU':
+                    return 'ENCERROU_DESISTIU';
+                case 'ENCERROU_SEM_INDICACAO':
+                    return 'ENCERROU_SEM_INDICACAO';
+                default:
+                    return 'OUTROS';
+            }
+        }
+
+        // Status do tipo "AGENDADO" têm data real marcada — por isso dá pra checar atraso.
+        // Status "PENDENTE" usam a data só como controle interno, não uma data real de exame.
+        function isAgendadoTypeStatus(code) {
+            return code === 'EXAMES_OFT_AGENDADOS' || code === 'EXAMES_CLINICO_AGENDADOS' || code === 'EXAMES_REALIZOU_PENDENTE_RETORNO';
+        }
+
+        function isStatusOverdue(item) {
+            const code = classifyStatus(getItemProp(item, ['agendamento_cirg_status_clinica']));
+            if (!isAgendadoTypeStatus(code)) return false;
+            const d = parseFlexibleDate(getItemProp(item, ['agendamento_cirg_data_clinica_r']));
+            if (!d) return false;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return d < today;
+        }
+
+        // O Farol acompanha até 5 procedimentos dentro da mesma consulta (abas 1 a 5).
+        // "lock" = campo de trava: quando preenchido, a cirurgia daquela aba já foi
+        // reportada no relatório financeiro mensal da clínica e o FEE já foi pago.
+        const PROCEDURE_SLOTS = [
+            { date: ['agendamento_cirg_data_clinica_r'], status: ['agendamento_cirg_status_clinica'], obs: ['agendamento_cirg_obs'], lock: ['agendamento_cirg_data_clinica_lock'] },
+            { date: ['agendamento_cirg_data_clinica_2', 'agendamento_cirg_data_clinica_r_2'], status: ['agendamento_cirg_status_clinica_2'], obs: ['agendamento_cirg_obs_2'], lock: ['agendamento_cirg_data_clinica_lock_2'] },
+            { date: ['agendamento_cirg_data_clinica_r_3', 'agendamento_cirg_data_clinica_3'], status: ['agendamento_cirg_status_clinica_3'], obs: ['agendamento_cirg_obs_3'], lock: ['agendamento_cirg_data_clinica_lock_3'] },
+            { date: ['agendamento_cirg_data_clinica_r_4', 'agendamento_cirg_data_clinica_4'], status: ['agendamento_cirg_status_clinica_4'], obs: ['agendamento_cirg_obs_4'], lock: ['agendamento_cirg_data_clinica_lock_4'] },
+            { date: ['agendamento_cirg_data_clinica_r_5', 'agendamento_cirg_data_clinica_5'], status: ['agendamento_cirg_status_clinica_5'], obs: ['agendamento_cirg_obs_5'], lock: ['agendamento_cirg_data_clinica_lock_5'] }
+        ];
+
+        function getProcedureSlots(item) {
+            return PROCEDURE_SLOTS.map((slotDef, idx) => {
+                const statusRaw = getItemProp(item, slotDef.status);
+                if (!statusRaw && idx > 0) return null; // aba vazia = paciente não tem esse procedimento
+                const lockRaw = getItemProp(item, slotDef.lock);
+                return {
+                    slot: idx + 1,
+                    statusRaw,
+                    code: classifyStatus(statusRaw),
+                    date: parseFlexibleDate(getItemProp(item, slotDef.date)),
+                    obs: getItemProp(item, slotDef.obs),
+                    isLocked: lockRaw !== '' // preenchido = já reportado/pago; vazio = ainda pendente
+                };
+            }).filter(Boolean);
+        }
+
+        // Regra: para CATARATA, se a aba 1 é "realizou 1º olho" e nenhuma outra aba (2-5)
+        // mostra um "realizou" (1º ou 2º), falta o acompanhamento obrigatório do 2º olho.
+        function needsSecondEyeFollowUp(item, especialidade) {
+            if (!/CATARATA/i.test(especialidade || '')) return false;
+            const slots = getProcedureSlots(item);
+            if (slots.length === 0) return false;
+            const primary = slots[0];
+            if (primary.code !== 'CIRURGIA_REALIZOU_1') return false;
+            const hasOtherRealizou = slots.some((sl, i) => i > 0 && (sl.code === 'CIRURGIA_REALIZOU_1' || sl.code === 'CIRURGIA_REALIZOU_2'));
+            return !hasOtherRealizou;
+        }
+
+        // Pendências de faturamento: cada procedimento "realizou" (1º ou 2º olho) cuja
+        // trava (lock) DA MESMA ABA ainda está vazia — ou seja, ainda não foi reportado/pago.
+        function getPendingBillingRecords(data) {
+            const records = [];
+            data.forEach(item => {
+                const slots = getProcedureSlots(item);
+                slots.forEach(sl => {
+                    const isRealizou = sl.code === 'CIRURGIA_REALIZOU_1' || sl.code === 'CIRURGIA_REALIZOU_2';
+                    if (isRealizou && !sl.isLocked) {
+                        records.push({
+                            paciente: getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']) || 'Sem Nome',
+                            clinica: getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']) || 'Sem Clínica',
+                            especialidade: getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']) || 'Não Especificado',
+                            medico: getItemProp(item, ['medicos', 'medico', 'Médico']) || '-',
+                            procedimento: sl.code === 'CIRURGIA_REALIZOU_1' ? '1º Olho' : '2º Olho',
+                            slot: sl.slot,
+                            data: sl.date
+                        });
+                    }
+                });
+            });
+            return records;
+        }
+
+        function collectUnknownStatuses(data) {
+            const set = new Set();
+            data.forEach(item => {
+                const raw = getItemProp(item, ['agendamento_cirg_status_clinica']);
+                if (!raw) return;
+                if (classifyStatus(raw) === 'OUTROS') set.add(raw);
+            });
+            return set;
+        }
+
+        function renderUnknownStatusWarning() {
+            const el = document.getElementById('unknownStatusWarning');
+            const unknown = collectUnknownStatuses(filteredData);
+            if (unknown.size === 0) {
+                el.classList.add('hidden');
+                el.textContent = '';
+                return;
+            }
+            const sample = Array.from(unknown).slice(0, 5).join(' · ');
+            el.textContent = `⚠️ ${unknown.size} status não reconhecido(s) na lista oficial do Farol: ${sample}${unknown.size > 5 ? '...' : ''}`;
+            el.classList.remove('hidden');
+        }
+
+        // ================================================================
+        // PÁGINA 3: PENDÊNCIAS DE FATURAMENTO — usa a MESMA base (rawData) da
+        // Página 1, não precisa de upload próprio.
+        // ================================================================
+        let faturamentoFilteredRecords = [];
+        let faturamentoCurrentPage = 1;
+
+        function populateFaturamentoFilters() {
+            const clinics = new Set();
+            const surgeries = new Set();
+            rawData.forEach(item => {
+                const c = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']);
+                const s = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']);
+                if (c) clinics.add(c.trim());
+                if (s) surgeries.add(s.trim());
+            });
+            populateSelect('faturamentoFilterClinic', Array.from(clinics).sort());
+            populateSelect('faturamentoFilterSurgery', Array.from(surgeries).sort());
+        }
+
+        function applyFaturamentoFilters() {
+            const clinic = document.getElementById('faturamentoFilterClinic').value;
+            const surgery = document.getElementById('faturamentoFilterSurgery').value;
+            const dateStart = document.getElementById('faturamentoDateStart').value;
+            const dateEnd = document.getElementById('faturamentoDateEnd').value;
+
+            const allPending = getPendingBillingRecords(rawData);
+
+            faturamentoFilteredRecords = allPending.filter(rec => {
+                const matchClinic = !clinic || rec.clinica === clinic;
+                const matchSurgery = !surgery || rec.especialidade === surgery;
+                const matchPeriod = isWithinPeriod(rec.data, dateStart, dateEnd);
+                return matchClinic && matchSurgery && matchPeriod;
+            });
+
+            faturamentoCurrentPage = 1;
+            document.getElementById('faturamentoCountLabel').textContent = `${faturamentoFilteredRecords.length} pendência(s) no filtro`;
+            renderFaturamentoTable();
+        }
+
+        function renderFaturamentoTable(exportAll = false) {
+            const tbody = document.getElementById('faturamentoTableBody');
+            const totalRecords = faturamentoFilteredRecords.length;
+
+            let pageData, startIndex;
+            if (exportAll) {
+                pageData = faturamentoFilteredRecords;
+                startIndex = 0;
+            } else {
+                const totalPages = Math.ceil(totalRecords / pageSize) || 1;
+                if (faturamentoCurrentPage > totalPages) faturamentoCurrentPage = totalPages;
+                startIndex = (faturamentoCurrentPage - 1) * pageSize;
+                pageData = faturamentoFilteredRecords.slice(startIndex, startIndex + pageSize);
+            }
+
+            tbody.innerHTML = pageData.map(rec => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-3 font-bold text-slate-900">${rec.paciente}</td>
+                    <td class="p-3 text-slate-700 text-[11px] font-medium">${rec.clinica}</td>
+                    <td class="p-3 text-slate-700 text-[11px] font-medium">${rec.especialidade}</td>
+                    <td class="p-3">
+                        <span class="inline-block px-2.5 py-1 text-[10px] font-bold rounded-full border bg-amber-100 text-amber-800 border-amber-300">${rec.procedimento}</span>
+                    </td>
+                    <td class="p-3 text-slate-600 font-medium">${rec.data ? rec.data.toLocaleDateString('pt-BR') : '-'}</td>
+                    <td class="p-3 text-slate-600 text-[11px] font-medium">${rec.medico}</td>
+                </tr>
+            `).join('') || '<tr><td colspan="6" class="p-4 text-center text-slate-400">Nenhuma pendência de faturamento encontrada no filtro atual.</td></tr>';
+
+            document.getElementById('faturamentoPrintCount').textContent = `Relatório com ${totalRecords} pendência(s) — filtro atual aplicado no momento da exportação.`;
+
+            if (exportAll) return;
+
+            const totalPages = Math.ceil(totalRecords / pageSize) || 1;
+            document.getElementById('faturamentoPaginationInfo').textContent = `Mostrando ${totalRecords === 0 ? 0 : startIndex + 1} até ${Math.min(startIndex + pageSize, totalRecords)} de ${totalRecords} pendência(s)`;
+            document.getElementById('faturamentoPrevPageBtn').disabled = faturamentoCurrentPage === 1;
+            document.getElementById('faturamentoNextPageBtn').disabled = faturamentoCurrentPage === totalPages;
+        }
+
+        function downloadFaturamentoReport() {
+            if (faturamentoFilteredRecords.length === 0) {
+                alert('Não há pendências de faturamento no filtro atual para baixar.');
+                return;
+            }
+            const rows = faturamentoFilteredRecords.map(rec => ({
+                'Paciente': rec.paciente,
+                'Clínica': rec.clinica,
+                'Especialidade': rec.especialidade,
+                'Procedimento': rec.procedimento,
+                'Data da Cirurgia': rec.data ? rec.data.toLocaleDateString('pt-BR') : '',
+                'Médico': rec.medico
+            }));
+            const worksheet = XLSX.utils.json_to_sheet(rows);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Pendencias Faturamento');
+            const today = new Date();
+            const stamp = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            XLSX.writeFile(workbook, `pendencias_faturamento_${stamp}.xlsx`);
+        }
+
+        function populateFilterDropdowns() {
+            const clinics = new Set();
+            const surgeries = new Set();
+            const statuses = new Set();
+            const users = new Set();
+
+            rawData.forEach(item => {
+                const c = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']);
+                const s = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia', 'especialidade_nome']);
+                // OBS: NÃO incluir 'agendamento_status' aqui — esse campo é o status de
+                // COMPARECEU/FALTOU da consulta, não o status da jornada cirúrgica na clínica.
+                const st = getItemProp(item, ['agendamento_cirg_status_clinica', 'status', 'Status']);
+                const u = getItemProp(item, ['user', 'atendente', 'SDR', 'responsavel']);
+
+                if (c) clinics.add(c.trim());
+                if (s) surgeries.add(s.trim());
+                if (st) statuses.add(st.trim());
+                if (u) users.add(u.trim());
+            });
+
+            populateSelect('filterClinic', Array.from(clinics).sort());
+            populateSelect('filterSurgery', Array.from(surgeries).sort());
+            populateSelect('filterStatus', Array.from(statuses).sort());
+            populateSelect('filterUser', Array.from(users).sort());
+        }
+
+        function populateSelect(elementId, items) {
+            const select = document.getElementById(elementId);
+            select.innerHTML = select.options[0].outerHTML; // Preserve first default option
+            items.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item;
+                option.textContent = item;
+                select.appendChild(option);
+            });
+        }
+
+        function getItemProp(item, candidates) {
+            for (let key of candidates) {
+                if (item[key] !== undefined && item[key] !== null && String(item[key]).trim() !== '') {
+                    return String(item[key]).trim();
+                }
+            }
+            // Case insensitive fallback lookup
+            const itemKeys = Object.keys(item);
+            for (let cand of candidates) {
+                const foundKey = itemKeys.find(k => k.toLowerCase() === cand.toLowerCase());
+                if (foundKey && item[foundKey] !== undefined && item[foundKey] !== null) {
+                    return String(item[foundKey]).trim();
+                }
+            }
+            return '';
+        }
+
+        function setupEventListeners() {
+            ['filterClinic', 'filterSurgery', 'filterStatus', 'filterUser', 'filterDateStart', 'filterDateEnd'].forEach(id => {
+                document.getElementById(id).addEventListener('change', applyFilters);
+            });
+
+            document.getElementById('tableSearch').addEventListener('input', () => {
+                currentPage = 1;
+                renderPatientTable();
+            });
+
+            document.getElementById('prevPageBtn').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderPatientTable();
+                }
+            });
+
+            document.getElementById('nextPageBtn').addEventListener('click', () => {
+                const totalPages = Math.ceil(filteredData.length / pageSize);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderPatientTable();
+                }
+            });
+
+            // File Upload Handler
+            document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+
+            // NPS: Filtros e Upload (base independente)
+            ['npsFilterClinic', 'npsFilterSurgery', 'npsDateStart', 'npsDateEnd'].forEach(id => {
+                document.getElementById(id).addEventListener('change', npsApplyFilters);
+            });
+            document.getElementById('npsFileInput').addEventListener('change', npsHandleFileUpload);
+
+            document.getElementById('npsPrevPageBtn').addEventListener('click', () => {
+                if (npsCurrentPage > 1) {
+                    npsCurrentPage--;
+                    renderNpsTable();
+                }
+            });
+            document.getElementById('npsNextPageBtn').addEventListener('click', () => {
+                const totalPages = Math.ceil(npsFilteredData.length / pageSize);
+                if (npsCurrentPage < totalPages) {
+                    npsCurrentPage++;
+                    renderNpsTable();
+                }
+            });
+
+            // Faturamento: Filtros (mesma base de dados da Página 1)
+            ['faturamentoFilterClinic', 'faturamentoFilterSurgery', 'faturamentoDateStart', 'faturamentoDateEnd'].forEach(id => {
+                document.getElementById(id).addEventListener('change', applyFaturamentoFilters);
+            });
+            document.getElementById('faturamentoPrevPageBtn').addEventListener('click', () => {
+                if (faturamentoCurrentPage > 1) {
+                    faturamentoCurrentPage--;
+                    renderFaturamentoTable();
+                }
+            });
+            document.getElementById('faturamentoNextPageBtn').addEventListener('click', () => {
+                const totalPages = Math.ceil(faturamentoFilteredRecords.length / pageSize);
+                if (faturamentoCurrentPage < totalPages) {
+                    faturamentoCurrentPage++;
+                    renderFaturamentoTable();
+                }
+            });
+
+            // Botão flutuante "voltar ao topo": só aparece depois de rolar a página
+            window.addEventListener('scroll', () => {
+                document.getElementById('backToTopBtn').classList.toggle('hidden', window.scrollY < 300);
+            });
+        }
+
+        function applyFilters() {
+            const clinic = document.getElementById('filterClinic').value;
+            const surgery = document.getElementById('filterSurgery').value;
+            const status = document.getElementById('filterStatus').value;
+            const user = document.getElementById('filterUser').value;
+            const dateStart = document.getElementById('filterDateStart').value;
+            const dateEnd = document.getElementById('filterDateEnd').value;
+
+            filteredData = rawData.filter(item => {
+                const c = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']);
+                const s = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']);
+                const st = getItemProp(item, ['agendamento_cirg_status_clinica', 'status', 'Status']);
+                const u = getItemProp(item, ['user', 'atendente', 'SDR', 'responsavel']);
+                const d = parseFlexibleDate(getItemProp(item, ['agendamento_data', 'data', 'Data']));
+
+                const matchClinic = !clinic || c === clinic;
+                const matchSurgery = !surgery || s === surgery;
+                const matchStatus = !status || st === status;
+                const matchUser = !user || u === user;
+                const matchPeriod = isWithinPeriod(d, dateStart, dateEnd);
+                return matchClinic && matchSurgery && matchStatus && matchUser && matchPeriod;
+            });
+
+            currentPage = 1;
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            document.getElementById('dataCountLabel').textContent = filteredData.length > 0
+                ? `${filteredData.length} registro(s) analisado(s)`
+                : 'Nenhuma planilha carregada';
+            renderUnknownStatusWarning();
+            updateKPIs();
+            renderAIInsights();
+            renderFunnel();
+            renderCharts();
+            renderClinicSummaryTable();
+            renderPatientTable();
+        }
+
+        function updateKPIs() {
+            const total = filteredData.length;
+
+            let semStatusCount = 0;
+            let examsCount = 0;
+            let aguardandoClinicaCount = 0;
+            let agendadasCount = 0;
+            let realizadasCount = 0;
+
+            filteredData.forEach(item => {
+                const group = statusGroup(classifyStatus(getItemProp(item, ['agendamento_cirg_status_clinica'])));
+                if (group === 'SEM_STATUS') semStatusCount++;
+                else if (group === 'EXAMES') examsCount++;
+                else if (group === 'AGUARDANDO_CLINICA') aguardandoClinicaCount++;
+                else if (group === 'CIRURGIA_AGENDADA') agendadasCount++;
+                else if (group === 'CIRURGIA_REALIZADA') realizadasCount++;
+            });
+
+            document.getElementById('kpiTotal').textContent = total.toLocaleString('pt-BR');
+            document.getElementById('kpiSemStatus').textContent = semStatusCount.toLocaleString('pt-BR');
+            document.getElementById('kpiExams').textContent = examsCount.toLocaleString('pt-BR');
+            document.getElementById('kpiAguardandoClinica').textContent = aguardandoClinicaCount.toLocaleString('pt-BR');
+            document.getElementById('kpiAgendadas').textContent = agendadasCount.toLocaleString('pt-BR');
+            document.getElementById('kpiRealizadas').textContent = realizadasCount.toLocaleString('pt-BR');
+        }
+
+        // ================================================================
+        // INSIGHTS ESTRATÉGICOS — organizados por especialidade (Catarata,
+        // Refrativa, Blefaroplastia) + Resumo Geral + Mediana de conversão.
+        // Textos de recomendação são um primeiro rascunho — revisão de
+        // redação combinada para depois.
+        // ================================================================
+        const CORE_SPECIALTIES = [
+            { key: 'CATARATA', label: 'Catarata', icon: 'eye', accent: 'indigo' },
+            { key: 'REFRATIVA', label: 'Refrativa', icon: 'scan-eye', accent: 'blue' },
+            { key: 'BLEFAROPLASTIA', label: 'Blefaroplastia', icon: 'sparkles', accent: 'pink' }
+        ];
+        const MIN_SAMPLE_SIZE = 10; // abaixo disso, avisamos que a amostra é pequena
+
+        function buildGroupStats(data) {
+            const stats = {
+                total: data.length, semStatus: 0, exames: 0, examesAtrasados: 0,
+                aguardandoClinica: 0, agendada: 0, realizada: 0, desistiu: 0,
+                semIndicacao: 0, olho2Pendente: 0, topGargalo: null
+            };
+            const clinicGargalos = {};
+
+            data.forEach(item => {
+                const statusRaw = getItemProp(item, ['agendamento_cirg_status_clinica']);
+                const group = statusGroup(classifyStatus(statusRaw));
+                const especialidade = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']);
+                const clinic = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']) || 'Não identificada';
+
+                if (group === 'SEM_STATUS') stats.semStatus++;
+                else if (group === 'EXAMES') {
+                    stats.exames++;
+                    if (isStatusOverdue(item)) stats.examesAtrasados++;
+                } else if (group === 'AGUARDANDO_CLINICA') {
+                    stats.aguardandoClinica++;
+                    clinicGargalos[clinic] = (clinicGargalos[clinic] || 0) + 1;
+                } else if (group === 'CIRURGIA_AGENDADA') stats.agendada++;
+                else if (group === 'CIRURGIA_REALIZADA') stats.realizada++;
+                else if (group === 'ENCERROU_DESISTIU') stats.desistiu++;
+                else if (group === 'ENCERROU_SEM_INDICACAO') stats.semIndicacao++;
+
+                if (needsSecondEyeFollowUp(item, especialidade)) stats.olho2Pendente++;
+            });
+
+            stats.topGargalo = Object.entries(clinicGargalos).sort((a, b) => b[1] - a[1])[0] || null;
+            return stats;
+        }
+
+        function computeMedianDaysToFirstSurgery(data) {
+            const days = [];
+            data.forEach(item => {
+                const consultaDate = parseFlexibleDate(getItemProp(item, ['agendamento_data', 'data', 'Data']));
+                if (!consultaDate) return;
+                const realizouSlots = getProcedureSlots(item)
+                    .filter(sl => (sl.code === 'CIRURGIA_REALIZOU_1' || sl.code === 'CIRURGIA_REALIZOU_2') && sl.date);
+                if (realizouSlots.length === 0) return;
+                const earliest = realizouSlots.reduce((min, sl) => (sl.date < min ? sl.date : min), realizouSlots[0].date);
+                const diffDays = Math.round((earliest - consultaDate) / 86400000);
+                if (diffDays >= 0) days.push(diffDays);
+            });
+            if (days.length === 0) return null;
+            days.sort((a, b) => a - b);
+            const mid = Math.floor(days.length / 2);
+            const median = days.length % 2 !== 0 ? days[mid] : Math.round((days[mid - 1] + days[mid]) / 2);
+            return { median, count: days.length };
+        }
+
+        function renderGeneralSummaryCard(stats) {
+            const pct = n => stats.total ? Math.round((n / stats.total) * 100) : 0;
+            const cells = [
+                ['Sem Status', stats.semStatus, 'slate'],
+                ['Exames', stats.exames, 'amber'],
+                ['Aguard. Clínica', stats.aguardandoClinica, 'rose'],
+                ['Agendada', stats.agendada, 'blue'],
+                ['Realizada', stats.realizada, 'emerald'],
+                ['Desistiu', stats.desistiu, 'slate'],
+                ['Sem Indicação', stats.semIndicacao, 'slate']
+            ];
+            return `
+                <div class="col-span-full p-4 rounded-xl border border-slate-300 bg-slate-50 space-y-3">
+                    <div class="flex items-center gap-2 text-xs font-bold text-slate-800">
+                        <i data-lucide="globe" class="w-4 h-4"></i>
+                        RESUMO GERAL — TODAS AS ESPECIALIDADES (${stats.total} pacientes no filtro atual)
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 text-center">
+                        ${cells.map(([label, val, color]) => `
+                            <div>
+                                <div class="text-lg font-extrabold text-${color}-700">${val}</div>
+                                <div class="text-[10px] text-slate-500 font-semibold">${label} (${pct(val)}%)</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSpecialtyInsightCard(sp, stats) {
+            const smallSample = stats.total > 0 && stats.total < MIN_SAMPLE_SIZE;
+            const pct = n => stats.total ? Math.round((n / stats.total) * 100) : 0;
+            const semIndicacaoPct = pct(stats.semIndicacao);
+            const semIndicacaoAlert = semIndicacaoPct > 20;
+
+            if (stats.total === 0) {
+                return `
+                    <div class="p-4 rounded-xl border border-${sp.accent}-200 bg-${sp.accent}-50/40 space-y-2">
+                        <div class="flex items-center gap-2 text-xs font-bold text-${sp.accent}-800">
+                            <i data-lucide="${sp.icon}" class="w-4 h-4"></i>
+                            ${sp.label.toUpperCase()}
+                        </div>
+                        <p class="text-xs text-slate-400">Nenhum paciente de ${sp.label} no filtro atual.</p>
+                    </div>
+                `;
+            }
+
+            const parts = [];
+            parts.push(`<strong>${stats.total}</strong> pacientes no filtro atual.`);
+            if (stats.aguardandoClinica > 0) {
+                parts.push(`<strong>${stats.aguardandoClinica} (${pct(stats.aguardandoClinica)}%)</strong> aguardando a clínica agendar${stats.topGargalo ? ` (maior acúmulo: <strong>${stats.topGargalo[0]}</strong>)` : ''}.`);
+            }
+            if (stats.exames > 0) {
+                parts.push(`<strong>${stats.exames} (${pct(stats.exames)}%)</strong> na fase de exames${stats.examesAtrasados > 0 ? `, sendo <strong class="text-rose-700">${stats.examesAtrasados} com data agendada já atrasada</strong> (precisa contato)` : ''}.`);
+            }
+            if (stats.realizada > 0) {
+                parts.push(`<strong>${stats.realizada} (${pct(stats.realizada)}%)</strong> já realizaram a cirurgia.`);
+            }
+            if (sp.key === 'CATARATA' && stats.olho2Pendente > 0) {
+                parts.push(`<strong class="text-indigo-700">${stats.olho2Pendente} pacientes</strong> operaram o 1º olho e ainda não têm registro do 2º em nenhuma aba — oportunidade de acompanhamento.`);
+            }
+            if (semIndicacaoAlert) {
+                parts.push(`<strong class="text-rose-700">${semIndicacaoPct}%</strong> encerraram por "sem indicação cirúrgica" — acima de 20%, vale revisar a triagem pré-agendamento.`);
+            }
+
+            let recomendacao = 'Priorizar retorno de contato com os pacientes aguardando clínica/exames.';
+            if (sp.key === 'CATARATA' && stats.olho2Pendente > 0) {
+                recomendacao = 'Acionar régua de acompanhamento para confirmação cirúrgica do 2º olho.';
+            } else if (semIndicacaoAlert) {
+                recomendacao = 'Revisar critérios de triagem antes do agendamento — % de "sem indicação" acima do esperado.';
+            } else if (stats.examesAtrasados > 0) {
+                recomendacao = 'Contatar pacientes com exame agendado e data já vencida para reagendar.';
+            }
+
+            return `
+                <div class="p-4 rounded-xl border border-${sp.accent}-200 bg-${sp.accent}-50/40 flex flex-col justify-between space-y-2">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-xs font-bold text-${sp.accent}-800">
+                            <i data-lucide="${sp.icon}" class="w-4 h-4"></i>
+                            ${sp.label.toUpperCase()}
+                        </div>
+                        ${smallSample ? `<span class="text-[9px] font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full whitespace-nowrap">AMOSTRA PEQUENA</span>` : ''}
+                    </div>
+                    <p class="text-xs text-slate-700 leading-relaxed">
+                        ${smallSample ? '<em>Amostra pequena — percentuais abaixo podem não ser representativos.</em> ' : ''}${parts.join(' ')}
+                    </p>
+                    <div class="pt-2 border-t border-${sp.accent}-200/60 text-[11px] font-semibold text-${sp.accent}-900 flex items-center gap-1.5">
+                        <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+                        Recomendação: ${recomendacao}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderMedianSurgeryCard(data) {
+            const result = computeMedianDaysToFirstSurgery(data);
+            return `
+                <div class="p-4 rounded-xl border border-violet-200 bg-violet-50/50 space-y-2">
+                    <div class="flex items-center gap-2 text-xs font-bold text-violet-800">
+                        <i data-lucide="hourglass" class="w-4 h-4"></i>
+                        MEDIANA: CONSULTA → 1ª CIRURGIA
+                    </div>
+                    ${result
+                        ? `<div class="text-2xl font-extrabold text-violet-700">${result.median} dia(s)</div>
+                           <p class="text-[11px] text-slate-500 font-medium">Baseado em ${result.count} paciente(s) com cirurgia realizada e datas completas no filtro atual.</p>`
+                        : `<p class="text-xs text-slate-400">Sem dados suficientes (datas de consulta/cirurgia) no filtro atual.</p>`
+                    }
+                </div>
+            `;
+        }
+
+        function renderAIInsights() {
+            const container = document.getElementById('aiInsightsContainer');
+            const especialidadeFilter = document.getElementById('filterSurgery').value;
+
+            let html = '';
+
+            // EXTRA: quando não há filtro de especialidade específico, mostra o total geral
+            if (!especialidadeFilter) {
+                html += renderGeneralSummaryCard(buildGroupStats(filteredData));
+            }
+
+            CORE_SPECIALTIES.forEach(sp => {
+                const data = filteredData.filter(item => {
+                    const esp = (getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']) || '').toUpperCase();
+                    return esp.includes(sp.key);
+                });
+                html += renderSpecialtyInsightCard(sp, buildGroupStats(data));
+            });
+
+            html += renderMedianSurgeryCard(filteredData);
+
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function renderFunnel() {
+            const container = document.getElementById('funnelContainer');
+            const total = filteredData.length || 1;
+
+            let semStatus = 0;
+            let examesPendente = 0;
+            let aguardandoClinica = 0;
+            let agendou = 0;
+            let realizou = 0;
+            let desistiu = 0;
+            let semIndicacao = 0;
+
+            filteredData.forEach(item => {
+                const group = statusGroup(classifyStatus(getItemProp(item, ['agendamento_cirg_status_clinica'])));
+                if (group === 'SEM_STATUS') semStatus++;
+                else if (group === 'EXAMES') examesPendente++;
+                else if (group === 'AGUARDANDO_CLINICA') aguardandoClinica++;
+                else if (group === 'CIRURGIA_AGENDADA') agendou++;
+                else if (group === 'CIRURGIA_REALIZADA') realizou++;
+                else if (group === 'ENCERROU_DESISTIU') desistiu++;
+                else if (group === 'ENCERROU_SEM_INDICACAO') semIndicacao++;
+            });
+
+            const stages = [
+                { name: '1. Atendidos', count: filteredData.length, color: 'bg-indigo-50 border-indigo-200 text-indigo-900', icon: 'users' },
+                { name: '2. Sem Status', count: semStatus, color: 'bg-slate-200 border-slate-300 text-slate-800', icon: 'help-circle' },
+                { name: '3. Fase de Exames', count: examesPendente, color: 'bg-amber-50 border-amber-200 text-amber-900', icon: 'file-clock' },
+                { name: '4. Aguardando Clínica', count: aguardandoClinica, color: 'bg-rose-50 border-rose-200 text-rose-900', icon: 'alert-circle' },
+                { name: '5. Cirurgia Agendada', count: agendou, color: 'bg-blue-50 border-blue-200 text-blue-900', icon: 'calendar-check' },
+                { name: '6. Cirurgia Realizada', count: realizou, color: 'bg-emerald-50 border-emerald-200 text-emerald-900', icon: 'check-circle' },
+                { name: 'Desistiu', count: desistiu, color: 'bg-slate-100 border-slate-200 text-slate-700', icon: 'x-circle' },
+                { name: 'Sem Indicação', count: semIndicacao, color: 'bg-slate-100 border-slate-200 text-slate-700', icon: 'minus-circle' }
+            ];
+
+            container.innerHTML = stages.map(s => {
+                const pct = Math.round((s.count / total) * 100);
+                return `
+                    <div class="p-3.5 rounded-xl border ${s.color} flex flex-col justify-between shadow-xs">
+                        <div class="flex items-center justify-between text-xs font-semibold mb-2">
+                            <span>${s.name}</span>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-extrabold text-slate-900">${s.count}</div>
+                            <div class="text-[10px] font-semibold opacity-75 mt-0.5">${pct}% do total</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        function renderCharts() {
+            // Status Chart (doughnut com legenda custom + total central)
+            const statusCounts = {};
+            filteredData.forEach(item => {
+                const st = getItemProp(item, ['agendamento_cirg_status_clinica', 'status', 'Status']) || 'Sem Status';
+                statusCounts[st] = (statusCounts[st] || 0) + 1;
+            });
+
+            const sortedStatus = Object.entries(statusCounts).sort((a, b) => b[1] - a[1]);
+            const statusLabels = sortedStatus.map(s => s[0]);
+            const statusData = sortedStatus.map(s => s[1]);
+            const statusTotal = statusData.reduce((a, b) => a + b, 0);
+
+            document.getElementById('statusDonutTotal').textContent = statusTotal.toLocaleString('pt-BR');
+
+            if (chartStatusInstance) chartStatusInstance.destroy();
+            chartStatusInstance = new Chart(document.getElementById('chartStatus'), {
+                type: 'doughnut',
+                data: {
+                    labels: statusLabels,
+                    datasets: [{
+                        data: statusData,
+                        backgroundColor: STATUS_COLORS,
+                        borderWidth: 3,
+                        borderColor: '#ffffff',
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    cutout: '72%',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            const legendContainer = document.getElementById('statusLegendContainer');
+            legendContainer.innerHTML = sortedStatus.map(([label, count], idx) => {
+                const pct = statusTotal ? Math.round((count / statusTotal) * 100) : 0;
+                const color = STATUS_COLORS[idx % STATUS_COLORS.length];
+                return `
+                    <div class="flex items-center gap-3">
+                        <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${color}"></span>
+                        <span class="text-xs font-semibold text-slate-700 flex-1 truncate" title="${label}">${label}</span>
+                        <span class="text-xs font-bold text-slate-900 w-10 text-right">${count}</span>
+                        <div class="w-24 h-1.5 rounded-full bg-slate-100 overflow-hidden shrink-0">
+                            <div class="h-full rounded-full" style="width:${pct}%; background:${color}"></div>
+                        </div>
+                        <span class="text-[11px] font-semibold text-slate-400 w-9 text-right">${pct}%</span>
+                    </div>
+                `;
+            }).join('') || '<p class="text-xs text-slate-400">Nenhum dado para exibir.</p>';
+
+            // Surgeries Chart
+            const surgCounts = {};
+            filteredData.forEach(item => {
+                const sg = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']) || 'Não Especificado';
+                surgCounts[sg] = (surgCounts[sg] || 0) + 1;
+            });
+
+            if (chartSurgeriesInstance) chartSurgeriesInstance.destroy();
+            chartSurgeriesInstance = new Chart(document.getElementById('chartSurgeries'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(surgCounts),
+                    datasets: [{
+                        label: 'Quantidade de Pacientes',
+                        data: Object.values(surgCounts),
+                        backgroundColor: '#6366f1',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: '#475569', font: { size: 10, weight: 600 } }, grid: { display: false } },
+                        y: { ticks: { color: '#475569' }, grid: { color: '#f1f5f9' } }
+                    }
+                }
+            });
+
+            // Clinics Chart (Top 10 Clinics)
+            const clinicCounts = {};
+            filteredData.forEach(item => {
+                const cl = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']) || 'Sem Clínica';
+                clinicCounts[cl] = (clinicCounts[cl] || 0) + 1;
+            });
+
+            const sortedClinics = Object.entries(clinicCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+
+            if (chartClinicsInstance) chartClinicsInstance.destroy();
+            chartClinicsInstance = new Chart(document.getElementById('chartClinics'), {
+                type: 'bar',
+                data: {
+                    labels: sortedClinics.map(c => c[0].length > 32 ? c[0].substring(0, 32) + '...' : c[0]),
+                    datasets: [{
+                        label: 'Pacientes Atendidos',
+                        data: sortedClinics.map(c => c[1]),
+                        backgroundColor: '#4338ca',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: '#475569' }, grid: { color: '#f1f5f9' } },
+                        y: { ticks: { color: '#334155', font: { size: 10, weight: 600 } }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderClinicSummaryTable() {
+            const tbody = document.getElementById('clinicTableBody');
+            const summary = {};
+
+            filteredData.forEach(item => {
+                const cl = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']) || 'Outros / Não Especificado';
+                if (!summary[cl]) {
+                    summary[cl] = { total: 0, semStatus: 0, exames: 0, aguardando: 0, agendadas: 0, realizadas: 0, desistiu: 0, semIndicacao: 0 };
+                }
+                summary[cl].total++;
+
+                const group = statusGroup(classifyStatus(getItemProp(item, ['agendamento_cirg_status_clinica'])));
+                if (group === 'SEM_STATUS') summary[cl].semStatus++;
+                else if (group === 'EXAMES') summary[cl].exames++;
+                else if (group === 'AGUARDANDO_CLINICA') summary[cl].aguardando++;
+                else if (group === 'CIRURGIA_AGENDADA') summary[cl].agendadas++;
+                else if (group === 'CIRURGIA_REALIZADA') summary[cl].realizadas++;
+                else if (group === 'ENCERROU_DESISTIU') summary[cl].desistiu++;
+                else if (group === 'ENCERROU_SEM_INDICACAO') summary[cl].semIndicacao++;
+            });
+
+            const sortedList = Object.entries(summary).sort((a, b) => b[1].total - a[1].total);
+
+            tbody.innerHTML = sortedList.map(([clinicName, counts]) => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-3 font-semibold text-slate-900">${clinicName}</td>
+                    <td class="p-3 text-center font-bold text-slate-800">${counts.total}</td>
+                    <td class="p-3 text-center text-slate-500">${counts.semStatus}</td>
+                    <td class="p-3 text-center text-amber-700 font-bold">${counts.exames}</td>
+                    <td class="p-3 text-center text-rose-700 font-bold">${counts.aguardando}</td>
+                    <td class="p-3 text-center text-blue-700 font-bold">${counts.agendadas}</td>
+                    <td class="p-3 text-center text-emerald-700 font-bold">${counts.realizadas}</td>
+                    <td class="p-3 text-center text-slate-500">${counts.desistiu}</td>
+                    <td class="p-3 text-center text-slate-500">${counts.semIndicacao}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderPatientTable(exportAll = false) {
+            const tbody = document.getElementById('patientTableBody');
+            const search = document.getElementById('tableSearch').value.toLowerCase();
+
+            const searchedData = filteredData.filter(item => {
+                const name = getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']).toLowerCase();
+                const id = getItemProp(item, ['clientes_id', 'id', 'ID']).toLowerCase();
+                const doc = getItemProp(item, ['medicos', 'medico', 'Médico']).toLowerCase();
+                const obs = getItemProp(item, ['agendamento_obs', 'obs', 'observacao']).toLowerCase();
+                return name.includes(search) || id.includes(search) || doc.includes(search) || obs.includes(search);
+            });
+
+            const totalRecords = searchedData.length;
+
+            // Exportação/impressão sempre considera TODAS as linhas do filtro atual,
+            // ignorando a paginação usada apenas para navegação em tela.
+            let pageData, startIndex;
+            if (exportAll) {
+                pageData = searchedData;
+                startIndex = 0;
+            } else {
+                const totalPages = Math.ceil(totalRecords / pageSize) || 1;
+                if (currentPage > totalPages) currentPage = totalPages;
+                startIndex = (currentPage - 1) * pageSize;
+                pageData = searchedData.slice(startIndex, startIndex + pageSize);
+            }
+
+            tbody.innerHTML = pageData.map(item => {
+                const nameStr = getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']) || 'Sem Nome';
+                const idStr = getItemProp(item, ['clientes_id', 'id', 'ID']);
+                const dataStr = getItemProp(item, ['agendamento_data', 'data', 'Data']);
+                const surgStr = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']);
+                const clinicStr = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']);
+                const statusStr = getItemProp(item, ['agendamento_cirg_status_clinica', 'status', 'Status']) || 'Sem Status';
+                const docStr = getItemProp(item, ['medicos', 'medico', 'Médico']);
+                const userStr = getItemProp(item, ['user', 'atendente', 'SDR', 'responsavel']);
+                const obsStr = getItemProp(item, ['agendamento_obs', 'agendamento_cirg_obs', 'obs', 'observacao']);
+
+                const group = statusGroup(classifyStatus(statusStr));
+                let badgeColor = 'bg-slate-100 text-slate-700 border-slate-200';
+                if (group === 'EXAMES') badgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
+                else if (group === 'AGUARDANDO_CLINICA') badgeColor = 'bg-rose-100 text-rose-800 border-rose-300';
+                else if (group === 'CIRURGIA_AGENDADA') badgeColor = 'bg-blue-100 text-blue-800 border-blue-300';
+                else if (group === 'CIRURGIA_REALIZADA') badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                else if (group === 'SEM_STATUS') badgeColor = 'bg-slate-200 text-slate-700 border-slate-300';
+
+                // Regra de negócio: desistência sem motivo registrado precisa ficar visível
+                const semMotivoTag = (group === 'ENCERROU_DESISTIU' && !obsStr)
+                    ? '<span class="ml-1 text-[9px] font-bold text-rose-600 whitespace-nowrap">(sem motivo registrado)</span>'
+                    : '';
+
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-3">
+                            <div class="font-bold text-slate-900">${nameStr}</div>
+                            <div class="text-[10px] text-slate-400 font-semibold">ID: ${idStr || '-'}</div>
+                        </td>
+                        <td class="p-3 text-slate-600 font-medium">${dataStr || '-'}</td>
+                        <td class="p-3 font-semibold text-indigo-700">${surgStr || '-'}</td>
+                        <td class="p-3 text-slate-700 text-[11px] font-medium">${clinicStr || '-'}</td>
+                        <td class="p-3">
+                            <span class="inline-block px-2.5 py-1 text-[10px] font-bold rounded-full border ${badgeColor}">
+                                ${statusStr}
+                            </span>${semMotivoTag}
+                        </td>
+                        <td class="p-3 text-slate-600 text-[11px] font-medium">${docStr || '-'}</td>
+                        <td class="p-3 text-slate-600 text-[11px] font-medium">${userStr || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('patientPrintCount').textContent = `Relatório com ${totalRecords} paciente(s) — filtro atual aplicado no momento da exportação.`;
+
+            if (exportAll) return;
+
+            const totalPages = Math.ceil(totalRecords / pageSize) || 1;
+            document.getElementById('paginationInfo').textContent = `Mostrando ${totalRecords === 0 ? 0 : startIndex + 1} até ${Math.min(startIndex + pageSize, totalRecords)} de ${totalRecords} paciente(s)`;
+            document.getElementById('prevPageBtn').disabled = currentPage === 1;
+            document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+        }
+
+        // LEITOR ROBUSTO DE PLANILHA (SHEETJS)
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = new Uint8Array(evt.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+
+                    const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+
+                    if (!rawRows || rawRows.length <= 1) {
+                        alert('A planilha parece estar vazia ou sem linhas de dados.');
+                        return;
+                    }
+
+                    const headers = rawRows[0].map(h => String(h || '').trim());
+                    const parsedRecords = [];
+
+                    for (let r = 1; r < rawRows.length; r++) {
+                        const row = rawRows[r];
+                        if (!row || row.length === 0) continue;
+
+                        const obj = {};
+                        let hasData = false;
+                        headers.forEach((h, idx) => {
+                            if (h) {
+                                let val = row[idx] !== undefined && row[idx] !== null ? String(row[idx]).trim() : '';
+                                obj[h] = val;
+                                if (val !== '') hasData = true;
+                            }
+                        });
+                        if (hasData) parsedRecords.push(obj);
+                    }
+
+                    if (parsedRecords.length > 0) {
+                        rawData = parsedRecords;
+                        filteredData = [...rawData];
+                        populateFilterDropdowns();
+                        updateDashboard();
+                        populateFaturamentoFilters();
+                        applyFaturamentoFilters();
+                        alert(`Planilha carregada com sucesso! ${parsedRecords.length} registros importados.`);
+                    } else {
+                        alert('Nenhum registro válido foi encontrado na planilha.');
+                    }
+                } catch (err) {
+                    console.error('Erro na leitura da planilha:', err);
+                    alert('Ocorreu um erro ao processar o arquivo. Certifique-se de que é um arquivo de Excel (.xlsx ou .xls) válido.');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // ================================================================
+        // SEÇÃO DE NPS — base de dados própria, totalmente separada da
+        // jornada cirúrgica. Nunca compartilha instância de gráfico ou
+        // dados com o donut de status acima.
+        // ================================================================
+
+        function npsHandleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = new Uint8Array(evt.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+
+                    if (!rawRows || rawRows.length <= 1) {
+                        alert('A planilha de NPS parece estar vazia ou sem linhas de dados.');
+                        return;
+                    }
+
+                    const headers = rawRows[0].map(h => String(h || '').trim());
+                    const parsedRecords = [];
+
+                    for (let r = 1; r < rawRows.length; r++) {
+                        const row = rawRows[r];
+                        if (!row || row.length === 0) continue;
+
+                        const obj = {};
+                        let hasData = false;
+                        headers.forEach((h, idx) => {
+                            if (h) {
+                                let val = row[idx] !== undefined && row[idx] !== null ? row[idx] : '';
+                                obj[h] = val;
+                                if (String(val).trim() !== '') hasData = true;
+                            }
+                        });
+                        if (hasData) parsedRecords.push(obj);
+                    }
+
+                    if (parsedRecords.length > 0) {
+                        npsRawData = parsedRecords;
+                        npsFilteredData = [...npsRawData];
+                        npsCurrentPage = 1;
+                        npsPopulateFilters();
+                        npsUpdateDashboard();
+                        alert(`Planilha de NPS carregada com sucesso! ${parsedRecords.length} avaliações importadas.`);
+                    } else {
+                        alert('Nenhuma avaliação válida foi encontrada na planilha de NPS.');
+                    }
+                } catch (err) {
+                    console.error('Erro na leitura da planilha de NPS:', err);
+                    alert('Ocorreu um erro ao processar o arquivo de NPS. Certifique-se de que é um arquivo de Excel (.xlsx ou .xls) válido.');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function npsPopulateFilters() {
+            const clinics = new Set();
+            const surgeries = new Set();
+            npsRawData.forEach(item => {
+                const c = getItemProp(item, ['Clínica', 'clinicas', 'clinica']);
+                const s = getItemProp(item, ['Especialidade', 'especialidades']);
+                if (c) clinics.add(c.trim());
+                if (s) surgeries.add(s.trim());
+            });
+            populateSelect('npsFilterClinic', Array.from(clinics).sort());
+            populateSelect('npsFilterSurgery', Array.from(surgeries).sort());
+        }
+
+        function npsApplyFilters() {
+            const clinic = document.getElementById('npsFilterClinic').value;
+            const surgery = document.getElementById('npsFilterSurgery').value;
+            const dateStart = document.getElementById('npsDateStart').value;
+            const dateEnd = document.getElementById('npsDateEnd').value;
+
+            npsFilteredData = npsRawData.filter(item => {
+                const c = getItemProp(item, ['Clínica', 'clinicas', 'clinica']);
+                const s = getItemProp(item, ['Especialidade', 'especialidades']);
+                const d = parseFlexibleDate(getItemProp(item, ['Data da Cirurgia']));
+
+                const matchClinic = !clinic || c === clinic;
+                const matchSurgery = !surgery || s === surgery;
+                const matchPeriod = isWithinPeriod(d, dateStart, dateEnd);
+                return matchClinic && matchSurgery && matchPeriod;
+            });
+
+            npsCurrentPage = 1;
+            npsUpdateDashboard();
+        }
+
+        function npsGetNota(item) {
+            const raw = getItemProp(item, ['Nota']);
+            const n = parseFloat(String(raw).replace(',', '.'));
+            return isNaN(n) ? null : n;
+        }
+
+        const NPS_AVAL_FIELDS = ['Aval. de Atendimento CDV', 'Aval. de Acompanhamento CDV', 'Aval. Clínica', 'Aval. Médico'];
+
+        function npsUpdateDashboard() {
+            document.getElementById('npsDataCountLabel').textContent = npsRawData.length > 0
+                ? `${npsFilteredData.length} avaliação(ões) no filtro`
+                : 'Nenhuma planilha de NPS carregada';
+
+            // Regra de negócio: quando falta a Nota mas há avaliação qualitativa
+            // preenchida, o registro entra num cálculo separado ("Nota Ausente")
+            // e NÃO conta no total de Promotores/Neutros/Detratores.
+            const notas = [];
+            let notaAusente = 0;
+            npsFilteredData.forEach(item => {
+                const nota = npsGetNota(item);
+                if (nota !== null) {
+                    notas.push(nota);
+                    return;
+                }
+                const hasAvalData = NPS_AVAL_FIELDS.some(f => getItemProp(item, [f]) !== '');
+                if (hasAvalData) notaAusente++;
+            });
+
+            const total = notas.length;
+            const promoters = notas.filter(n => n >= 9).length;
+            const passives = notas.filter(n => n >= 7 && n < 9).length;
+            const detractors = notas.filter(n => n < 7).length;
+
+            const pctPromoters = total ? Math.round((promoters / total) * 100) : 0;
+            const pctPassives = total ? Math.round((passives / total) * 100) : 0;
+            const pctDetractors = total ? Math.round((detractors / total) * 100) : 0;
+            const npsScore = total ? Math.round((promoters / total) * 100 - (detractors / total) * 100) : 0;
+
+            document.getElementById('npsKpiTotal').textContent = npsFilteredData.length.toLocaleString('pt-BR');
+            document.getElementById('npsKpiNotaAusente').textContent = notaAusente.toLocaleString('pt-BR');
+            document.getElementById('npsKpiPromoters').textContent = `${pctPromoters}%`;
+            document.getElementById('npsKpiPassives').textContent = `${pctPassives}%`;
+            document.getElementById('npsKpiDetractors').textContent = `${pctDetractors}%`;
+
+            renderNpsGauge(Math.max(0, npsScore));
+            renderNpsClinicsChart();
+            renderNpsCategories();
+            renderNpsTable();
+        }
+
+        // Gauge semicircular em SVG puro (0-100), com faixas de cor e ponteiro
+        function renderNpsGauge(value) {
+            const container = document.getElementById('npsGaugeContainer');
+            const v = Math.max(0, Math.min(100, value));
+            const cx = 150, cy = 145, r = 110, sw = 26;
+
+            function polar(angleDeg, radius) {
+                const rad = angleDeg * Math.PI / 180;
+                return { x: cx + radius * Math.cos(rad), y: cy + radius * Math.sin(rad) };
+            }
+            function arcPath(a0, a1, radius) {
+                const p0 = polar(a0, radius);
+                const p1 = polar(a1, radius);
+                const largeArc = (a1 - a0) > 180 ? 1 : 0;
+                return `M ${p0.x} ${p0.y} A ${radius} ${radius} 0 ${largeArc} 1 ${p1.x} ${p1.y}`;
+            }
+
+            const zones = [
+                { from: 0, to: 70, color: '#ef4444' },
+                { from: 70, to: 90, color: '#f59e0b' },
+                { from: 90, to: 100, color: '#10b981' }
+            ];
+
+            const arcs = zones.map(z => {
+                const a0 = 180 + (z.from / 100) * 180;
+                const a1 = 180 + (z.to / 100) * 180;
+                return `<path d="${arcPath(a0, a1, r)}" stroke="${z.color}" stroke-width="${sw}" fill="none" stroke-linecap="butt"/>`;
+            }).join('');
+
+            const needleAngle = 180 + (v / 100) * 180;
+            const needleTip = polar(needleAngle, r - sw - 6);
+            const needleBase1 = polar(needleAngle - 90, 7);
+            const needleBase2 = polar(needleAngle + 90, 7);
+
+            const ticks = [0, 70, 90, 100].map(t => {
+                const a = 180 + (t / 100) * 180;
+                const p = polar(a, r + 20);
+                return `<text x="${p.x}" y="${p.y}" font-size="12" font-weight="600" fill="#64748b" text-anchor="middle" dominant-baseline="middle">${t.toFixed(2).replace('.', ',')}</text>`;
+            }).join('');
+
+            container.innerHTML = `
+                <svg viewBox="0 0 300 190" class="w-full max-w-[380px]">
+                    ${arcs}
+                    ${ticks}
+                    <line x1="${needleBase1.x}" y1="${needleBase1.y}" x2="${needleTip.x}" y2="${needleTip.y}" stroke="#334155" stroke-width="4" stroke-linecap="round"/>
+                    <line x1="${needleBase2.x}" y1="${needleBase2.y}" x2="${needleTip.x}" y2="${needleTip.y}" stroke="#334155" stroke-width="4" stroke-linecap="round"/>
+                    <circle cx="${cx}" cy="${cy}" r="9" fill="#334155"/>
+                    <text x="${cx}" y="${cy - 34}" font-size="34" font-weight="800" fill="#0f172a" text-anchor="middle">${v.toFixed(2).replace('.', ',')}</text>
+                </svg>
+            `;
+        }
+
+        function renderNpsClinicsChart() {
+            const clinicNotas = {};
+            npsFilteredData.forEach(item => {
+                const cl = getItemProp(item, ['Clínica', 'clinicas']) || 'Sem Clínica';
+                const nota = npsGetNota(item);
+                if (nota === null) return;
+                if (!clinicNotas[cl]) clinicNotas[cl] = [];
+                clinicNotas[cl].push(nota);
+            });
+
+            const clinicScores = Object.entries(clinicNotas).map(([clinic, notas]) => {
+                const promoters = notas.filter(n => n >= 9).length;
+                const detractors = notas.filter(n => n < 7).length;
+                const score = Math.round((promoters / notas.length) * 100 - (detractors / notas.length) * 100);
+                return { clinic, score, count: notas.length };
+            }).sort((a, b) => b.score - a.score).slice(0, 10);
+
+            if (chartNpsClinicsInstance) chartNpsClinicsInstance.destroy();
+            chartNpsClinicsInstance = new Chart(document.getElementById('chartNpsClinics'), {
+                type: 'bar',
+                data: {
+                    labels: clinicScores.map(c => c.clinic.length > 30 ? c.clinic.substring(0, 30) + '...' : c.clinic),
+                    datasets: [{
+                        label: 'NPS por Clínica',
+                        data: clinicScores.map(c => c.score),
+                        backgroundColor: clinicScores.map(c => c.score >= 90 ? '#10b981' : c.score >= 70 ? '#f59e0b' : '#ef4444'),
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { min: 0, max: 100, ticks: { color: '#475569' }, grid: { color: '#f1f5f9' } },
+                        y: { ticks: { color: '#334155', font: { size: 10, weight: 600 } }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function npsCategoryStats(field) {
+            const values = npsFilteredData.map(item => getItemProp(item, [field])).filter(v => v !== '');
+            const total = values.length || 1;
+            const gostei = values.filter(v => String(v).toLowerCase().includes('gostei') && !String(v).toLowerCase().includes('não') && !String(v).toLowerCase().includes('nao')).length;
+            return Math.round((gostei / total) * 100);
+        }
+
+        function renderNpsCategories() {
+            const categories = [
+                { field: 'Aval. de Atendimento CDV', label: 'Atendimento CDV', icon: 'headset' },
+                { field: 'Aval. de Acompanhamento CDV', label: 'Acompanhamento CDV', icon: 'message-square' },
+                { field: 'Aval. Clínica', label: 'Estrutura da Clínica', icon: 'building-2' },
+                { field: 'Aval. Médico', label: 'Corpo Médico', icon: 'stethoscope' }
+            ];
+
+            const container = document.getElementById('npsCategoryContainer');
+            container.innerHTML = categories.map(cat => {
+                const pct = npsFilteredData.length ? npsCategoryStats(cat.field) : 0;
+                const color = pct >= 90 ? 'emerald' : pct >= 70 ? 'amber' : 'rose';
+                return `
+                    <div class="p-4 rounded-xl border border-${color}-200 bg-${color}-50/40 space-y-2">
+                        <div class="flex items-center gap-2 text-xs font-bold text-${color}-800">
+                            <i data-lucide="${cat.icon}" class="w-3.5 h-3.5"></i>
+                            ${cat.label}
+                        </div>
+                        <div class="text-2xl font-extrabold text-${color}-600">${pct}%</div>
+                        <div class="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                            <div class="h-full rounded-full bg-${color}-500" style="width:${pct}%"></div>
+                        </div>
+                        <p class="text-[10px] text-slate-500 font-medium">Marcaram "Gostei"</p>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function renderNpsTable(exportAll = false) {
+            const tbody = document.getElementById('npsTableBody');
+            const totalRecords = npsFilteredData.length;
+
+            // Em tela: paginado (igual à Página 1). Na exportação/impressão:
+            // sempre a lista completa do filtro atual, ignorando a paginação.
+            let pageData, startIndex;
+            if (exportAll) {
+                pageData = npsFilteredData;
+                startIndex = 0;
+            } else {
+                const totalPages = Math.ceil(totalRecords / pageSize) || 1;
+                if (npsCurrentPage > totalPages) npsCurrentPage = totalPages;
+                startIndex = (npsCurrentPage - 1) * pageSize;
+                pageData = npsFilteredData.slice(startIndex, startIndex + pageSize);
+            }
+
+            tbody.innerHTML = pageData.map(item => {
+                const nome = getItemProp(item, ['Cliente']) || 'Sem Nome';
+                const clinica = getItemProp(item, ['Clínica']);
+                const medico = getItemProp(item, ['Médico']);
+                const nota = npsGetNota(item);
+                const dataCirurgia = getItemProp(item, ['Data da Cirurgia']);
+                const dataAval = getItemProp(item, ['Data da Aval.']);
+
+                const dCirurgia = parseFlexibleDate(dataCirurgia);
+                const dAval = parseFlexibleDate(dataAval);
+
+                let notaColor = 'bg-slate-100 text-slate-700 border-slate-200';
+                if (nota !== null) {
+                    if (nota >= 9) notaColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                    else if (nota >= 7) notaColor = 'bg-amber-100 text-amber-800 border-amber-300';
+                    else notaColor = 'bg-rose-100 text-rose-800 border-rose-300';
+                }
+
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-3 font-bold text-slate-900">${nome}</td>
+                        <td class="p-3 text-slate-700 text-[11px] font-medium">${clinica || '-'}</td>
+                        <td class="p-3 text-slate-600 text-[11px] font-medium">${medico || '-'}</td>
+                        <td class="p-3 text-center">
+                            <span class="inline-block px-2.5 py-1 text-[10px] font-bold rounded-full border ${notaColor}">${nota !== null ? nota : '-'}</span>
+                        </td>
+                        <td class="p-3 text-slate-600 font-medium">${dCirurgia ? dCirurgia.toLocaleDateString('pt-BR') : '-'}</td>
+                        <td class="p-3 text-slate-600 font-medium">${dAval ? dAval.toLocaleDateString('pt-BR') : '-'}</td>
+                    </tr>
+                `;
+            }).join('') || '<tr><td colspan="6" class="p-4 text-center text-slate-400">Carregue a planilha de NPS para visualizar as avaliações.</td></tr>';
+
+            document.getElementById('npsPrintCount').textContent = `Relatório com ${totalRecords} avaliação(ões) — filtro atual aplicado no momento da exportação.`;
+
+            if (exportAll) return;
+
+            const totalPages = Math.ceil(totalRecords / pageSize) || 1;
+            document.getElementById('npsPaginationInfo').textContent = `Mostrando ${totalRecords === 0 ? 0 : startIndex + 1} até ${Math.min(startIndex + pageSize, totalRecords)} de ${totalRecords} avaliação(ões)`;
+            document.getElementById('npsPrevPageBtn').disabled = npsCurrentPage === 1;
+            document.getElementById('npsNextPageBtn').disabled = npsCurrentPage === totalPages;
+        }
+
+        // ================================================================
+        // NAVEGAÇÃO POR PÁGINA (Consultas / NPS) + EXPORTAÇÃO/IMPRESSÃO
+        // ================================================================
+        let activeTab = 'consultas';
+
+        const TAB_LABELS = {
+            consultas: 'Exportar / Imprimir Relatório de Consultas',
+            nps: 'Exportar / Imprimir Relatório de NPS',
+            faturamento: 'Exportar / Imprimir Relatório de Pendências'
+        };
+
+        function updateTabNav() {
+            const base = 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2';
+            document.getElementById('navTabConsultas').className = `${base} ${activeTab === 'consultas' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
+            document.getElementById('navTabNps').className = `${base} ${activeTab === 'nps' ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
+            document.getElementById('navTabFaturamento').className = `${base} ${activeTab === 'faturamento' ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
+            document.getElementById('exportBtnLabel').textContent = TAB_LABELS[activeTab];
+        }
+
+        function switchTab(tab) {
+            activeTab = tab;
+            document.getElementById('tabConsultas').classList.toggle('hidden', tab !== 'consultas');
+            document.getElementById('tabNps').classList.toggle('hidden', tab !== 'nps');
+            document.getElementById('tabFaturamento').classList.toggle('hidden', tab !== 'faturamento');
+            updateTabNav();
+            updateStickyOffsets();
+        }
+
+        function exportReport() {
+            if (activeTab === 'consultas') {
+                renderPatientTable(true); // renderiza todas as linhas do filtro atual, ignorando a paginação
+            } else if (activeTab === 'nps') {
+                renderNpsTable(true);
+            } else if (activeTab === 'faturamento') {
+                renderFaturamentoTable(true);
+            }
+            window.print();
+        }
+
+        window.addEventListener('afterprint', () => {
+            if (activeTab === 'consultas') {
+                renderPatientTable(false); // volta para a visualização paginada em tela
+            } else if (activeTab === 'nps') {
+                renderNpsTable(false);
+            } else if (activeTab === 'faturamento') {
+                renderFaturamentoTable(false);
+            }
+        });
+    </script>
+</body>
+</html>
