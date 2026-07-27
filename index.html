@@ -17,6 +17,11 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <!-- html2canvas & jsPDF (+ autotable) — exportação granular por seção (gráficos/insights em imagem, listas/relatórios em tabela real) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -75,10 +80,20 @@
         </div>
 
         <div class="flex items-center gap-2 no-print">
-            <label class="cursor-pointer px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition shadow-md shadow-indigo-600/20">
+            <!-- Upload contextual: as planilhas de Consultas e de NPS têm layouts
+                 diferentes e bases separadas. Antes existia um único botão no topo,
+                 que continuava aparecendo na página de NPS e dava a entender que
+                 servia para carregar o NPS ali. Agora cada página mostra o botão da
+                 SUA planilha (Faturamento usa a mesma base de Consultas). -->
+            <label id="uploadConsultas" class="cursor-pointer px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition shadow-md shadow-indigo-600/20">
                 <i data-lucide="file-up" class="w-3.5 h-3.5"></i>
-                Carregar Planilha (.xlsx/.csv)
+                Carregar Planilha de Consultas (.xlsx/.csv)
                 <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" class="hidden">
+            </label>
+            <label id="uploadNps" class="hidden cursor-pointer px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition shadow-md shadow-teal-600/20">
+                <i data-lucide="file-up" class="w-3.5 h-3.5"></i>
+                Carregar Planilha de NPS (.xlsx/.csv)
+                <input type="file" id="npsFileInput" accept=".xlsx, .xls, .csv" class="hidden">
             </label>
             <button onclick="exportReport()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
                 <i data-lucide="printer" class="w-3.5 h-3.5"></i>
@@ -235,7 +250,7 @@
         </div>
 
         <!-- SEÇÃO DE INSIGHTS ESTRATÉGICOS DA IA -->
-        <div class="white-card rounded-2xl p-6 border-l-4 border-l-indigo-600 bg-gradient-to-r from-indigo-50/40 via-white to-white space-y-4">
+        <div class="white-card rounded-2xl p-6 border-l-4 border-l-indigo-600 bg-gradient-to-r from-indigo-50/40 via-white to-white space-y-4" id="cardInsights">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-600/20">
@@ -249,7 +264,24 @@
                         <p class="text-xs text-slate-500">Ações prioritárias sugeridas com base nos dados atuais da jornada</p>
                     </div>
                 </div>
-                <span class="text-xs text-slate-400 font-medium">Recomendações Práticas</span>
+                <div class="flex items-center gap-3">
+                    <div class="relative no-print">
+                        <button onclick="toggleExportMenu(event, 'menuInsights')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            Exportar como...
+                            <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                        </button>
+                        <div id="menuInsights" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
+                            <button onclick="exportSectionAsPdf('cardInsights','Insights_Jornada_Cirurgica')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
+                            </button>
+                            <button onclick="exportSectionAsJpeg('cardInsights','Insights_Jornada_Cirurgica')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                                <i data-lucide="image" class="w-3.5 h-3.5 text-indigo-500"></i> Exportar como JPEG
+                            </button>
+                        </div>
+                    </div>
+                    <span class="text-xs text-slate-400 font-medium no-print">Recomendações Práticas</span>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="aiInsightsContainer">
@@ -258,13 +290,30 @@
         </div>
 
         <!-- Funil da Jornada Cirúrgica -->
-        <div class="white-card rounded-2xl p-6 space-y-4">
+        <div class="white-card rounded-2xl p-6 space-y-4" id="cardFunil">
             <div class="flex items-center justify-between">
                 <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
                     <i data-lucide="git-commit" class="w-5 h-5 text-indigo-600"></i>
                     Funil da Jornada de Atendimento até a Cirurgia
                 </h3>
-                <span class="text-xs text-slate-500 font-medium">Visão Geral do Fluxo dos Pacientes</span>
+                <div class="flex items-center gap-3">
+                    <div class="relative no-print">
+                        <button onclick="toggleExportMenu(event, 'menuFunil')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            Exportar como...
+                            <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                        </button>
+                        <div id="menuFunil" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
+                            <button onclick="exportSectionAsPdf('cardFunil','Funil_Jornada_Cirurgica')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
+                            </button>
+                            <button onclick="exportSectionAsJpeg('cardFunil','Funil_Jornada_Cirurgica')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                                <i data-lucide="image" class="w-3.5 h-3.5 text-indigo-500"></i> Exportar como JPEG
+                            </button>
+                        </div>
+                    </div>
+                    <span class="text-xs text-slate-500 font-medium no-print">Visão Geral do Fluxo dos Pacientes</span>
+                </div>
             </div>
 
             <div id="funnelContainer" class="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-3">
@@ -273,7 +322,7 @@
         </div>
 
         <!-- Distribuição dos Pacientes por Status (Seção Dedicada) -->
-        <div class="white-card rounded-2xl p-6 space-y-5">
+        <div class="white-card rounded-2xl p-6 space-y-5" id="cardStatusDist">
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
@@ -281,6 +330,21 @@
                         Distribuição dos Pacientes por Status
                     </h3>
                     <p class="text-xs text-slate-500">Visão consolidada de onde cada paciente está na jornada</p>
+                </div>
+                <div class="relative no-print">
+                    <button onclick="toggleExportMenu(event, 'menuStatusDist')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        Exportar como...
+                        <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                    </button>
+                    <div id="menuStatusDist" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
+                        <button onclick="exportSectionAsPdf('cardStatusDist','Distribuicao_Status_Pacientes')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
+                        </button>
+                        <button onclick="exportSectionAsJpeg('cardStatusDist','Distribuicao_Status_Pacientes')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                            <i data-lucide="image" class="w-3.5 h-3.5 text-indigo-500"></i> Exportar como JPEG
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -299,12 +363,27 @@
         </div>
 
         <!-- Distribuição por Tipo de Cirurgia -->
-        <div class="white-card rounded-2xl p-6 space-y-4">
+        <div class="white-card rounded-2xl p-6 space-y-4" id="cardSurgeryDist">
             <div class="flex items-center justify-between">
                 <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
                     <i data-lucide="activity" class="w-5 h-5 text-violet-600"></i>
                     Distribuição por Tipo de Cirurgia / Especialidade
                 </h3>
+                <div class="relative no-print">
+                    <button onclick="toggleExportMenu(event, 'menuSurgeryDist')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        Exportar como...
+                        <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                    </button>
+                    <div id="menuSurgeryDist" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
+                        <button onclick="exportSectionAsPdf('cardSurgeryDist','Distribuicao_Tipo_Cirurgia')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
+                        </button>
+                        <button onclick="exportSectionAsJpeg('cardSurgeryDist','Distribuicao_Tipo_Cirurgia')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                            <i data-lucide="image" class="w-3.5 h-3.5 text-indigo-500"></i> Exportar como JPEG
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="relative min-h-[280px]">
                 <canvas id="chartSurgeries"></canvas>
@@ -312,7 +391,7 @@
         </div>
 
         <!-- Graphic 3: Performance por Clínica Parceira -->
-        <div class="white-card rounded-2xl p-6 space-y-4">
+        <div class="white-card rounded-2xl p-6 space-y-4" id="cardClinicPerf">
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
@@ -321,6 +400,21 @@
                     </h3>
                     <p class="text-xs text-slate-500">Comparativo do volume de pacientes em cada parceiro</p>
                 </div>
+                <div class="relative no-print">
+                    <button onclick="toggleExportMenu(event, 'menuClinicPerf')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        Exportar como...
+                        <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                    </button>
+                    <div id="menuClinicPerf" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
+                        <button onclick="exportSectionAsPdf('cardClinicPerf','Performance_Clinica_Parceira')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
+                        </button>
+                        <button onclick="exportSectionAsJpeg('cardClinicPerf','Performance_Clinica_Parceira')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                            <i data-lucide="image" class="w-3.5 h-3.5 text-indigo-500"></i> Exportar como JPEG
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="relative min-h-[320px]">
                 <canvas id="chartClinics"></canvas>
@@ -328,7 +422,7 @@
         </div>
 
         <!-- Tabela de Gestão de Clínicas Parceiras -->
-        <div class="white-card rounded-2xl p-6 space-y-4">
+        <div class="white-card rounded-2xl p-6 space-y-4" id="cardClinicSummary">
             <div class="flex items-center justify-between flex-wrap gap-2">
                 <div>
                     <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
@@ -336,6 +430,24 @@
                         Relatório Consolidado para Envio à Gestão das Clínicas
                     </h3>
                     <p class="text-xs text-slate-500">Resumo de pendências e conversões para reuniões de alinhamento com diretores</p>
+                </div>
+                <div class="relative no-print">
+                    <button onclick="toggleExportMenu(event, 'menuClinicSummary')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold rounded-lg flex items-center gap-1.5 transition shadow-sm">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        Exportar como...
+                        <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                    </button>
+                    <div id="menuClinicSummary" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
+                        <button onclick="exportClinicSummaryAsSpreadsheet()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i> Exportar como Planilha
+                        </button>
+                        <button onclick="exportClinicSummaryAsCSV()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                            <i data-lucide="file-type" class="w-3.5 h-3.5 text-slate-500"></i> Exportar como CSV
+                        </button>
+                        <button onclick="exportClinicSummaryAsPdf()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -362,7 +474,7 @@
         </div>
 
         <!-- Tabela Detalhada de Pacientes -->
-        <div class="white-card rounded-2xl p-6 space-y-4">
+        <div class="white-card rounded-2xl p-6 space-y-4" id="cardPatientList">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div>
                     <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
@@ -371,10 +483,30 @@
                     </h3>
                     <p class="text-xs text-slate-500">Consulte informações individuais, médicos e observações clínicas</p>
                 </div>
-                <div class="relative w-full sm:w-72">
-                    <input type="text" id="tableSearch" placeholder="Buscar paciente, médico ou obs..."
-                        class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl pl-9 pr-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none">
-                    <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                <div class="flex items-center gap-2 no-print">
+                    <div class="relative w-full sm:w-72">
+                        <input type="text" id="tableSearch" placeholder="Buscar paciente, médico ou obs..."
+                            class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl pl-9 pr-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                    </div>
+                    <div class="relative">
+                        <button onclick="toggleExportMenu(event, 'menuPatientList')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold rounded-lg flex items-center gap-1.5 transition shadow-sm whitespace-nowrap">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            Exportar como...
+                            <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                        </button>
+                        <div id="menuPatientList" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
+                            <button onclick="exportPatientsAsSpreadsheet()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i> Exportar como Planilha
+                            </button>
+                            <button onclick="exportPatientsAsCSV()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                                <i data-lucide="file-type" class="w-3.5 h-3.5 text-slate-500"></i> Exportar como CSV
+                            </button>
+                            <button onclick="exportPatientsAsPdf()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                                <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -434,16 +566,13 @@
                     <i data-lucide="filter" class="w-3.5 h-3.5 text-teal-600"></i>
                     Filtros de NPS
                 </h3>
+                <!-- O upload de NPS agora fica no topo da página (botão contextual do
+                     header), para existir um único lugar de carregar cada planilha. -->
                 <div class="flex items-center gap-2 no-print">
                     <div class="flex items-center gap-1.5 text-[11px] text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-medium">
                         <i data-lucide="database" class="w-3 h-3 text-teal-600"></i>
                         <span id="npsDataCountLabel">Nenhuma planilha de NPS carregada</span>
                     </div>
-                    <label class="cursor-pointer px-2.5 py-1 bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-semibold rounded-lg flex items-center gap-1.5 transition shadow-md shadow-teal-600/20">
-                        <i data-lucide="file-up" class="w-3.5 h-3.5"></i>
-                        Carregar NPS (.xlsx/.csv)
-                        <input type="file" id="npsFileInput" accept=".xlsx, .xls, .csv" class="hidden">
-                    </label>
                 </div>
             </div>
 
@@ -518,21 +647,55 @@
 
         <!-- NPS: Gauge Geral + Ranking por Clínica -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="white-card rounded-2xl p-6 space-y-2 flex flex-col items-center">
-                <h3 class="text-base font-bold text-slate-900 flex items-center gap-2 self-start">
-                    <i data-lucide="gauge" class="w-5 h-5 text-teal-600"></i>
-                    NPS Geral (Data da Cirurgia)
-                </h3>
+            <div class="white-card rounded-2xl p-6 space-y-2 flex flex-col items-center" id="cardNpsGauge">
+                <div class="w-full flex items-start justify-between gap-2">
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="gauge" class="w-5 h-5 text-teal-600"></i>
+                        NPS Geral (Data da Cirurgia)
+                    </h3>
+                    <div class="relative no-print shrink-0">
+                        <button onclick="toggleExportMenu(event, 'menuNpsGauge')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            Exportar como...
+                            <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                        </button>
+                        <div id="menuNpsGauge" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
+                            <button onclick="exportSectionAsPdf('cardNpsGauge','NPS_Geral')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
+                            </button>
+                            <button onclick="exportSectionAsJpeg('cardNpsGauge','NPS_Geral')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                                <i data-lucide="image" class="w-3.5 h-3.5 text-teal-600"></i> Exportar como JPEG
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 <div id="npsGaugeContainer" class="w-full flex items-center justify-center pt-2"></div>
             </div>
 
-            <div class="white-card rounded-2xl p-6 space-y-4">
-                <div>
-                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                        <i data-lucide="building-2" class="w-5 h-5 text-teal-600"></i>
-                        NPS por Clínica Parceira
-                    </h3>
-                    <p class="text-xs text-slate-500">Ranking de satisfação — não confundir com a distribuição de status acima</p>
+            <div class="white-card rounded-2xl p-6 space-y-4" id="cardNpsClinics">
+                <div class="flex items-start justify-between gap-2">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <i data-lucide="building-2" class="w-5 h-5 text-teal-600"></i>
+                            NPS por Clínica Parceira
+                        </h3>
+                        <p class="text-xs text-slate-500">Ranking de satisfação — não confundir com a distribuição de status acima</p>
+                    </div>
+                    <div class="relative no-print shrink-0">
+                        <button onclick="toggleExportMenu(event, 'menuNpsClinics')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            Exportar como...
+                            <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                        </button>
+                        <div id="menuNpsClinics" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
+                            <button onclick="exportSectionAsPdf('cardNpsClinics','NPS_por_Clinica')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
+                            </button>
+                            <button onclick="exportSectionAsJpeg('cardNpsClinics','NPS_por_Clinica')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                                <i data-lucide="image" class="w-3.5 h-3.5 text-teal-600"></i> Exportar como JPEG
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <div class="relative min-h-[280px]">
                     <canvas id="chartNpsClinics"></canvas>
@@ -541,18 +704,35 @@
         </div>
 
         <!-- NPS: Breakdown de Categorias -->
-        <div class="white-card rounded-2xl p-6 space-y-4">
-            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                <i data-lucide="list-checks" class="w-5 h-5 text-teal-600"></i>
-                Avaliação por Categoria (% "Gostei")
-            </h3>
+        <div class="white-card rounded-2xl p-6 space-y-4" id="cardNpsCategories">
+            <div class="flex items-center justify-between gap-2">
+                <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="list-checks" class="w-5 h-5 text-teal-600"></i>
+                    Avaliação por Categoria (% "Gostei")
+                </h3>
+                <div class="relative no-print shrink-0">
+                    <button onclick="toggleExportMenu(event, 'menuNpsCategories')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        Exportar como...
+                        <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                    </button>
+                    <div id="menuNpsCategories" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
+                        <button onclick="exportSectionAsPdf('cardNpsCategories','NPS_Avaliacao_por_Categoria')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
+                        </button>
+                        <button onclick="exportSectionAsJpeg('cardNpsCategories','NPS_Avaliacao_por_Categoria')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                            <i data-lucide="image" class="w-3.5 h-3.5 text-teal-600"></i> Exportar como JPEG
+                        </button>
+                    </div>
+                </div>
+            </div>
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4" id="npsCategoryContainer">
                 <!-- Populado via JS -->
             </div>
         </div>
 
         <!-- NPS: Destaques (Detratores + Comentários Negativos) -->
-        <div class="white-card rounded-2xl p-6 space-y-4 border-l-4 border-l-rose-500">
+        <div class="white-card rounded-2xl p-6 space-y-4 border-l-4 border-l-rose-500" id="cardNpsDestaques">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center shadow-md shadow-rose-600/20">
@@ -563,27 +743,68 @@
                         <p class="text-xs text-slate-500">Detratores (nota até 6) e respostas com sinais de insatisfação, identificados por um filtro de palavras-chave — base para os futuros insights de IA desta página</p>
                     </div>
                 </div>
-                <span class="text-xs text-slate-400 font-medium" id="npsDestaquesCountLabel">0 destaque(s)</span>
+                <div class="flex items-center gap-3">
+                    <div class="relative no-print shrink-0">
+                        <button onclick="toggleExportMenu(event, 'menuNpsDestaques')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            Exportar como...
+                            <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                        </button>
+                        <div id="menuNpsDestaques" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
+                            <button onclick="exportSectionAsPdf('cardNpsDestaques','NPS_Destaques_Atencao')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
+                            </button>
+                            <button onclick="exportSectionAsJpeg('cardNpsDestaques','NPS_Destaques_Atencao')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                                <i data-lucide="image" class="w-3.5 h-3.5 text-teal-600"></i> Exportar como JPEG
+                            </button>
+                        </div>
+                    </div>
+                    <span class="text-xs text-slate-400 font-medium" id="npsDestaquesCountLabel">0 destaque(s)</span>
+                </div>
             </div>
-            <div class="space-y-2 max-h-[420px] overflow-y-auto custom-scrollbar pr-1" id="npsDestaquesContainer">
+            <!-- `export-expand` = na exportação em imagem esta caixa precisa crescer
+                 para mostrar a lista inteira; sem isso o html2canvas capturaria só
+                 os ~420px visíveis e cortaria os destaques que ficam na rolagem. -->
+            <div class="space-y-2 max-h-[420px] overflow-y-auto custom-scrollbar pr-1 export-expand" id="npsDestaquesContainer">
                 <!-- Populado via JS -->
             </div>
         </div>
 
         <!-- NPS: Tabela Detalhada para Montagem do Relatório da Clínica -->
-        <div class="white-card rounded-2xl p-6 space-y-4">
-            <div>
-                <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                    <i data-lucide="file-text" class="w-5 h-5 text-teal-600"></i>
-                    Avaliações Detalhadas (Base para Envio à Clínica)
-                </h3>
-                <p class="text-xs text-slate-500">Filtre por clínica e período acima para gerar o relatório de NPS individual daquela unidade</p>
+        <div class="white-card rounded-2xl p-6 space-y-4" id="cardNpsTable">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="file-text" class="w-5 h-5 text-teal-600"></i>
+                        Avaliações Detalhadas (Base para Envio à Clínica)
+                    </h3>
+                    <p class="text-xs text-slate-500">Filtre por clínica e período acima para gerar o relatório de NPS individual daquela unidade</p>
+                </div>
+                <div class="relative no-print shrink-0">
+                    <button onclick="toggleExportMenu(event, 'menuNpsTable')" class="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-bold rounded-lg flex items-center gap-1.5 transition shadow-sm whitespace-nowrap">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        Exportar como...
+                        <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                    </button>
+                    <div id="menuNpsTable" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
+                        <button onclick="exportNpsAsSpreadsheet()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i> Exportar como Planilha
+                        </button>
+                        <button onclick="exportNpsAsCSV()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                            <i data-lucide="file-type" class="w-3.5 h-3.5 text-slate-500"></i> Exportar como CSV
+                        </button>
+                        <button onclick="exportNpsAsPdf()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="overflow-x-auto custom-scrollbar">
                 <table class="w-full text-left text-xs text-slate-700">
                     <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200">
                         <tr>
                             <th class="p-3">Paciente</th>
+                            <th class="p-3">Telefone</th>
                             <th class="p-3">Clínica</th>
                             <th class="p-3">Médico</th>
                             <th class="p-3 text-center">Nota</th>
@@ -641,10 +862,6 @@
                             <i data-lucide="database" class="w-3 h-3 text-amber-600"></i>
                             <span id="faturamentoCountLabel">0 pendência(s) no filtro</span>
                         </div>
-                        <button onclick="downloadFaturamentoReport()" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-semibold rounded-lg flex items-center gap-1.5 transition shadow-md shadow-amber-600/20">
-                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                            Baixar (.xlsx)
-                        </button>
                     </div>
                 </div>
 
@@ -673,13 +890,33 @@
             </div>
 
             <!-- Faturamento: Tabela -->
-            <div class="white-card rounded-2xl p-6 space-y-4">
-                <div>
-                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                        <i data-lucide="clipboard-list" class="w-5 h-5 text-amber-600"></i>
-                        Cirurgias Realizadas e Ainda Não Reportadas/Pagas
-                    </h3>
-                    <p class="text-xs text-slate-500">Cada linha é um procedimento (1º ou 2º olho) com status "realizou" cuja aba correspondente ainda não tem o campo de trava preenchido</p>
+            <div class="white-card rounded-2xl p-6 space-y-4" id="cardFaturamentoTable">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <i data-lucide="clipboard-list" class="w-5 h-5 text-amber-600"></i>
+                            Cirurgias Realizadas e Ainda Não Reportadas/Pagas
+                        </h3>
+                        <p class="text-xs text-slate-500">Cada linha é um procedimento (1º ou 2º olho) com status "realizou" cuja aba correspondente ainda não tem o campo de trava preenchido</p>
+                    </div>
+                    <div class="relative no-print shrink-0">
+                        <button onclick="toggleExportMenu(event, 'menuFaturamento')" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold rounded-lg flex items-center gap-1.5 transition shadow-sm whitespace-nowrap">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            Exportar como...
+                            <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                        </button>
+                        <div id="menuFaturamento" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
+                            <button onclick="exportFaturamentoAsSpreadsheet()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i> Exportar como Planilha
+                            </button>
+                            <button onclick="exportFaturamentoAsCSV()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                                <i data-lucide="file-type" class="w-3.5 h-3.5 text-slate-500"></i> Exportar como CSV
+                            </button>
+                            <button onclick="exportFaturamentoAsPdf()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                                <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <div class="overflow-x-auto custom-scrollbar">
                     <table class="w-full text-left text-xs text-slate-700">
@@ -1068,26 +1305,10 @@
             document.getElementById('faturamentoNextPageBtn').disabled = faturamentoCurrentPage === totalPages;
         }
 
-        function downloadFaturamentoReport() {
-            if (faturamentoFilteredRecords.length === 0) {
-                alert('Não há pendências de faturamento no filtro atual para baixar.');
-                return;
-            }
-            const rows = faturamentoFilteredRecords.map(rec => ({
-                'Paciente': rec.paciente,
-                'Clínica': rec.clinica,
-                'Especialidade': rec.especialidade,
-                'Procedimento': rec.procedimento,
-                'Data da Cirurgia': rec.data ? rec.data.toLocaleDateString('pt-BR') : '',
-                'Médico': rec.medico
-            }));
-            const worksheet = XLSX.utils.json_to_sheet(rows);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, 'Pendencias Faturamento');
-            const today = new Date();
-            const stamp = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-            XLSX.writeFile(workbook, `pendencias_faturamento_${stamp}.xlsx`);
-        }
+        // O antigo downloadFaturamentoReport() (botão "Baixar (.xlsx)" na barra de
+        // filtros) foi substituído pelo dropdown "Exportar como..." no cabeçalho da
+        // tabela — mesmo padrão das outras páginas, agora também com CSV e PDF.
+        // A lógica virou buildFaturamentoExportRows() + exportFaturamentoAs*.
 
         function populateFilterDropdowns() {
             const clinics = new Set();
@@ -1653,8 +1874,10 @@
             });
         }
 
-        function renderClinicSummaryTable() {
-            const tbody = document.getElementById('clinicTableBody');
+        // Extraído para função própria porque é usado tanto para renderizar a
+        // tabela em tela quanto para os 3 formatos de exportação (planilha/csv/pdf) —
+        // mesma regra do classifyStatus: uma única fonte de verdade, sem duplicar lógica.
+        function buildClinicSummary() {
             const summary = {};
 
             filteredData.forEach(item => {
@@ -1674,7 +1897,12 @@
                 else if (group === 'ENCERROU_SEM_INDICACAO') summary[cl].semIndicacao++;
             });
 
-            const sortedList = Object.entries(summary).sort((a, b) => b[1].total - a[1].total);
+            return Object.entries(summary).sort((a, b) => b[1].total - a[1].total);
+        }
+
+        function renderClinicSummaryTable() {
+            const tbody = document.getElementById('clinicTableBody');
+            const sortedList = buildClinicSummary();
 
             tbody.innerHTML = sortedList.map(([clinicName, counts]) => `
                 <tr class="hover:bg-slate-50 transition">
@@ -1691,18 +1919,22 @@
             `).join('');
         }
 
-        function renderPatientTable(exportAll = false) {
-            const tbody = document.getElementById('patientTableBody');
+        // Extraído para função própria para ser reaproveitado pelas exportações
+        // (planilha/csv/pdf) sem duplicar a regra de busca.
+        function getSearchedPatientData() {
             const search = document.getElementById('tableSearch').value.toLowerCase();
-
-            const searchedData = filteredData.filter(item => {
+            return filteredData.filter(item => {
                 const name = getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']).toLowerCase();
                 const id = getItemProp(item, ['clientes_id', 'id', 'ID']).toLowerCase();
                 const doc = getItemProp(item, ['medicos', 'medico', 'Médico']).toLowerCase();
                 const obs = getItemProp(item, ['agendamento_obs', 'obs', 'observacao']).toLowerCase();
                 return name.includes(search) || id.includes(search) || doc.includes(search) || obs.includes(search);
             });
+        }
 
+        function renderPatientTable(exportAll = false) {
+            const tbody = document.getElementById('patientTableBody');
+            const searchedData = getSearchedPatientData();
             const totalRecords = searchedData.length;
 
             // Exportação/impressão sempre considera TODAS as linhas do filtro atual,
@@ -1939,8 +2171,8 @@
             const clinics = new Set();
             const surgeries = new Set();
             npsRawData.forEach(item => {
-                const c = getItemProp(item, ['Clínica', 'clinicas', 'clinica']);
-                const s = getItemProp(item, ['Especialidade', 'especialidades']);
+                const c = npsGetClinica(item);
+                const s = npsGetEspecialidade(item);
                 if (c) clinics.add(c.trim());
                 if (s) surgeries.add(s.trim());
             });
@@ -1955,8 +2187,8 @@
             const dateEnd = document.getElementById('npsDateEnd').value;
 
             npsFilteredData = npsRawData.filter(item => {
-                const c = getItemProp(item, ['Clínica', 'clinicas', 'clinica']);
-                const s = getItemProp(item, ['Especialidade', 'especialidades']);
+                const c = npsGetClinica(item);
+                const s = npsGetEspecialidade(item);
                 const d = parseFlexibleDate(getItemProp(item, ['Data da Cirurgia']));
 
                 const matchClinic = !clinic || c === clinic;
@@ -1973,6 +2205,58 @@
             const raw = getItemProp(item, ['Nota']);
             const n = parseFloat(String(raw).replace(',', '.'));
             return isNaN(n) ? null : n;
+        }
+
+        // ================================================================
+        // LEITORES DE CAMPO DA PLANILHA DE NPS
+        //
+        // BUG JÁ CORRIGIDO — NÃO REINTRODUZIR: a planilha de NPS traz as colunas
+        // "Clínica", "Médico" e "Especialidade", mas o `normalizeHeaders()` aplica o
+        // HEADER_ALIASES (que é compartilhado com a planilha de Consultas) e renomeia
+        // essas três para os nomes canônicos `clinicas`, `medicos` e `especialidades`.
+        // Quem lia só `['Clínica']` / `['Médico']` recebia string vazia — foi assim que
+        // médico e clínica apareciam em branco na tabela de Avaliações Detalhadas e nos
+        // Destaques. Ler SEMPRE por estes leitores, nunca pelo nome cru da coluna.
+        // ================================================================
+        function npsGetClinica(item) { return getItemProp(item, ['clinicas', 'Clínica', 'clinica']); }
+        function npsGetMedico(item) { return getItemProp(item, ['medicos', 'Médico', 'medico']); }
+        function npsGetEspecialidade(item) { return getItemProp(item, ['especialidades', 'Especialidade']); }
+        function npsGetPaciente(item) { return getItemProp(item, ['Cliente', 'clientes', 'paciente', 'Paciente']); }
+        function npsGetTelefone(item) { return getItemProp(item, ['Telefone', 'telefone', 'Celular', 'celular', 'Telefones', 'Fone']); }
+
+        // Os telefones vêm crus da planilha (ex.: "5562992602112"). Quem vai ligar para
+        // o paciente precisa ler o número, então formatamos quando o formato brasileiro
+        // é reconhecível e devolvemos o valor original em qualquer outro caso.
+        function npsFormatTelefone(raw) {
+            const digitos = String(raw || '').replace(/\D/g, '');
+            if (!digitos) return '';
+            const m = digitos.match(/^(?:55)?(\d{2})(\d{4,5})(\d{4})$/);
+            if (!m) return String(raw).trim();
+            return `(${m[1]}) ${m[2]}-${m[3]}`;
+        }
+
+        // Comentário/texto livre do paciente. A planilha de teste atual NÃO tem essa
+        // coluna (os campos "Aval. *" só guardam "Gostei"/"Não"), mas outros exports do
+        // Farol podem trazer, então aceitamos os nomes usuais.
+        const NPS_COMMENT_FIELDS = ['Comentário', 'Comentario', 'Comentários', 'Comentarios',
+            'Observação', 'Observacao', 'Observações', 'Obs', 'Depoimento', 'Feedback',
+            'Justificativa', 'Relato', 'Resposta'];
+        function npsGetComentario(item) { return getItemProp(item, NPS_COMMENT_FIELDS); }
+
+        // Quais categorias o paciente marcou como NÃO gostou. É o detalhe acionável que
+        // existe mesmo quando a planilha não tem campo de comentário.
+        const NPS_AVAL_LABELS = {
+            'Aval. de Atendimento CDV': 'Atendimento CDV',
+            'Aval. de Acompanhamento CDV': 'Acompanhamento CDV',
+            'Aval. Clínica': 'Estrutura da Clínica',
+            'Aval. Médico': 'Corpo Médico'
+        };
+        function npsGetCategoriasNegativas(item) {
+            return Object.keys(NPS_AVAL_LABELS).filter(campo => {
+                // normalizeFreeText devolve em MAIÚSCULAS e sem acento
+                const v = normalizeFreeText(getItemProp(item, [campo])).trim();
+                return v !== '' && !v.startsWith('GOSTEI');
+            }).map(campo => NPS_AVAL_LABELS[campo]);
         }
 
         const NPS_AVAL_FIELDS = ['Aval. de Atendimento CDV', 'Aval. de Acompanhamento CDV', 'Aval. Clínica', 'Aval. Médico'];
@@ -2075,7 +2359,7 @@
         function renderNpsClinicsChart() {
             const clinicNotas = {};
             npsFilteredData.forEach(item => {
-                const cl = getItemProp(item, ['Clínica', 'clinicas']) || 'Sem Clínica';
+                const cl = npsGetClinica(item) || 'Sem Clínica';
                 const nota = npsGetNota(item);
                 if (nota === null) return;
                 if (!clinicNotas[cl]) clinicNotas[cl] = [];
@@ -2174,10 +2458,28 @@
 
         // Campos que sabidamente não são texto livre — pular na varredura evita
         // falso positivo (ex: um CEP ou telefone batendo por acaso com um número).
-        const NPS_NON_TEXT_FIELDS = new Set(['Nota', 'Telefone', 'Telefone 1', 'Telefone 2', 'CEP', 'Data da Cirurgia', 'Data da Aval.']);
+        // Campos de identificação/localização do paciente e da clínica: nunca contêm
+        // opinião do paciente, então ficam fora da varredura de palavras-chave — evita
+        // destaque falso vindo de um nome de rua, bairro, e-mail ou nome de médico.
+        const NPS_NON_TEXT_FIELDS = new Set(['Nota', 'Telefone', 'Telefone 1', 'Telefone 2', 'CEP',
+            'Data da Cirurgia', 'Data da Aval.', 'Email', 'E-mail', 'Endereço', 'Endereco',
+            'Número', 'Numero', 'Bairro', 'Cidade', 'Estado', 'Cliente', 'clientes',
+            'clinicas', 'medicos', 'especialidades']);
 
         function normalizeFreeText(s) {
             return (s || '').toString().toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+        }
+
+        // Texto livre da planilha (comentário do paciente, nome, etc.) é interpolado em
+        // HTML nos cards de destaque — sem escapar, um comentário com "<" quebraria o
+        // layout do card.
+        function escapeHtml(s) {
+            return String(s ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
 
         function findNegativeKeywords(item) {
@@ -2215,28 +2517,58 @@
 
             const MAX_DESTAQUES = 50;
             container.innerHTML = highlights.slice(0, MAX_DESTAQUES).map(h => {
-                const nome = getItemProp(h.item, ['Cliente']) || 'Sem Nome';
-                const clinica = getItemProp(h.item, ['Clínica']);
-                const medico = getItemProp(h.item, ['Médico']);
+                const nome = npsGetPaciente(h.item) || 'Sem Nome';
+                const telefone = npsFormatTelefone(npsGetTelefone(h.item));
+                const clinica = npsGetClinica(h.item);
+                const medico = npsGetMedico(h.item);
+                const comentario = npsGetComentario(h.item);
+                const negativas = npsGetCategoriasNegativas(h.item);
 
                 const tags = [];
                 if (h.isDetrator) {
                     tags.push(`<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300 whitespace-nowrap">DETRATOR (nota ${h.nota})</span>`);
                 }
                 h.keywords.forEach(kw => {
-                    tags.push(`<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 whitespace-nowrap">"${kw}"</span>`);
+                    tags.push(`<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 whitespace-nowrap">"${escapeHtml(kw)}"</span>`);
                 });
 
+                // O comentário é o que dá contexto para acionar o paciente, então recebe
+                // destaque visual próprio. Quando a planilha não traz campo de comentário
+                // (caso do export atual do Farol), mostramos ao menos QUAIS categorias o
+                // paciente marcou como "não gostei" — é o detalhe acionável disponível.
+                const blocoComentario = comentario
+                    ? `<div class="mt-2 pt-2 border-t border-rose-200/70">
+                           <p class="text-[10px] font-bold text-rose-700 uppercase tracking-wider mb-1 flex items-center gap-1">
+                               <i data-lucide="message-square-quote" class="w-3 h-3"></i> Comentário do paciente
+                           </p>
+                           <p class="text-xs text-slate-800 italic leading-relaxed">"${escapeHtml(comentario)}"</p>
+                       </div>`
+                    : (negativas.length
+                        ? `<div class="mt-2 pt-2 border-t border-rose-200/70">
+                               <p class="text-[11px] text-slate-600">
+                                   <span class="font-bold text-rose-700">Não gostou de:</span> ${escapeHtml(negativas.join(' · '))}
+                               </p>
+                               <p class="text-[10px] text-slate-400 mt-0.5">Esta planilha não traz campo de comentário — detalhe vindo das avaliações por categoria.</p>
+                           </div>`
+                        : '');
+
                 return `
-                    <div class="p-3 rounded-xl border border-rose-200 bg-rose-50/40 flex flex-wrap items-center justify-between gap-2">
-                        <div class="text-xs">
-                            <span class="font-bold text-slate-900">${nome}</span>
-                            <span class="text-slate-500"> — ${clinica || 'Sem Clínica'}${medico ? ' · ' + medico : ''}</span>
+                    <div class="p-3 rounded-xl border border-rose-200 bg-rose-50/40">
+                        <div class="flex flex-wrap items-start justify-between gap-2">
+                            <div class="text-xs">
+                                <span class="font-bold text-slate-900">${escapeHtml(nome)}</span>
+                                ${telefone ? `<span class="ml-2 inline-flex items-center gap-1 text-[11px] font-semibold text-slate-700 bg-white px-2 py-0.5 rounded-md border border-slate-200 whitespace-nowrap"><i data-lucide="phone" class="w-3 h-3 text-rose-600"></i>${escapeHtml(telefone)}</span>` : ''}
+                                <div class="text-slate-500 mt-1">${escapeHtml(clinica || 'Sem Clínica')}${medico ? ' · ' + escapeHtml(medico) : ''}</div>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5">${tags.join('')}</div>
                         </div>
-                        <div class="flex flex-wrap gap-1.5">${tags.join('')}</div>
+                        ${blocoComentario}
                     </div>
                 `;
             }).join('') + (highlights.length > MAX_DESTAQUES ? `<p class="text-[11px] text-slate-400 text-center pt-2">Mostrando ${MAX_DESTAQUES} de ${highlights.length} destaques.</p>` : '');
+
+            // Os ícones novos (telefone/comentário) só aparecem depois disto
+            lucide.createIcons();
         }
 
         function renderNpsTable(exportAll = false) {
@@ -2257,15 +2589,14 @@
             }
 
             tbody.innerHTML = pageData.map(item => {
-                const nome = getItemProp(item, ['Cliente']) || 'Sem Nome';
-                const clinica = getItemProp(item, ['Clínica']);
-                const medico = getItemProp(item, ['Médico']);
+                const nome = npsGetPaciente(item) || 'Sem Nome';
+                const telefone = npsFormatTelefone(npsGetTelefone(item));
+                const clinica = npsGetClinica(item);
+                const medico = npsGetMedico(item);
                 const nota = npsGetNota(item);
-                const dataCirurgia = getItemProp(item, ['Data da Cirurgia']);
-                const dataAval = getItemProp(item, ['Data da Aval.']);
 
-                const dCirurgia = parseFlexibleDate(dataCirurgia);
-                const dAval = parseFlexibleDate(dataAval);
+                const dCirurgia = parseFlexibleDate(getItemProp(item, ['Data da Cirurgia']));
+                const dAval = parseFlexibleDate(getItemProp(item, ['Data da Aval.']));
 
                 let notaColor = 'bg-slate-100 text-slate-700 border-slate-200';
                 if (nota !== null) {
@@ -2277,6 +2608,7 @@
                 return `
                     <tr class="hover:bg-slate-50 transition">
                         <td class="p-3 font-bold text-slate-900">${nome}</td>
+                        <td class="p-3 text-slate-700 text-[11px] font-medium whitespace-nowrap">${telefone || '-'}</td>
                         <td class="p-3 text-slate-700 text-[11px] font-medium">${clinica || '-'}</td>
                         <td class="p-3 text-slate-600 text-[11px] font-medium">${medico || '-'}</td>
                         <td class="p-3 text-center">
@@ -2286,7 +2618,7 @@
                         <td class="p-3 text-slate-600 font-medium">${dAval ? dAval.toLocaleDateString('pt-BR') : '-'}</td>
                     </tr>
                 `;
-            }).join('') || '<tr><td colspan="6" class="p-4 text-center text-slate-400">Carregue a planilha de NPS para visualizar as avaliações.</td></tr>';
+            }).join('') || '<tr><td colspan="7" class="p-4 text-center text-slate-400">Carregue a planilha de NPS para visualizar as avaliações.</td></tr>';
 
             document.getElementById('npsPrintCount').textContent = `Relatório com ${totalRecords} avaliação(ões) — filtro atual aplicado no momento da exportação.`;
 
@@ -2315,6 +2647,12 @@
             document.getElementById('navTabNps').className = `${base} ${activeTab === 'nps' ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
             document.getElementById('navTabFaturamento').className = `${base} ${activeTab === 'faturamento' ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
             document.getElementById('exportBtnLabel').textContent = TAB_LABELS[activeTab];
+
+            // Cada página mostra o botão de upload da SUA planilha. Faturamento usa a
+            // mesma base de Consultas, por isso compartilha o mesmo botão.
+            const ehNps = activeTab === 'nps';
+            document.getElementById('uploadConsultas').classList.toggle('hidden', ehNps);
+            document.getElementById('uploadNps').classList.toggle('hidden', !ehNps);
         }
 
         function switchTab(tab) {
@@ -2346,6 +2684,342 @@
                 renderFaturamentoTable(false);
             }
         });
+
+        // ================================================================
+        // EXPORTAÇÃO GRANULAR POR SEÇÃO
+        // Substitui o "PDF gigante" (window.print da página inteira) por
+        // exportações independentes por card: gráficos/insights viram
+        // imagem (JPEG) ou PDF de página única; listas/relatórios viram
+        // planilha, CSV ou PDF em tabela real (jsPDF-AutoTable), sempre
+        // usando os MESMOS dados já filtrados em tela (nunca a paginação).
+        // Em teste primeiro na aba Consultas antes de replicar em NPS/Faturamento.
+        // ================================================================
+
+        function todayStamp() {
+            const d = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        }
+
+        // --- Dropdowns "Exportar como..." ---
+        function toggleExportMenu(event, menuId) {
+            event.stopPropagation();
+            const menu = document.getElementById(menuId);
+            const wasOpen = !menu.classList.contains('hidden');
+            closeExportMenus();
+            if (!wasOpen) menu.classList.remove('hidden');
+        }
+        function closeExportMenus() {
+            document.querySelectorAll('.export-dropdown-menu').forEach(m => m.classList.add('hidden'));
+        }
+        document.addEventListener('click', closeExportMenus);
+
+        // --- Gráficos / Insights → JPEG ou PDF (captura da seção via html2canvas) ---
+        //
+        // BUG JÁ CORRIGIDO — NÃO REINTRODUZIR: o texto saía "comido" (metade de
+        // baixo das letras cortada) na imagem/PDF exportados. São duas causas
+        // somadas, e as duas precisam do tratamento abaixo:
+        //
+        // 1) O html2canvas clona a página num iframe e mede ali as métricas da
+        //    fonte (ascendente/descendente) para posicionar a linha de base do
+        //    texto. Se a Plus Jakarta Sans (Google Fonts) ainda não terminou de
+        //    carregar, ele mede uma fonte de fallback, erra a linha de base e
+        //    desenha o texto mais baixo do que o navegador desenha. Daí o
+        //    `await document.fonts.ready`.
+        // 2) Onde há `overflow: hidden` numa caixa de texto — principalmente o
+        //    utilitário `truncate` do Tailwind, usado na legenda do donut — esse
+        //    deslocamento é recortado e as letras aparecem cortadas. Na imagem
+        //    exportada não existe hover/tooltip para ler o rótulo completo, então
+        //    liberar o overflow é melhor que truncar: o rótulo sai inteiro.
+        //    Barras de progresso e cards continuam recortando normalmente porque
+        //    o ajuste só atinge caixas que contêm texto e nenhum elemento filho.
+        async function captureSectionCanvas(elementId) {
+            const el = document.getElementById(elementId);
+
+            // Seção sem dimensão = está dentro de uma aba oculta (display:none).
+            // Sem essa checagem o html2canvas devolve um canvas vazio e o
+            // navegador baixa um arquivo de 0 byte, sem nenhum aviso.
+            const rect = el.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) {
+                throw new Error('Seção não está visível na tela — abra a página correspondente antes de exportar.');
+            }
+
+            if (document.fonts && document.fonts.ready) {
+                try { await document.fonts.ready; } catch (e) { /* segue com as métricas disponíveis */ }
+            }
+
+            return html2canvas(el, {
+                scale: 2,
+                backgroundColor: '#ffffff',
+                useCORS: true,
+                ignoreElements: (node) => node.classList && node.classList.contains('no-print'),
+                onclone: (clonedDoc) => {
+                    const style = clonedDoc.createElement('style');
+                    // `truncate` = overflow:hidden + ellipsis + nowrap. Na exportação
+                    // queremos o texto completo, sem recorte vertical.
+                    style.textContent = `
+                        .truncate { overflow: visible !important; text-overflow: clip !important; }
+                        .export-no-clip { overflow: visible !important; }
+                        /* Caixas com rolagem própria (ex.: lista de destaques do NPS)
+                           precisam crescer na exportação: a imagem não tem rolagem,
+                           então sem isso o conteúdo fora da área visível sumiria. */
+                        .export-expand { max-height: none !important; overflow: visible !important; }
+                    `;
+                    clonedDoc.head.appendChild(style);
+
+                    // Folga para a linha de base em qualquer outra caixa que contenha
+                    // apenas texto e esteja recortando conteúdo. Elementos com filhos
+                    // (barra de progresso, cards com overflow-hidden proposital) ficam de
+                    // fora. Escopado só à seção exportada: o clone contém a página toda,
+                    // incluindo as tabelas das outras abas.
+                    const target = clonedDoc.getElementById(elementId);
+                    if (target) {
+                        target.querySelectorAll('*').forEach(node => {
+                            if (node.children.length === 0 && node.textContent.trim() !== '') {
+                                node.classList.add('export-no-clip');
+                            }
+                        });
+                    }
+                }
+            });
+        }
+
+        async function exportSectionAsJpeg(elementId, filenameBase) {
+            closeExportMenus();
+            try {
+                const canvas = await captureSectionCanvas(elementId);
+                const link = document.createElement('a');
+                link.download = `${filenameBase}_${todayStamp()}.jpg`;
+                link.href = canvas.toDataURL('image/jpeg', 0.95);
+                link.click();
+            } catch (err) {
+                console.error(err);
+                alert('Não foi possível gerar a imagem desta seção.\n\n' + err.message);
+            }
+        }
+
+        async function exportSectionAsPdf(elementId, filenameBase) {
+            closeExportMenus();
+            try {
+                const canvas = await captureSectionCanvas(elementId);
+                const { jsPDF } = window.jspdf;
+                const orientation = canvas.width >= canvas.height ? 'l' : 'p';
+                const pdf = new jsPDF({ orientation, unit: 'pt', format: 'a4' });
+                const margin = 24;
+                const pageWidth = pdf.internal.pageSize.getWidth() - margin * 2;
+                const pageHeight = pdf.internal.pageSize.getHeight() - margin * 2;
+
+                // A seção sempre ocupa a largura da página; a escala sai daí.
+                const scale = pageWidth / canvas.width;
+                const fullHeight = canvas.height * scale;
+
+                if (fullHeight <= pageHeight) {
+                    // Cabe em uma página: centraliza verticalmente.
+                    pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', margin, margin, pageWidth, fullHeight);
+                } else {
+                    // Seção mais alta que a página (acontece com a janela estreita,
+                    // quando os cards empilham). Aqui NÃO encolhemos para caber em
+                    // uma página só — isso deixaria o texto ilegível, que é
+                    // justamente o problema do PDF único e gigante que essa
+                    // exportação por seção veio resolver. Em vez disso, recortamos
+                    // a captura em fatias do tamanho da página.
+                    const sliceHeightPx = pageHeight / scale;
+                    const slice = document.createElement('canvas');
+                    const ctx = slice.getContext('2d');
+                    let y = 0;
+                    let firstPage = true;
+
+                    while (y < canvas.height) {
+                        const h = Math.min(sliceHeightPx, canvas.height - y);
+                        slice.width = canvas.width;
+                        slice.height = h;
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, slice.width, slice.height);
+                        ctx.drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
+
+                        if (!firstPage) pdf.addPage();
+                        pdf.addImage(slice.toDataURL('image/jpeg', 0.95), 'JPEG', margin, margin, pageWidth, h * scale);
+                        firstPage = false;
+                        y += h;
+                    }
+                }
+
+                pdf.save(`${filenameBase}_${todayStamp()}.pdf`);
+            } catch (err) {
+                console.error(err);
+                alert('Não foi possível gerar o PDF desta seção.\n\n' + err.message);
+            }
+        }
+
+        // --- Listas / Relatórios → Planilha, CSV ou PDF (tabela real, não imagem) ---
+        function downloadTextFile(content, filename, mime) {
+            // ﻿ (BOM) garante acentuação correta ao abrir o CSV direto no Excel.
+            const blob = new Blob(['﻿' + content], { type: mime });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
+        // Evita gerar arquivo vazio quando o filtro atual não retornou nada —
+        // o usuário não percebe que baixou uma planilha em branco.
+        function hasRowsToExport(rows) {
+            if (rows.length === 0) {
+                alert('Não há registros no filtro atual para exportar.');
+                return false;
+            }
+            return true;
+        }
+
+        function exportRowsAsSpreadsheet(rows, sheetName, filenameBase) {
+            if (!hasRowsToExport(rows)) return;
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            XLSX.writeFile(wb, `${filenameBase}_${todayStamp()}.xlsx`);
+        }
+
+        function exportRowsAsCSV(rows, filenameBase) {
+            if (!hasRowsToExport(rows)) return;
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const csv = XLSX.utils.sheet_to_csv(ws);
+            downloadTextFile(csv, `${filenameBase}_${todayStamp()}.csv`, 'text/csv;charset=utf-8;');
+        }
+
+        function exportRowsAsPdf(rows, title, filenameBase) {
+            if (!hasRowsToExport(rows)) return;
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ orientation: 'l', unit: 'pt', format: 'a4' });
+            pdf.setFontSize(13);
+            pdf.text(title, 32, 30);
+            const headers = rows.length ? Object.keys(rows[0]) : [];
+            pdf.autoTable({
+                startY: 42,
+                head: [headers],
+                body: rows.map(r => headers.map(h => r[h])),
+                styles: { fontSize: 7, cellPadding: 3, overflow: 'linebreak' },
+                headStyles: { fillColor: [79, 70, 229], textColor: 255 },
+                margin: { left: 32, right: 32 }
+            });
+            pdf.save(`${filenameBase}_${todayStamp()}.pdf`);
+        }
+
+        // Lista Detalhada dos Pacientes
+        function buildPatientExportRows() {
+            return getSearchedPatientData().map(item => ({
+                'ID': getItemProp(item, ['clientes_id', 'id', 'ID']) || '-',
+                'Paciente': getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']) || 'Sem Nome',
+                'Data Contato': getItemProp(item, ['agendamento_data', 'data', 'Data']) || '-',
+                'Cirurgia': getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']) || '-',
+                'Clínica Parceira': getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']) || '-',
+                'Status da Jornada': getItemProp(item, ['agendamento_cirg_status_clinica', 'status', 'Status']) || 'Sem Status',
+                'Médico / Equipe': getItemProp(item, ['medicos', 'medico', 'Médico']) || '-',
+                'Atendente': getItemProp(item, ['user', 'atendente', 'SDR', 'responsavel']) || '-'
+            }));
+        }
+        function exportPatientsAsSpreadsheet() {
+            closeExportMenus();
+            exportRowsAsSpreadsheet(buildPatientExportRows(), 'Pacientes', 'Lista_Detalhada_Pacientes');
+        }
+        function exportPatientsAsCSV() {
+            closeExportMenus();
+            exportRowsAsCSV(buildPatientExportRows(), 'Lista_Detalhada_Pacientes');
+        }
+        function exportPatientsAsPdf() {
+            closeExportMenus();
+            exportRowsAsPdf(buildPatientExportRows(), 'Lista Detalhada dos Pacientes', 'Lista_Detalhada_Pacientes');
+        }
+
+        // Relatório Consolidado para Envio à Gestão das Clínicas
+        function buildClinicExportRows() {
+            return buildClinicSummary().map(([clinicName, c]) => ({
+                'Clínica Parceira': clinicName,
+                'Total Pacientes': c.total,
+                'Sem Status': c.semStatus,
+                'Exames Pendentes': c.exames,
+                'Aguardando Clínica': c.aguardando,
+                'Cirurgia Agendada': c.agendadas,
+                'Cirurgia Realizada': c.realizadas,
+                'Desistiu': c.desistiu,
+                'Sem Indicação': c.semIndicacao
+            }));
+        }
+        function exportClinicSummaryAsSpreadsheet() {
+            closeExportMenus();
+            exportRowsAsSpreadsheet(buildClinicExportRows(), 'Consolidado Clínicas', 'Relatorio_Consolidado_Clinicas');
+        }
+        function exportClinicSummaryAsCSV() {
+            closeExportMenus();
+            exportRowsAsCSV(buildClinicExportRows(), 'Relatorio_Consolidado_Clinicas');
+        }
+        function exportClinicSummaryAsPdf() {
+            closeExportMenus();
+            exportRowsAsPdf(buildClinicExportRows(), 'Relatório Consolidado para Envio à Gestão das Clínicas', 'Relatorio_Consolidado_Clinicas');
+        }
+
+        // --- PÁGINA NPS: Avaliações Detalhadas ---
+        // Usa npsFilteredData (base própria do NPS) e npsGetNota — as mesmas
+        // fontes da tabela em tela, incluindo todo o filtro atual.
+        function buildNpsExportRows() {
+            return npsFilteredData.map(item => {
+                const nota = npsGetNota(item);
+                const dCirurgia = parseFlexibleDate(getItemProp(item, ['Data da Cirurgia']));
+                const dAval = parseFlexibleDate(getItemProp(item, ['Data da Aval.']));
+                const negativas = npsGetCategoriasNegativas(item);
+                return {
+                    'Paciente': npsGetPaciente(item) || 'Sem Nome',
+                    'Telefone': npsFormatTelefone(npsGetTelefone(item)),
+                    'Clínica': npsGetClinica(item) || '-',
+                    'Médico': npsGetMedico(item) || '-',
+                    // Nota ausente fica em branco em vez de 0 — 0 é uma nota válida
+                    // (detrator) e confundiria quem lê a planilha.
+                    'Nota': nota !== null ? nota : '',
+                    'Classificação': nota === null ? 'Nota Ausente' : (nota >= 9 ? 'Promotor' : (nota >= 7 ? 'Neutro' : 'Detrator')),
+                    'Não Gostou De': negativas.join(' · '),
+                    'Comentário': npsGetComentario(item),
+                    'Data da Cirurgia': dCirurgia ? dCirurgia.toLocaleDateString('pt-BR') : '',
+                    'Data da Avaliação': dAval ? dAval.toLocaleDateString('pt-BR') : ''
+                };
+            });
+        }
+        function exportNpsAsSpreadsheet() {
+            closeExportMenus();
+            exportRowsAsSpreadsheet(buildNpsExportRows(), 'Avaliacoes NPS', 'Avaliacoes_NPS');
+        }
+        function exportNpsAsCSV() {
+            closeExportMenus();
+            exportRowsAsCSV(buildNpsExportRows(), 'Avaliacoes_NPS');
+        }
+        function exportNpsAsPdf() {
+            closeExportMenus();
+            exportRowsAsPdf(buildNpsExportRows(), 'Avaliações Detalhadas de NPS (Base para Envio à Clínica)', 'Avaliacoes_NPS');
+        }
+
+        // --- PÁGINA FATURAMENTO: Pendências ---
+        // faturamentoFilteredRecords já vem pronto de applyFaturamentoFilters().
+        function buildFaturamentoExportRows() {
+            return faturamentoFilteredRecords.map(rec => ({
+                'Paciente': rec.paciente,
+                'Clínica': rec.clinica,
+                'Especialidade': rec.especialidade,
+                'Procedimento': rec.procedimento,
+                'Data da Cirurgia': rec.data ? rec.data.toLocaleDateString('pt-BR') : '',
+                'Médico': rec.medico
+            }));
+        }
+        function exportFaturamentoAsSpreadsheet() {
+            closeExportMenus();
+            exportRowsAsSpreadsheet(buildFaturamentoExportRows(), 'Pendencias Faturamento', 'Pendencias_Faturamento');
+        }
+        function exportFaturamentoAsCSV() {
+            closeExportMenus();
+            exportRowsAsCSV(buildFaturamentoExportRows(), 'Pendencias_Faturamento');
+        }
+        function exportFaturamentoAsPdf() {
+            closeExportMenus();
+            exportRowsAsPdf(buildFaturamentoExportRows(), 'Pendências de Faturamento — Cirurgias Realizadas e Não Reportadas', 'Pendencias_Faturamento');
+        }
     </script>
 </body>
 </html>
