@@ -63,6 +63,16 @@
         }
         @media print {
             .no-print { display: none !important; }
+            /* Relatório completo (botão do topo / Ctrl+P) = só indicadores,
+               insights e gráficos. As listas longas (Lista Detalhada dos
+               Pacientes, Avaliações de NPS, Consolidado das Clínicas) ficam
+               fora: era o que transformava o PDF num arquivo gigante e
+               inutilizável. Cada uma delas tem seu próprio "Exportar como..."
+               em planilha/CSV/PDF de tabela real, que é o formato certo. */
+            .print-exclude { display: none !important; }
+            /* Painel de filtro múltiplo aberto na hora do Ctrl+P não deve
+               aparecer no PDF cobrindo os cards. */
+            .ms-panel { display: none !important; }
             body { background: white !important; color: black !important; }
             .white-card { background: white !important; border: 1px solid #ccc !important; color: black !important; box-shadow: none !important; }
         }
@@ -95,9 +105,15 @@
                 Carregar Planilha de NPS (.xlsx/.csv)
                 <input type="file" id="npsFileInput" accept=".xlsx, .xls, .csv" class="hidden">
             </label>
-            <button onclick="exportReport()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+            <!-- Relatório completo da página: leva só indicadores, insights e
+                 gráficos. As listas ficam de fora (classe .print-exclude) para
+                 o PDF não virar um arquivo gigante — cada lista tem seu próprio
+                 "Exportar como..." em planilha/CSV/PDF de tabela. -->
+            <button id="exportReportBtn" onclick="exportReport()"
+                title="Gera o PDF com os cards de indicadores, insights e gráficos da página. As listas detalhadas não entram — use o botão 'Exportar como...' de cada lista."
+                class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
                 <i data-lucide="printer" class="w-3.5 h-3.5"></i>
-                <span id="exportBtnLabel">Exportar / Imprimir Relatório de Consultas</span>
+                <span id="exportBtnLabel">Imprimir Painel de Consultas</span>
             </button>
         </div>
     </header>
@@ -141,35 +157,23 @@
 
             <p class="hidden text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5" id="unknownStatusWarning"></p>
 
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-                <!-- Filtro Clínica -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                <!-- Filtro Clínica (seleção múltipla) -->
                 <div>
                     <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Clínica</label>
-                    <select id="filterClinic" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-1.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
-                        <option value="">Todas as Clínicas</option>
-                    </select>
+                    <div class="multi-select relative" id="filterClinic" data-placeholder="Todas as Clínicas" data-accent="indigo" data-onchange="applyFilters"></div>
                 </div>
 
-                <!-- Filtro Especialidade / Cirurgia -->
+                <!-- Filtro Especialidade / Cirurgia (seleção múltipla) -->
                 <div>
                     <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Especialidade</label>
-                    <select id="filterSurgery" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-1.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
-                        <option value="">Todas</option>
-                    </select>
+                    <div class="multi-select relative" id="filterSurgery" data-placeholder="Todas as Especialidades" data-accent="indigo" data-onchange="applyFilters"></div>
                 </div>
 
                 <!-- Filtro Status da Jornada -->
                 <div>
                     <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Status da Jornada</label>
                     <select id="filterStatus" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-1.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
-                        <option value="">Todos</option>
-                    </select>
-                </div>
-
-                <!-- Filtro Atendente / SDR -->
-                <div>
-                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Responsável</label>
-                    <select id="filterUser" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-1.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
                         <option value="">Todos</option>
                     </select>
                 </div>
@@ -422,7 +426,7 @@
         </div>
 
         <!-- Tabela de Gestão de Clínicas Parceiras -->
-        <div class="white-card rounded-2xl p-6 space-y-4" id="cardClinicSummary">
+        <div class="white-card rounded-2xl p-6 space-y-4 print-exclude" id="cardClinicSummary">
             <div class="flex items-center justify-between flex-wrap gap-2">
                 <div>
                     <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
@@ -474,7 +478,7 @@
         </div>
 
         <!-- Tabela Detalhada de Pacientes -->
-        <div class="white-card rounded-2xl p-6 space-y-4" id="cardPatientList">
+        <div class="white-card rounded-2xl p-6 space-y-4 print-exclude" id="cardPatientList">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div>
                     <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
@@ -520,7 +524,6 @@
                             <th class="p-3">Clínica Parceira</th>
                             <th class="p-3">Status da Jornada</th>
                             <th class="p-3">Médico / Equipe</th>
-                            <th class="p-3">Atendente</th>
                         </tr>
                     </thead>
                     <tbody id="patientTableBody" class="divide-y divide-slate-100">
@@ -579,9 +582,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <div>
                     <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Clínica</label>
-                    <select id="npsFilterClinic" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-1.5 focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition">
-                        <option value="">Todas as Clínicas</option>
-                    </select>
+                    <div class="multi-select relative" id="npsFilterClinic" data-placeholder="Todas as Clínicas" data-accent="teal" data-onchange="npsApplyFilters"></div>
                 </div>
                 <div>
                     <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Período (Cirurgia)</label>
@@ -593,9 +594,7 @@
                 </div>
                 <div>
                     <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Especialidade</label>
-                    <select id="npsFilterSurgery" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-1.5 focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition">
-                        <option value="">Todas</option>
-                    </select>
+                    <div class="multi-select relative" id="npsFilterSurgery" data-placeholder="Todas as Especialidades" data-accent="teal" data-onchange="npsApplyFilters"></div>
                 </div>
             </div>
         </div>
@@ -771,7 +770,7 @@
         </div>
 
         <!-- NPS: Tabela Detalhada para Montagem do Relatório da Clínica -->
-        <div class="white-card rounded-2xl p-6 space-y-4" id="cardNpsTable">
+        <div class="white-card rounded-2xl p-6 space-y-4 print-exclude" id="cardNpsTable">
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
@@ -868,15 +867,11 @@
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Clínica</label>
-                        <select id="faturamentoFilterClinic" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-1.5 focus:ring-2 focus:ring-amber-500 focus:bg-white outline-none transition">
-                            <option value="">Todas as Clínicas</option>
-                        </select>
+                        <div class="multi-select relative" id="faturamentoFilterClinic" data-placeholder="Todas as Clínicas" data-accent="amber" data-onchange="applyFaturamentoFilters"></div>
                     </div>
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Especialidade</label>
-                        <select id="faturamentoFilterSurgery" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-1.5 focus:ring-2 focus:ring-amber-500 focus:bg-white outline-none transition">
-                            <option value="">Todas</option>
-                        </select>
+                        <div class="multi-select relative" id="faturamentoFilterSurgery" data-placeholder="Todas as Especialidades" data-accent="amber" data-onchange="applyFaturamentoFilters"></div>
                     </div>
                     <div class="col-span-2 sm:col-span-2">
                         <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Período (Cirurgia Realizada)</label>
@@ -922,6 +917,7 @@
                     <table class="w-full text-left text-xs text-slate-700">
                         <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200">
                             <tr>
+                                <th class="p-3">ID</th>
                                 <th class="p-3">Paciente</th>
                                 <th class="p-3">Clínica</th>
                                 <th class="p-3">Especialidade</th>
@@ -996,6 +992,9 @@
 
         // On DOM Load
         document.addEventListener('DOMContentLoaded', () => {
+            // initMultiSelects() vem antes de qualquer populate*: são esses
+            // filtros que criam o próprio HTML e o estado de seleção.
+            initMultiSelects();
             lucide.createIcons();
             populateFilterDropdowns();
             setupEventListeners();
@@ -1190,6 +1189,9 @@
                     const isRealizou = sl.code === 'CIRURGIA_REALIZOU_1' || sl.code === 'CIRURGIA_REALIZOU_2';
                     if (isRealizou && !sl.isLocked) {
                         records.push({
+                            // ID do cliente no Farol: é por ele que a clínica
+                            // localiza o paciente para conferir o faturamento.
+                            id: getItemProp(item, ['clientes_id', 'id', 'ID']),
                             paciente: getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']) || 'Sem Nome',
                             clinica: getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']) || 'Sem Clínica',
                             especialidade: getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']) || 'Não Especificado',
@@ -1243,21 +1245,21 @@
                 if (c) clinics.add(c.trim());
                 if (s) surgeries.add(s.trim());
             });
-            populateSelect('faturamentoFilterClinic', Array.from(clinics).sort());
-            populateSelect('faturamentoFilterSurgery', Array.from(surgeries).sort());
+            populateMultiSelect('faturamentoFilterClinic', Array.from(clinics).sort());
+            populateMultiSelect('faturamentoFilterSurgery', Array.from(surgeries).sort());
         }
 
         function applyFaturamentoFilters() {
-            const clinic = document.getElementById('faturamentoFilterClinic').value;
-            const surgery = document.getElementById('faturamentoFilterSurgery').value;
+            const clinics = getMultiSelectValues('faturamentoFilterClinic');
+            const surgeries = getMultiSelectValues('faturamentoFilterSurgery');
             const dateStart = document.getElementById('faturamentoDateStart').value;
             const dateEnd = document.getElementById('faturamentoDateEnd').value;
 
             const allPending = getPendingBillingRecords(rawData);
 
             faturamentoFilteredRecords = allPending.filter(rec => {
-                const matchClinic = !clinic || rec.clinica === clinic;
-                const matchSurgery = !surgery || rec.especialidade === surgery;
+                const matchClinic = matchesMultiSelect(clinics, rec.clinica);
+                const matchSurgery = matchesMultiSelect(surgeries, rec.especialidade);
                 const matchPeriod = isWithinPeriod(rec.data, dateStart, dateEnd);
                 return matchClinic && matchSurgery && matchPeriod;
             });
@@ -1284,6 +1286,7 @@
 
             tbody.innerHTML = pageData.map(rec => `
                 <tr class="hover:bg-slate-50 transition">
+                    <td class="p-3 text-slate-500 text-[11px] font-semibold whitespace-nowrap">${rec.id || '-'}</td>
                     <td class="p-3 font-bold text-slate-900">${rec.paciente}</td>
                     <td class="p-3 text-slate-700 text-[11px] font-medium">${rec.clinica}</td>
                     <td class="p-3 text-slate-700 text-[11px] font-medium">${rec.especialidade}</td>
@@ -1293,7 +1296,7 @@
                     <td class="p-3 text-slate-600 font-medium">${rec.data ? rec.data.toLocaleDateString('pt-BR') : '-'}</td>
                     <td class="p-3 text-slate-600 text-[11px] font-medium">${rec.medico}</td>
                 </tr>
-            `).join('') || '<tr><td colspan="6" class="p-4 text-center text-slate-400">Nenhuma pendência de faturamento encontrada no filtro atual.</td></tr>';
+            `).join('') || '<tr><td colspan="7" class="p-4 text-center text-slate-400">Nenhuma pendência de faturamento encontrada no filtro atual.</td></tr>';
 
             document.getElementById('faturamentoPrintCount').textContent = `Relatório com ${totalRecords} pendência(s) — filtro atual aplicado no momento da exportação.`;
 
@@ -1310,11 +1313,187 @@
         // tabela — mesmo padrão das outras páginas, agora também com CSV e PDF.
         // A lógica virou buildFaturamentoExportRows() + exportFaturamentoAs*.
 
+        // ================================================================
+        // FILTRO DE SELEÇÃO MÚLTIPLA (Clínica e Especialidade, nas 3 páginas)
+        //
+        // Um <select multiple> nativo tem UX ruim (obriga a segurar Ctrl, não
+        // mostra o que está marcado e não tem "selecionar todas"), então cada
+        // filtro múltiplo é um dropdown próprio com checkboxes, busca e os
+        // botões "Selecionar todas" / "Limpar".
+        //
+        // CONTRATO IMPORTANTE: nenhuma opção marcada = SEM filtro (mostra
+        // tudo), exatamente como fazia a opção "Todas as Clínicas" do select
+        // antigo. É por isso que os filtros usam matchesMultiSelect() e não
+        // comparação com string vazia. "Limpar" volta justamente pra esse
+        // estado de "todas".
+        // ================================================================
+        const MULTI_ACCENTS = {
+            indigo: { ring: 'focus:ring-indigo-500', text: 'text-indigo-700', badge: 'bg-indigo-50 border-indigo-200 text-indigo-700', check: 'accent-indigo-600' },
+            teal:   { ring: 'focus:ring-teal-500',   text: 'text-teal-700',   badge: 'bg-teal-50 border-teal-200 text-teal-700',       check: 'accent-teal-600' },
+            amber:  { ring: 'focus:ring-amber-500',  text: 'text-amber-700',  badge: 'bg-amber-50 border-amber-200 text-amber-700',    check: 'accent-amber-600' }
+        };
+
+        // id do filtro -> { options, selected, placeholder, onChange, accent }
+        const multiSelectState = {};
+
+        function initMultiSelects() {
+            document.querySelectorAll('.multi-select').forEach(root => {
+                const id = root.id;
+                const accent = MULTI_ACCENTS[root.dataset.accent] || MULTI_ACCENTS.indigo;
+                const placeholder = root.dataset.placeholder || 'Todos';
+
+                multiSelectState[id] = {
+                    options: [],
+                    selected: new Set(),
+                    placeholder,
+                    onChange: root.dataset.onchange,
+                    accent
+                };
+
+                root.innerHTML = `
+                    <button type="button" class="ms-toggle w-full flex items-center justify-between gap-1 bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-1.5 text-left hover:bg-white focus:ring-2 ${accent.ring} outline-none transition">
+                        <span class="ms-label truncate">${escapeHtml(placeholder)}</span>
+                        <i data-lucide="chevron-down" class="w-3 h-3 shrink-0 text-slate-400"></i>
+                    </button>
+                    <div class="ms-panel hidden absolute left-0 right-0 mt-1 min-w-[220px] bg-white rounded-xl shadow-xl border border-slate-200 z-50">
+                        <div class="p-1.5 border-b border-slate-100 space-y-1.5">
+                            <input type="text" class="ms-search w-full bg-slate-50 border border-slate-200 text-slate-700 text-[11px] rounded-md px-2 py-1 focus:ring-2 ${accent.ring} focus:bg-white outline-none" placeholder="Buscar...">
+                            <div class="flex items-center gap-1">
+                                <button type="button" class="ms-all flex-1 px-2 py-1 text-[10px] font-bold rounded-md bg-slate-100 hover:bg-slate-200 border border-slate-200 ${accent.text} transition">Selecionar todas</button>
+                                <button type="button" class="ms-clear flex-1 px-2 py-1 text-[10px] font-bold rounded-md bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 transition">Limpar</button>
+                            </div>
+                        </div>
+                        <div class="ms-options max-h-52 overflow-y-auto custom-scrollbar p-1"></div>
+                        <p class="ms-empty hidden px-2.5 py-2 text-[11px] text-slate-400 font-medium"></p>
+                    </div>
+                `;
+
+                const panel = root.querySelector('.ms-panel');
+
+                root.querySelector('.ms-toggle').addEventListener('click', e => {
+                    e.stopPropagation();
+                    const wasOpen = !panel.classList.contains('hidden');
+                    closeAllDropdowns();
+                    if (!wasOpen) {
+                        panel.classList.remove('hidden');
+                        root.querySelector('.ms-search').focus();
+                    }
+                });
+
+                // Sem isso, o clique num checkbox borbulha até o document e o
+                // listener global fecharia o painel a cada opção marcada.
+                panel.addEventListener('click', e => e.stopPropagation());
+
+                root.querySelector('.ms-search').addEventListener('input', () => renderMultiSelectOptions(id));
+
+                // "Selecionar todas" respeita a busca: com um termo digitado,
+                // marca as opções visíveis (é o que a pessoa está vendo).
+                root.querySelector('.ms-all').addEventListener('click', () => {
+                    visibleMultiSelectOptions(id).forEach(({ value }) => multiSelectState[id].selected.add(value));
+                    commitMultiSelect(id);
+                });
+
+                root.querySelector('.ms-clear').addEventListener('click', () => {
+                    multiSelectState[id].selected.clear();
+                    commitMultiSelect(id);
+                });
+
+                root.querySelector('.ms-options').addEventListener('change', e => {
+                    const cb = e.target.closest('.ms-cb');
+                    if (!cb) return;
+                    const value = multiSelectState[id].options[Number(cb.dataset.idx)];
+                    if (cb.checked) multiSelectState[id].selected.add(value);
+                    else multiSelectState[id].selected.delete(value);
+                    commitMultiSelect(id);
+                });
+            });
+        }
+
+        // Opções visíveis = as que passam pelo termo de busca. Guarda o índice
+        // original para o checkbox referenciar o valor sem precisar colocá-lo
+        // dentro de um atributo HTML (nome de clínica com acento/aspas).
+        function visibleMultiSelectOptions(id) {
+            const root = document.getElementById(id);
+            const term = root.querySelector('.ms-search').value.trim().toLowerCase();
+            return multiSelectState[id].options
+                .map((value, idx) => ({ value, idx }))
+                .filter(({ value }) => value.toLowerCase().includes(term));
+        }
+
+        function renderMultiSelectOptions(id) {
+            const root = document.getElementById(id);
+            const st = multiSelectState[id];
+            const visible = visibleMultiSelectOptions(id);
+
+            root.querySelector('.ms-options').innerHTML = visible.map(({ value, idx }) => `
+                <label class="flex items-start gap-2 px-2 py-1 rounded-md hover:bg-slate-50 cursor-pointer">
+                    <input type="checkbox" data-idx="${idx}" class="ms-cb mt-0.5 w-3.5 h-3.5 shrink-0 rounded border-slate-300 ${st.accent.check}" ${st.selected.has(value) ? 'checked' : ''}>
+                    <span class="text-[11px] font-medium text-slate-700 leading-snug">${escapeHtml(value)}</span>
+                </label>
+            `).join('');
+
+            const empty = root.querySelector('.ms-empty');
+            empty.classList.toggle('hidden', visible.length > 0);
+            empty.textContent = st.options.length === 0
+                ? 'Nenhuma opção — carregue uma planilha primeiro.'
+                : 'Nenhuma opção corresponde à busca.';
+        }
+
+        function updateMultiSelectLabel(id) {
+            const st = multiSelectState[id];
+            const label = document.getElementById(id).querySelector('.ms-label');
+            const n = st.selected.size;
+
+            if (n === 0) {
+                label.textContent = st.placeholder;
+                label.className = 'ms-label truncate text-slate-500';
+            } else if (n === 1) {
+                label.textContent = Array.from(st.selected)[0];
+                label.className = 'ms-label truncate font-semibold text-slate-800';
+            } else {
+                label.textContent = n === st.options.length ? `Todas (${n})` : `${n} selecionadas`;
+                label.className = 'ms-label truncate font-semibold text-slate-800';
+            }
+        }
+
+        // Redesenha o filtro e reaplica os dados (a função de cada página vem
+        // do data-onchange no HTML).
+        function commitMultiSelect(id) {
+            renderMultiSelectOptions(id);
+            updateMultiSelectLabel(id);
+            const fn = window[multiSelectState[id].onChange];
+            if (typeof fn === 'function') fn();
+        }
+
+        function populateMultiSelect(id, items) {
+            const st = multiSelectState[id];
+            if (!st) return;
+            st.options = items;
+            // Planilha nova pode não ter mais uma clínica que estava marcada —
+            // manter a seleção fantasma esconderia todos os registros.
+            st.selected.forEach(v => { if (!items.includes(v)) st.selected.delete(v); });
+            renderMultiSelectOptions(id);
+            updateMultiSelectLabel(id);
+        }
+
+        function getMultiSelectValues(id) {
+            const st = multiSelectState[id];
+            return st ? Array.from(st.selected) : [];
+        }
+
+        // Nada marcado = todas as opções passam.
+        function matchesMultiSelect(selectedValues, value) {
+            return selectedValues.length === 0 || selectedValues.includes(value);
+        }
+
+        function closeMultiSelectPanels() {
+            document.querySelectorAll('.ms-panel').forEach(p => p.classList.add('hidden'));
+        }
+
         function populateFilterDropdowns() {
             const clinics = new Set();
             const surgeries = new Set();
             const statuses = new Set();
-            const users = new Set();
 
             rawData.forEach(item => {
                 const c = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']);
@@ -1322,18 +1501,15 @@
                 // OBS: NÃO incluir 'agendamento_status' aqui — esse campo é o status de
                 // COMPARECEU/FALTOU da consulta, não o status da jornada cirúrgica na clínica.
                 const st = getItemProp(item, ['agendamento_cirg_status_clinica', 'status', 'Status']);
-                const u = getItemProp(item, ['user', 'atendente', 'SDR', 'responsavel']);
 
                 if (c) clinics.add(c.trim());
                 if (s) surgeries.add(s.trim());
                 if (st) statuses.add(st.trim());
-                if (u) users.add(u.trim());
             });
 
-            populateSelect('filterClinic', Array.from(clinics).sort());
-            populateSelect('filterSurgery', Array.from(surgeries).sort());
+            populateMultiSelect('filterClinic', Array.from(clinics).sort());
+            populateMultiSelect('filterSurgery', Array.from(surgeries).sort());
             populateSelect('filterStatus', Array.from(statuses).sort());
-            populateSelect('filterUser', Array.from(users).sort());
         }
 
         function populateSelect(elementId, items) {
@@ -1365,7 +1541,9 @@
         }
 
         function setupEventListeners() {
-            ['filterClinic', 'filterSurgery', 'filterStatus', 'filterUser', 'filterDateStart', 'filterDateEnd'].forEach(id => {
+            // Clínica e Especialidade são filtros de seleção múltipla: eles se
+            // religam sozinhos via data-onchange (ver initMultiSelects).
+            ['filterStatus', 'filterDateStart', 'filterDateEnd'].forEach(id => {
                 document.getElementById(id).addEventListener('change', applyFilters);
             });
 
@@ -1392,8 +1570,9 @@
             // File Upload Handler
             document.getElementById('fileInput').addEventListener('change', handleFileUpload);
 
-            // NPS: Filtros e Upload (base independente)
-            ['npsFilterClinic', 'npsFilterSurgery', 'npsDateStart', 'npsDateEnd'].forEach(id => {
+            // NPS: Filtros e Upload (base independente). Clínica e
+            // Especialidade são múltiplos e se religam via data-onchange.
+            ['npsDateStart', 'npsDateEnd'].forEach(id => {
                 document.getElementById(id).addEventListener('change', npsApplyFilters);
             });
             document.getElementById('npsFileInput').addEventListener('change', npsHandleFileUpload);
@@ -1412,8 +1591,9 @@
                 }
             });
 
-            // Faturamento: Filtros (mesma base de dados da Página 1)
-            ['faturamentoFilterClinic', 'faturamentoFilterSurgery', 'faturamentoDateStart', 'faturamentoDateEnd'].forEach(id => {
+            // Faturamento: Filtros (mesma base de dados da Página 1). Clínica e
+            // Especialidade são múltiplos e se religam via data-onchange.
+            ['faturamentoDateStart', 'faturamentoDateEnd'].forEach(id => {
                 document.getElementById(id).addEventListener('change', applyFaturamentoFilters);
             });
             document.getElementById('faturamentoPrevPageBtn').addEventListener('click', () => {
@@ -1437,10 +1617,9 @@
         }
 
         function applyFilters() {
-            const clinic = document.getElementById('filterClinic').value;
-            const surgery = document.getElementById('filterSurgery').value;
+            const clinics = getMultiSelectValues('filterClinic');
+            const surgeries = getMultiSelectValues('filterSurgery');
             const status = document.getElementById('filterStatus').value;
-            const user = document.getElementById('filterUser').value;
             const dateStart = document.getElementById('filterDateStart').value;
             const dateEnd = document.getElementById('filterDateEnd').value;
 
@@ -1448,15 +1627,13 @@
                 const c = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']);
                 const s = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']);
                 const st = getItemProp(item, ['agendamento_cirg_status_clinica', 'status', 'Status']);
-                const u = getItemProp(item, ['user', 'atendente', 'SDR', 'responsavel']);
                 const d = parseFlexibleDate(getItemProp(item, ['agendamento_data', 'data', 'Data']));
 
-                const matchClinic = !clinic || c === clinic;
-                const matchSurgery = !surgery || s === surgery;
+                const matchClinic = matchesMultiSelect(clinics, c);
+                const matchSurgery = matchesMultiSelect(surgeries, s);
                 const matchStatus = !status || st === status;
-                const matchUser = !user || u === user;
                 const matchPeriod = isWithinPeriod(d, dateStart, dateEnd);
-                return matchClinic && matchSurgery && matchStatus && matchUser && matchPeriod;
+                return matchClinic && matchSurgery && matchStatus && matchPeriod;
             });
 
             currentPage = 1;
@@ -1680,12 +1857,14 @@
 
         function renderAIInsights() {
             const container = document.getElementById('aiInsightsContainer');
-            const especialidadeFilter = document.getElementById('filterSurgery').value;
+            const especialidadesFiltradas = getMultiSelectValues('filterSurgery');
 
             let html = '';
 
-            // EXTRA: quando não há filtro de especialidade específico, mostra o total geral
-            if (!especialidadeFilter) {
+            // EXTRA: o resumo geral só é redundante quando a tela já está
+            // olhando UMA especialidade. Sem filtro ou com várias marcadas, o
+            // total geral continua sendo informação nova.
+            if (especialidadesFiltradas.length !== 1) {
                 html += renderGeneralSummaryCard(buildGroupStats(filteredData));
             }
 
@@ -1958,7 +2137,6 @@
                 const clinicStr = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']);
                 const statusStr = getItemProp(item, ['agendamento_cirg_status_clinica', 'status', 'Status']) || 'Sem Status';
                 const docStr = getItemProp(item, ['medicos', 'medico', 'Médico']);
-                const userStr = getItemProp(item, ['user', 'atendente', 'SDR', 'responsavel']);
                 const obsStr = getItemProp(item, ['agendamento_obs', 'agendamento_cirg_obs', 'obs', 'observacao']);
 
                 const group = statusGroup(classifyStatus(statusStr));
@@ -1989,7 +2167,6 @@
                             </span>${semMotivoTag}
                         </td>
                         <td class="p-3 text-slate-600 text-[11px] font-medium">${docStr || '-'}</td>
-                        <td class="p-3 text-slate-600 text-[11px] font-medium">${userStr || '-'}</td>
                     </tr>
                 `;
             }).join('');
@@ -2033,13 +2210,18 @@
             'Cirg data 5 status': 'agendamento_cirg_status_clinica_5',
             'Médico': 'medicos',
             'Clínica': 'clinicas',
-            'Especialidade': 'especialidades',
-            'Responsável pelo paciente': 'user'
+            'Especialidade': 'especialidades'
             // Colunas sem equivalente hoje no dashboard (Tipo de agendamento,
             // Hora da consulta, Segundo olho, Motivo falta, Data/Status da
             // cirurgia legados, Campanha, Telefones, Data do cadastro,
-            // Responsável pelo agendamento, Unsubscribed) ficam com o nome
-            // original — não atrapalham, só não são usadas ainda.
+            // Responsável pelo paciente, Responsável pelo agendamento,
+            // Unsubscribed) ficam com o nome original — não atrapalham, só não
+            // são usadas ainda.
+            //
+            // "Responsável pelo paciente" já teve alias aqui (virava `user`) e
+            // alimentava um filtro "Responsável" + coluna "Atendente" na lista.
+            // Ambos foram removidos a pedido da equipe: o dado não é usado na
+            // análise da jornada e poluía filtro e relatório.
         };
 
         function normalizeHeaders(headers) {
@@ -2176,13 +2358,13 @@
                 if (c) clinics.add(c.trim());
                 if (s) surgeries.add(s.trim());
             });
-            populateSelect('npsFilterClinic', Array.from(clinics).sort());
-            populateSelect('npsFilterSurgery', Array.from(surgeries).sort());
+            populateMultiSelect('npsFilterClinic', Array.from(clinics).sort());
+            populateMultiSelect('npsFilterSurgery', Array.from(surgeries).sort());
         }
 
         function npsApplyFilters() {
-            const clinic = document.getElementById('npsFilterClinic').value;
-            const surgery = document.getElementById('npsFilterSurgery').value;
+            const clinics = getMultiSelectValues('npsFilterClinic');
+            const surgeries = getMultiSelectValues('npsFilterSurgery');
             const dateStart = document.getElementById('npsDateStart').value;
             const dateEnd = document.getElementById('npsDateEnd').value;
 
@@ -2191,8 +2373,8 @@
                 const s = npsGetEspecialidade(item);
                 const d = parseFlexibleDate(getItemProp(item, ['Data da Cirurgia']));
 
-                const matchClinic = !clinic || c === clinic;
-                const matchSurgery = !surgery || s === surgery;
+                const matchClinic = matchesMultiSelect(clinics, c);
+                const matchSurgery = matchesMultiSelect(surgeries, s);
                 const matchPeriod = isWithinPeriod(d, dateStart, dateEnd);
                 return matchClinic && matchSurgery && matchPeriod;
             });
@@ -2636,9 +2818,9 @@
         let activeTab = 'consultas';
 
         const TAB_LABELS = {
-            consultas: 'Exportar / Imprimir Relatório de Consultas',
-            nps: 'Exportar / Imprimir Relatório de NPS',
-            faturamento: 'Exportar / Imprimir Relatório de Pendências'
+            consultas: 'Imprimir Painel de Consultas',
+            nps: 'Imprimir Painel de NPS',
+            faturamento: '' // ver updateTabNav(): o botão não aparece aqui
         };
 
         function updateTabNav() {
@@ -2647,6 +2829,13 @@
             document.getElementById('navTabNps').className = `${base} ${activeTab === 'nps' ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
             document.getElementById('navTabFaturamento').className = `${base} ${activeTab === 'faturamento' ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
             document.getElementById('exportBtnLabel').textContent = TAB_LABELS[activeTab];
+
+            // O relatório completo é só de gráficos/indicadores, e Faturamento
+            // não tem nenhum: a página é apenas a lista de pendências. Mostrar o
+            // botão ali geraria um PDF em branco, então ele fica escondido —
+            // a lista sai pelo "Exportar como..." do próprio card, em planilha,
+            // CSV ou PDF de tabela real (o formato certo para lista).
+            document.getElementById('exportReportBtn').classList.toggle('hidden', activeTab === 'faturamento');
 
             // Cada página mostra o botão de upload da SUA planilha. Faturamento usa a
             // mesma base de Consultas, por isso compartilha o mesmo botão.
@@ -2664,26 +2853,25 @@
             updateStickyOffsets();
         }
 
+        // Relatório completo da página = indicadores + insights + gráficos.
+        // As listas longas são marcadas com .print-exclude no HTML e o CSS de
+        // impressão as esconde, então aqui basta chamar a impressão.
         function exportReport() {
-            if (activeTab === 'consultas') {
-                renderPatientTable(true); // renderiza todas as linhas do filtro atual, ignorando a paginação
-            } else if (activeTab === 'nps') {
-                renderNpsTable(true);
-            } else if (activeTab === 'faturamento') {
-                renderFaturamentoTable(true);
-            }
             window.print();
         }
 
-        window.addEventListener('afterprint', () => {
-            if (activeTab === 'consultas') {
-                renderPatientTable(false); // volta para a visualização paginada em tela
-            } else if (activeTab === 'nps') {
-                renderNpsTable(false);
-            } else if (activeTab === 'faturamento') {
-                renderFaturamentoTable(false);
-            }
-        });
+        // Ainda existe UMA lista imprimível: as pendências de Faturamento (a
+        // página não tem gráfico, então lá a lista é o conteúdo). Quem imprime
+        // com Ctrl+P precisa receber todas as linhas do filtro, não apenas a
+        // página atual da paginação — daí o par beforeprint/afterprint.
+        function setTablesPrintMode(exportAll) {
+            if (activeTab === 'consultas') renderPatientTable(exportAll);
+            else if (activeTab === 'nps') renderNpsTable(exportAll);
+            else if (activeTab === 'faturamento') renderFaturamentoTable(exportAll);
+        }
+
+        window.addEventListener('beforeprint', () => setTablesPrintMode(true));
+        window.addEventListener('afterprint', () => setTablesPrintMode(false)); // volta à visualização paginada em tela
 
         // ================================================================
         // EXPORTAÇÃO GRANULAR POR SEÇÃO
@@ -2706,13 +2894,19 @@
             event.stopPropagation();
             const menu = document.getElementById(menuId);
             const wasOpen = !menu.classList.contains('hidden');
-            closeExportMenus();
+            closeAllDropdowns();
             if (!wasOpen) menu.classList.remove('hidden');
         }
         function closeExportMenus() {
             document.querySelectorAll('.export-dropdown-menu').forEach(m => m.classList.add('hidden'));
         }
-        document.addEventListener('click', closeExportMenus);
+        // Clicar em qualquer lugar fora fecha tanto os menus de exportação
+        // quanto os painéis de filtro múltiplo (nunca deixar dois abertos).
+        function closeAllDropdowns() {
+            closeExportMenus();
+            closeMultiSelectPanels();
+        }
+        document.addEventListener('click', closeAllDropdowns);
 
         // --- Gráficos / Insights → JPEG ou PDF (captura da seção via html2canvas) ---
         //
@@ -2914,8 +3108,7 @@
                 'Cirurgia': getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']) || '-',
                 'Clínica Parceira': getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']) || '-',
                 'Status da Jornada': getItemProp(item, ['agendamento_cirg_status_clinica', 'status', 'Status']) || 'Sem Status',
-                'Médico / Equipe': getItemProp(item, ['medicos', 'medico', 'Médico']) || '-',
-                'Atendente': getItemProp(item, ['user', 'atendente', 'SDR', 'responsavel']) || '-'
+                'Médico / Equipe': getItemProp(item, ['medicos', 'medico', 'Médico']) || '-'
             }));
         }
         function exportPatientsAsSpreadsheet() {
@@ -3000,6 +3193,7 @@
         // faturamentoFilteredRecords já vem pronto de applyFaturamentoFilters().
         function buildFaturamentoExportRows() {
             return faturamentoFilteredRecords.map(rec => ({
+                'ID': rec.id || '-',
                 'Paciente': rec.paciente,
                 'Clínica': rec.clinica,
                 'Especialidade': rec.especialidade,
