@@ -73,6 +73,21 @@
             /* Painel de filtro múltiplo aberto na hora do Ctrl+P não deve
                aparecer no PDF cobrindo os cards. */
             .ms-panel { display: none !important; }
+
+            /* BUG CORRIGIDO — NÃO REINTRODUZIR: o header e as barras de filtro
+               usam position:sticky para acompanhar a rolagem na tela. Na
+               impressão o Chrome mantém esse deslocamento congelado na posição
+               de rolagem do momento do clique, então eles apareciam "colados"
+               no meio do PDF, em cima dos gráficos. Na impressão não existe
+               rolagem: eles precisam voltar ao fluxo normal e sair uma única
+               vez, no lugar onde estão no documento. Vale para qualquer card
+               sticky novo. */
+            header, .sticky { position: static !important; }
+
+            /* Sem isso um card pode ser cortado no meio pela quebra de página
+               (o KPI aparecia com o título numa folha e o número na outra). */
+            .white-card { break-inside: avoid; page-break-inside: avoid; }
+
             body { background: white !important; color: black !important; }
             .white-card { background: white !important; border: 1px solid #ccc !important; color: black !important; box-shadow: none !important; }
         }
