@@ -62,6 +62,13 @@
             border-radius: 4px;
         }
         @media print {
+            /* Paisagem: o painel é um dashboard largo (gráficos de ~1180px na
+               tela). Em A4 retrato a área útil é ~718px e os gráficos saíam a
+               ~60% do tamanho, com rótulo de eixo miúdo; em paisagem são
+               ~1047px (~88%), quase sem encolher. Também fica consistente com
+               a exportação por card, que já gera PDF em paisagem. */
+            @page { size: A4 landscape; margin: 10mm; }
+
             .no-print { display: none !important; }
             /* Relatório completo (botão do topo / Ctrl+P) = só indicadores,
                insights e gráficos. As listas longas (Lista Detalhada dos
@@ -87,6 +94,17 @@
             /* Sem isso um card pode ser cortado no meio pela quebra de página
                (o KPI aparecia com o título numa folha e o número na outra). */
             .white-card { break-inside: avoid; page-break-inside: avoid; }
+
+            /* BUG CORRIGIDO — NÃO REINTRODUZIR: o Chart.js grava no canvas uma
+               largura FIXA em pixels, medida na largura da TELA (ex.: 1180px).
+               A área útil da folha é bem menor, então o gráfico estourava a
+               borda do card e o limite da página — as últimas barras saíam
+               cortadas. O `!important` é obrigatório: sem ele a regra perde
+               para o style inline que o próprio Chart.js escreve no elemento.
+               Com a largura limitada e a altura solta, o canvas encolhe
+               proporcionalmente; como o bitmap foi gerado em resolução maior
+               que a impressa, ele sai nítido. */
+            canvas { max-width: 100% !important; height: auto !important; }
 
             body { background: white !important; color: black !important; }
             .white-card { background: white !important; border: 1px solid #ccc !important; color: black !important; box-shadow: none !important; }
