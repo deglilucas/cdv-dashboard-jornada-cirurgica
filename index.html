@@ -552,10 +552,11 @@
                     <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200">
                         <tr>
                             <th class="p-3">ID / Paciente</th>
-                            <th class="p-3">Data Contato</th>
+                            <th class="p-3">Data da Consulta</th>
                             <th class="p-3">Cirurgia</th>
                             <th class="p-3">Clínica Parceira</th>
                             <th class="p-3">Status da Jornada</th>
+                            <th class="p-3">Data</th>
                             <th class="p-3">Médico / Equipe</th>
                         </tr>
                     </thead>
@@ -2131,6 +2132,14 @@
             `).join('');
         }
 
+        // Telefone/nascimento não têm alias em HEADER_ALIASES (mesmo motivo do NPS:
+        // não existe nome de coluna oficial único) — aceitamos os nomes crus mais comuns
+        // vindos do Farol/Metabase. Formatação de telefone reaproveita npsFormatTelefone,
+        // que é genérica (só formata dígitos BR, não depende de nada específico do NPS).
+        function getPatientTelefone(item) { return getItemProp(item, ['Telefones', 'Telefone', 'telefone', 'Celular', 'celular', 'Fone', 'WhatsApp']); }
+        // Nem sempre vem na exportação do Farol — a tabela mostra "quando disponível".
+        function getPatientNascimento(item) { return getItemProp(item, ['Data de Nascimento', 'Data Nascimento', 'data_nascimento', 'Nascimento', 'nascimento', 'Data Nasc']); }
+
         // Extraído para função própria para ser reaproveitado pelas exportações
         // (planilha/csv/pdf) sem duplicar a regra de busca.
         function getSearchedPatientData() {
@@ -2162,9 +2171,19 @@
                 pageData = searchedData.slice(startIndex, startIndex + pageSize);
             }
 
+            // Só status com data REAL marcada ("agendado") entram na checagem de atraso —
+            // mesma regra do KPI de "exames atrasados": "pendente" usa a data como controle
+            // interno e não indica atraso (ver isAgendadoTypeStatus). Cirurgia agendada entra
+            // aqui também: é o caso que motivou este alerta (data passou e status não foi
+            // atualizado pra "realizou").
+            const AGENDADO_TYPE_CODES = ['EXAMES_OFT_AGENDADOS', 'EXAMES_CLINICO_AGENDADOS', 'EXAMES_REALIZOU_PENDENTE_RETORNO', 'CIRURGIA_AGENDOU'];
+
             tbody.innerHTML = pageData.map(item => {
                 const nameStr = getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']) || 'Sem Nome';
                 const idStr = getItemProp(item, ['clientes_id', 'id', 'ID']);
+                const telefoneStr = npsFormatTelefone(getPatientTelefone(item));
+                const nascDate = parseFlexibleDate(getPatientNascimento(item));
+                const nascStr = nascDate ? nascDate.toLocaleDateString('pt-BR') : '';
                 const dataStr = getItemProp(item, ['agendamento_data', 'data', 'Data']);
                 const surgStr = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']);
                 const clinicStr = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']);
@@ -2172,13 +2191,34 @@
                 const docStr = getItemProp(item, ['medicos', 'medico', 'Médico']);
                 const obsStr = getItemProp(item, ['agendamento_obs', 'agendamento_cirg_obs', 'obs', 'observacao']);
 
-                const group = statusGroup(classifyStatus(statusStr));
+                const code = classifyStatus(statusStr);
+                const group = statusGroup(code);
                 let badgeColor = 'bg-slate-100 text-slate-700 border-slate-200';
                 if (group === 'EXAMES') badgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
                 else if (group === 'AGUARDANDO_CLINICA') badgeColor = 'bg-rose-100 text-rose-800 border-rose-300';
                 else if (group === 'CIRURGIA_AGENDADA') badgeColor = 'bg-blue-100 text-blue-800 border-blue-300';
                 else if (group === 'CIRURGIA_REALIZADA') badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
                 else if (group === 'SEM_STATUS') badgeColor = 'bg-slate-200 text-slate-700 border-slate-300';
+                // Encerrou (desistiu ou sem indicação): vermelho claro, sempre — não depende de data.
+                else if (group === 'ENCERROU_DESISTIU' || group === 'ENCERROU_SEM_INDICACAO') badgeColor = 'bg-red-50 text-red-500 border-red-200';
+
+                // Data do procedimento/retorno marcado (mesma aba do status mostrado ao lado).
+                const journeyDate = parseFlexibleDate(getItemProp(item, ['agendamento_cirg_data_clinica_r']));
+                const journeyDateStr = journeyDate ? journeyDate.toLocaleDateString('pt-BR') : '-';
+                let journeyDateColor = 'text-slate-600 font-medium';
+                let overdueTag = '';
+                if (journeyDate && AGENDADO_TYPE_CODES.includes(code)) {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    // Atrasada: sobrescreve a cor do status (inclusive o azul de "cirurgia
+                    // agendada") pra laranja, sinalizando status desatualizado/alerta.
+                    if (journeyDate < today) {
+                        badgeColor = 'bg-orange-100 text-orange-800 border-orange-300';
+                        journeyDateColor = 'text-orange-600 font-bold';
+                        overdueTag = '<span class="ml-1 text-[9px] font-bold text-orange-600 whitespace-nowrap">(atrasado)</span>';
+                    }
+                    // Futura: mantém a cor padrão do grupo (ex.: azul de cirurgia agendada) — nada a fazer aqui.
+                }
 
                 // Regra de negócio: desistência sem motivo registrado precisa ficar visível
                 const semMotivoTag = (group === 'ENCERROU_DESISTIU' && !obsStr)
@@ -2190,6 +2230,8 @@
                         <td class="p-3">
                             <div class="font-bold text-slate-900">${nameStr}</div>
                             <div class="text-[10px] text-slate-400 font-semibold">ID: ${idStr || '-'}</div>
+                            ${telefoneStr ? `<div class="text-[10px] text-slate-500 font-medium">${escapeHtml(telefoneStr)}</div>` : ''}
+                            ${nascStr ? `<div class="text-[10px] text-slate-400 font-medium">Nasc.: ${nascStr}</div>` : ''}
                         </td>
                         <td class="p-3 text-slate-600 font-medium">${dataStr || '-'}</td>
                         <td class="p-3 font-semibold text-indigo-700">${surgStr || '-'}</td>
@@ -2199,6 +2241,7 @@
                                 ${statusStr}
                             </span>${semMotivoTag}
                         </td>
+                        <td class="p-3 ${journeyDateColor} text-[11px]">${journeyDateStr}${overdueTag}</td>
                         <td class="p-3 text-slate-600 text-[11px] font-medium">${docStr || '-'}</td>
                     </tr>
                 `;
@@ -3134,15 +3177,22 @@
 
         // Lista Detalhada dos Pacientes
         function buildPatientExportRows() {
-            return getSearchedPatientData().map(item => ({
-                'ID': getItemProp(item, ['clientes_id', 'id', 'ID']) || '-',
-                'Paciente': getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']) || 'Sem Nome',
-                'Data Contato': getItemProp(item, ['agendamento_data', 'data', 'Data']) || '-',
-                'Cirurgia': getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']) || '-',
-                'Clínica Parceira': getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']) || '-',
-                'Status da Jornada': getItemProp(item, ['agendamento_cirg_status_clinica', 'status', 'Status']) || 'Sem Status',
-                'Médico / Equipe': getItemProp(item, ['medicos', 'medico', 'Médico']) || '-'
-            }));
+            return getSearchedPatientData().map(item => {
+                const nascDate = parseFlexibleDate(getPatientNascimento(item));
+                const journeyDate = parseFlexibleDate(getItemProp(item, ['agendamento_cirg_data_clinica_r']));
+                return {
+                    'ID': getItemProp(item, ['clientes_id', 'id', 'ID']) || '-',
+                    'Paciente': getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']) || 'Sem Nome',
+                    'Telefone': npsFormatTelefone(getPatientTelefone(item)) || '-',
+                    'Data de Nascimento': nascDate ? nascDate.toLocaleDateString('pt-BR') : '-',
+                    'Data da Consulta': getItemProp(item, ['agendamento_data', 'data', 'Data']) || '-',
+                    'Cirurgia': getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']) || '-',
+                    'Clínica Parceira': getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']) || '-',
+                    'Status da Jornada': getItemProp(item, ['agendamento_cirg_status_clinica', 'status', 'Status']) || 'Sem Status',
+                    'Data do Status': journeyDate ? journeyDate.toLocaleDateString('pt-BR') : '-',
+                    'Médico / Equipe': getItemProp(item, ['medicos', 'medico', 'Médico']) || '-'
+                };
+            });
         }
         function exportPatientsAsSpreadsheet() {
             closeExportMenus();
