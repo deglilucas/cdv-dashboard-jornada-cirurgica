@@ -1,4 +1,4 @@
-# Central da Visão — Dashboard de Jornada Cirúrgica e NPS
+# Dashboard de Jornada Cirúrgica e NPS
 
 Painel web para acompanhar pacientes na jornada cirúrgica oftalmológica, medir a satisfação (NPS) das clínicas parceiras, controlar pendências de faturamento e estimar o potencial de ganho com pacientes que ainda não operaram.
 
@@ -43,4 +43,4 @@ Todo card de gráfico/indicador pode ser exportado em PDF ou JPEG; toda lista de
 
 ## Tecnologia
 
-Arquivo único (`index.html`) — HTML, CSS (Tailwind) e JavaScript puro, sem backend, sem banco de dados, sem etapa de build. Bibliotecas via CDN (Chart.js, SheetJS, jsPDF, Lucide Icons). Publicado automaticamente no Netlify e no GitHub Pages a cada atualização.
+Arquivo único (`index.html`) — HTML, CSS (Tailwind) e JavaScript puro, sem backend, sem banco de dados, sem etapa de build. Bibliotecas via CDN (Chart.js, SheetJS, jsPDF, Lucide Icons).
