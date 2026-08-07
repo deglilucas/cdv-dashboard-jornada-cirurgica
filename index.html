@@ -160,13 +160,17 @@
                 <i data-lucide="stethoscope" class="w-3.5 h-3.5"></i>
                 Consultas
             </button>
-            <button id="navTabNps" onclick="switchTab('nps')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
-                <i data-lucide="heart-handshake" class="w-3.5 h-3.5"></i>
-                NPS
+            <button id="navTabGanho" onclick="switchTab('ganho')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+                <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>
+                Potencial de Ganho
             </button>
             <button id="navTabFaturamento" onclick="switchTab('faturamento')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
                 <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
                 Faturamento
+            </button>
+            <button id="navTabNps" onclick="switchTab('nps')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+                <i data-lucide="heart-handshake" class="w-3.5 h-3.5"></i>
+                NPS
             </button>
         </div>
 
@@ -979,6 +983,200 @@
         </div>
         <!-- FIM PÁGINA 3 -->
 
+        <!-- ================================================================ -->
+        <!-- PÁGINA 4: POTENCIAL DE GANHO CIRÚRGICO — mesma base de Consultas -->
+        <!-- ================================================================ -->
+        <div id="tabGanho" class="space-y-6 hidden">
+
+        <!-- Ganho Potencial: Filtros (fixos logo abaixo da navegação de páginas) -->
+        <div class="white-card rounded-2xl p-3 space-y-2 border-emerald-200 sticky z-30" style="top: calc(var(--header-h, 0px) + var(--tabnav-h, 0px));">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <i data-lucide="filter" class="w-3.5 h-3.5 text-emerald-600"></i>
+                    Filtros de Potencial de Ganho
+                </h3>
+                <div class="flex items-center gap-2 no-print">
+                    <div class="flex items-center gap-1.5 text-[11px] text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-medium">
+                        <i data-lucide="database" class="w-3 h-3 text-emerald-600"></i>
+                        <span id="ganhoCountLabel">0 paciente(s) no filtro</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div>
+                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Clínica</label>
+                    <div class="multi-select relative" id="ganhoFilterClinic" data-placeholder="Todas as Clínicas" data-accent="emerald" data-onchange="applyGanhoFilters"></div>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Especialidade</label>
+                    <div class="multi-select relative" id="ganhoFilterSurgery" data-placeholder="Todas as Especialidades" data-accent="emerald" data-onchange="applyGanhoFilters"></div>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Status da Jornada</label>
+                    <select id="ganhoFilterStatus" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-1.5 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Período (Consulta)</label>
+                    <div class="flex items-center gap-1">
+                        <input type="date" id="ganhoDateStart" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-[11px] rounded-lg p-1.5 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition">
+                        <span class="text-slate-400 text-[10px]">até</span>
+                        <input type="date" id="ganhoDateEnd" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-[11px] rounded-lg p-1.5 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ganho Potencial: Cartões por especialidade (gráfico/indicador — entra no Imprimir Painel) -->
+        <div class="white-card rounded-2xl p-6 border-l-4 border-l-emerald-600 bg-gradient-to-r from-emerald-50/40 via-white to-white space-y-4" id="cardGanhoCards">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-600/20">
+                        <i data-lucide="circle-dollar-sign" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Potencial de Ganho Cirúrgico</h3>
+                        <p class="text-xs text-slate-500">Pacientes que ainda podem converter em cirurgia, multiplicados pelo valor base configurado abaixo</p>
+                    </div>
+                </div>
+                <div class="relative no-print">
+                    <button onclick="toggleExportMenu(event, 'menuGanhoCards')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        Exportar como...
+                        <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                    </button>
+                    <div id="menuGanhoCards" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
+                        <button onclick="exportSectionAsPdf('cardGanhoCards','Potencial_Ganho_Cirurgico')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
+                        </button>
+                        <button onclick="exportSectionAsJpeg('cardGanhoCards','Potencial_Ganho_Cirurgico')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                            <i data-lucide="image" class="w-3.5 h-3.5 text-indigo-500"></i> Exportar como JPEG
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="ganhoCardsContainer">
+                <!-- Dynamic cards gerados via JS -->
+            </div>
+        </div>
+
+        <!-- Ganho Potencial: Lista de Pacientes Convertíveis (mesmo formato da Lista Detalhada
+             de Pacientes de Consultas — fica fora do Imprimir Painel) -->
+        <div class="white-card rounded-2xl p-6 space-y-4 print-exclude" id="cardGanhoPatientList">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="search" class="w-5 h-5 text-emerald-600"></i>
+                        Pacientes Potenciais para Operar
+                    </h3>
+                    <p class="text-xs text-slate-500">Pacientes convertíveis do filtro atual — ainda não realizaram a cirurgia e não estão sem indicação</p>
+                </div>
+                <div class="flex items-center gap-2 no-print">
+                    <div class="relative w-full sm:w-72">
+                        <input type="text" id="ganhoPatientSearch" placeholder="Buscar paciente, médico ou obs..."
+                            class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl pl-9 pr-4 py-2 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                    </div>
+                    <div class="relative">
+                        <button onclick="toggleExportMenu(event, 'menuGanhoPatientList')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg flex items-center gap-1.5 transition shadow-sm whitespace-nowrap">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            Exportar como...
+                            <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                        </button>
+                        <div id="menuGanhoPatientList" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
+                            <button onclick="exportGanhoPatientsAsSpreadsheet()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i> Exportar como Planilha
+                            </button>
+                            <button onclick="exportGanhoPatientsAsCSV()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                                <i data-lucide="file-type" class="w-3.5 h-3.5 text-slate-500"></i> Exportar como CSV
+                            </button>
+                            <button onclick="exportGanhoPatientsAsPdf()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                                <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left text-xs text-slate-700">
+                    <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200">
+                        <tr>
+                            <th class="p-3">ID / Paciente</th>
+                            <th class="p-3">Data da Consulta</th>
+                            <th class="p-3">Cirurgia</th>
+                            <th class="p-3">Clínica Parceira</th>
+                            <th class="p-3">Status da Jornada</th>
+                            <th class="p-3">Data</th>
+                            <th class="p-3">Médico / Equipe</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ganhoPatientTableBody" class="divide-y divide-slate-100">
+                        <!-- Populated via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 text-xs text-slate-500 font-medium no-print">
+                <span id="ganhoPatientPaginationInfo">Mostrando 0 de 0 pacientes</span>
+                <div class="flex gap-2">
+                    <button id="ganhoPatientPrevPageBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 disabled:opacity-40 border border-slate-200">Anterior</button>
+                    <button id="ganhoPatientNextPageBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 disabled:opacity-40 border border-slate-200">Próximo</button>
+                </div>
+            </div>
+            <p class="hidden print:block text-[11px] text-slate-500 font-medium pt-2" id="ganhoPatientPrintCount"></p>
+        </div>
+
+        <!-- Ganho Potencial: Configuração de Valor Base (tabela — fica fora do Imprimir Painel) -->
+        <div class="white-card rounded-2xl p-6 space-y-4 print-exclude" id="cardValorBase">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="settings" class="w-5 h-5 text-emerald-600"></i>
+                        Configuração de Valor Base
+                    </h3>
+                    <p class="text-xs text-slate-500">Valor da cirurgia por clínica e especialidade (cada clínica pode cobrar um valor diferente) — salvo neste navegador</p>
+                </div>
+                <div class="relative no-print shrink-0">
+                    <button onclick="toggleExportMenu(event, 'menuValorBase')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg flex items-center gap-1.5 transition shadow-sm whitespace-nowrap">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        Exportar como...
+                        <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                    </button>
+                    <div id="menuValorBase" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
+                        <button onclick="exportValorBaseAsSpreadsheet()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i> Exportar como Planilha
+                        </button>
+                        <button onclick="exportValorBaseAsCSV()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                            <i data-lucide="file-type" class="w-3.5 h-3.5 text-slate-500"></i> Exportar como CSV
+                        </button>
+                        <button onclick="exportValorBaseAsPdf()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="overflow-x-auto custom-scrollbar max-h-[420px] overflow-y-auto export-expand">
+                <table class="w-full text-left text-xs text-slate-700">
+                    <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200 sticky top-0">
+                        <tr>
+                            <th class="p-3">Clínica</th>
+                            <th class="p-3">Valor Base (R$)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="valorBaseTableBody" class="divide-y divide-slate-100">
+                        <!-- Populated via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        </div>
+        <!-- FIM PÁGINA 4 -->
+
     </main>
 
     <!-- Botão flutuante "voltar ao topo" — visível em todas as páginas -->
@@ -1036,6 +1234,9 @@
             npsUpdateDashboard();
             populateFaturamentoFilters();
             applyFaturamentoFilters();
+            loadValorBaseConfig();
+            populateGanhoFilters();
+            applyGanhoFilters();
             updateTabNav();
             updateStickyOffsets();
             window.addEventListener('resize', updateStickyOffsets);
@@ -1158,20 +1359,25 @@
             }
         }
 
-        // Status do tipo "AGENDADO" têm data real marcada — por isso dá pra checar atraso.
-        // Status "PENDENTE" usam a data só como controle interno, não uma data real de exame.
-        function isAgendadoTypeStatus(code) {
-            return code === 'EXAMES_OFT_AGENDADOS' || code === 'EXAMES_CLINICO_AGENDADOS' || code === 'EXAMES_REALIZOU_PENDENTE_RETORNO';
-        }
+        // Grupos "ainda em andamento" onde uma data marcada no passado é sinal de gargalo —
+        // foi a última vez que o paciente disse que faria o exame, retornaria ou agendaria a
+        // cirurgia. Cobre "PENDENTE" também: a data ali é controle interno, mas se ela mesma já
+        // passou, "ficou pra trás por algum motivo" (confirmado com o usuário — antes só
+        // "AGENDADO" contava, mas essa distinção era só pra esse alerta, não é mais usada).
+        // Grupos resolvidos (realizou/encerrou) e SEM_STATUS (sem data de procedimento) ficam de
+        // fora: não há prazo perdido a cobrar ali.
+        const GARGALO_GROUPS = ['EXAMES', 'AGUARDANDO_CLINICA', 'CIRURGIA_AGENDADA'];
 
-        function isStatusOverdue(item) {
+        // Dias de atraso (> 0) do procedimento em andamento, ou null se não há atraso / não se aplica.
+        function getJourneyOverdueDays(item) {
             const code = classifyStatus(getItemProp(item, ['agendamento_cirg_status_clinica']));
-            if (!isAgendadoTypeStatus(code)) return false;
-            const d = parseFlexibleDate(getItemProp(item, ['agendamento_cirg_data_clinica_r']));
-            if (!d) return false;
+            if (!GARGALO_GROUPS.includes(statusGroup(code))) return null;
+            const date = parseFlexibleDate(getItemProp(item, ['agendamento_cirg_data_clinica_r']));
+            if (!date) return null;
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            return d < today;
+            if (date >= today) return null;
+            return Math.round((today - date) / 86400000);
         }
 
         // O Farol acompanha até 5 procedimentos dentro da mesma consulta (abas 1 a 5).
@@ -1348,7 +1554,353 @@
         // A lógica virou buildFaturamentoExportRows() + exportFaturamentoAs*.
 
         // ================================================================
-        // FILTRO DE SELEÇÃO MÚLTIPLA (Clínica e Especialidade, nas 3 páginas)
+        // PÁGINA 4: POTENCIAL DE GANHO CIRÚRGICO — usa a MESMA base (rawData) das
+        // páginas 1 e 3, não precisa de upload próprio.
+        //
+        // Regra de negócio (combinada com o usuário em 2026-08): "convertível" é
+        // todo paciente que ainda NÃO realizou a cirurgia (nenhum olho, no caso de
+        // Catarata) E cujo status não seja "sem indicação cirúrgica". Isso inclui
+        // "desistiu" de propósito — desistência é considerada reversível (pode ser
+        // financeira/momentânea ou por falha da clínica), diferente de "sem
+        // indicação" (motivo clínico, paciente realmente não é candidato). Cobre
+        // TODAS as especialidades da planilha, não só as 4 primárias do Insights.
+        //
+        // O valor da cirurgia varia por CLÍNICA (cada parceira negocia um valor
+        // diferente para a mesma especialidade) — por isso a configuração de valor
+        // base é uma tabela por (clínica, especialidade), não um valor único por
+        // especialidade. Esse valor não vem da planilha (é definido manualmente
+        // pelo usuário), então é salvo no localStorage do navegador para não se
+        // perder a cada reload/nova importação.
+        // ================================================================
+        let ganhoFilteredData = [];
+        let valorBaseConfig = {};
+
+        const VALOR_BASE_STORAGE_KEY = 'cdv_valorBaseConfig';
+
+        function loadValorBaseConfig() {
+            try {
+                const raw = localStorage.getItem(VALOR_BASE_STORAGE_KEY);
+                valorBaseConfig = raw ? JSON.parse(raw) : {};
+            } catch (e) {
+                valorBaseConfig = {};
+            }
+        }
+
+        function saveValorBaseConfig() {
+            try {
+                localStorage.setItem(VALOR_BASE_STORAGE_KEY, JSON.stringify(valorBaseConfig));
+            } catch (e) {
+                // localStorage indisponível (modo privado, quota etc.) — segue sem persistir.
+            }
+        }
+
+        function valorBaseKey(clinica, especialidade) {
+            return `${clinica}||${especialidade}`;
+        }
+
+        // null = ainda não configurado (não confundir com 0, que é um valor válido).
+        function getValorBase(clinica, especialidade) {
+            const v = valorBaseConfig[valorBaseKey(clinica, especialidade)];
+            return typeof v === 'number' && !isNaN(v) ? v : null;
+        }
+
+        function setValorBase(clinica, especialidade, valor) {
+            const key = valorBaseKey(clinica, especialidade);
+            if (valor === null || isNaN(valor)) delete valorBaseConfig[key];
+            else valorBaseConfig[key] = valor;
+            saveValorBaseConfig();
+        }
+
+        // Especialidades primárias, em ordem de prioridade — filtro padrão da página de
+        // Potencial de Ganho: ao carregar a planilha, já abre focada no que mais importa
+        // (o resto das especialidades continua disponível pra marcar manualmente).
+        const GANHO_DEFAULT_SPECIALTY_ORDER = ['CATARATA', 'REFRATIVA', 'BLEFAROPLASTIA', 'RETINA'];
+
+        function populateGanhoFilters() {
+            const clinics = new Set();
+            const surgeries = new Set();
+            const statuses = new Set();
+            rawData.forEach(item => {
+                const c = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']);
+                const s = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']);
+                const st = getItemProp(item, ['agendamento_cirg_status_clinica', 'status', 'Status']);
+                if (c) clinics.add(c.trim());
+                if (s) surgeries.add(s.trim());
+                if (st) statuses.add(st.trim());
+            });
+            populateMultiSelect('ganhoFilterClinic', Array.from(clinics).sort());
+            populateMultiSelect('ganhoFilterSurgery', Array.from(surgeries).sort());
+            populateSelect('ganhoFilterStatus', Array.from(statuses).sort());
+
+            // Pré-seleciona as primárias que existirem na planilha (nome exato pode variar
+            // de acento/caixa, daí o normalizeSpecialtyKey). Nenhuma primária encontrada =
+            // deixa como está (nenhuma marcada = sem filtro, mostra tudo).
+            const defaultSelection = [];
+            GANHO_DEFAULT_SPECIALTY_ORDER.forEach(key => {
+                Array.from(surgeries).forEach(s => {
+                    if (normalizeSpecialtyKey(s).includes(key) && !defaultSelection.includes(s)) defaultSelection.push(s);
+                });
+            });
+            if (defaultSelection.length > 0) {
+                multiSelectState['ganhoFilterSurgery'].selected = new Set(defaultSelection);
+                renderMultiSelectOptions('ganhoFilterSurgery');
+                updateMultiSelectLabel('ganhoFilterSurgery');
+            }
+        }
+
+        function applyGanhoFilters() {
+            const clinics = getMultiSelectValues('ganhoFilterClinic');
+            const surgeries = getMultiSelectValues('ganhoFilterSurgery');
+            const status = document.getElementById('ganhoFilterStatus').value;
+            const dateStart = document.getElementById('ganhoDateStart').value;
+            const dateEnd = document.getElementById('ganhoDateEnd').value;
+
+            ganhoFilteredData = rawData.filter(item => {
+                const c = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']);
+                const s = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']);
+                const st = getItemProp(item, ['agendamento_cirg_status_clinica', 'status', 'Status']);
+                const d = parseFlexibleDate(getItemProp(item, ['agendamento_data', 'data', 'Data']));
+
+                const matchClinic = matchesMultiSelect(clinics, c);
+                const matchSurgery = matchesMultiSelect(surgeries, s);
+                const matchStatus = !status || st === status;
+                const matchPeriod = isWithinPeriod(d, dateStart, dateEnd);
+                return matchClinic && matchSurgery && matchStatus && matchPeriod;
+            });
+
+            document.getElementById('ganhoCountLabel').textContent = `${ganhoFilteredData.length} paciente(s) no filtro`;
+            renderGanhoPotencialCards();
+            renderValorBaseTable();
+            ganhoPatientCurrentPage = 1;
+            renderGanhoPatientTable();
+        }
+
+        // Agrupa por especialidade. "Convertível" = nem realizou nem sem indicação
+        // (ver comentário de regra de negócio acima).
+        function buildGanhoEspecialidadeStats(data) {
+            const bySpecialty = {};
+            data.forEach(item => {
+                const especialidade = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']) || 'Não Especificado';
+                const clinica = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']) || 'Não identificada';
+                const group = statusGroup(classifyStatus(getItemProp(item, ['agendamento_cirg_status_clinica'])));
+
+                if (!bySpecialty[especialidade]) {
+                    bySpecialty[especialidade] = { total: 0, realizada: 0, semIndicacao: 0, convertiveis: 0, ganhoPotencial: 0, semPreco: 0 };
+                }
+                const st = bySpecialty[especialidade];
+                st.total++;
+
+                if (group === 'CIRURGIA_REALIZADA') {
+                    st.realizada++;
+                } else if (group === 'ENCERROU_SEM_INDICACAO') {
+                    st.semIndicacao++;
+                } else {
+                    st.convertiveis++;
+                    const valor = getValorBase(clinica, especialidade);
+                    if (valor !== null) st.ganhoPotencial += valor;
+                    else st.semPreco++;
+                }
+            });
+            return bySpecialty;
+        }
+
+        const GANHO_ACCENT_PALETTE = ['indigo', 'blue', 'pink', 'cyan', 'violet', 'teal', 'amber', 'rose', 'emerald', 'orange'];
+
+        function formatBRL(n) {
+            return (n || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+        }
+
+        function renderGanhoResumoCard(totalConvertiveis, totalGanho, totalSemPreco) {
+            return `
+                <div class="col-span-full p-4 rounded-xl border border-emerald-300 bg-emerald-50 space-y-2">
+                    <div class="flex items-center gap-2 text-xs font-bold text-emerald-800">
+                        <i data-lucide="circle-dollar-sign" class="w-4 h-4"></i>
+                        GANHO POTENCIAL TOTAL — TODAS AS ESPECIALIDADES NO FILTRO ATUAL
+                    </div>
+                    <div class="text-3xl font-extrabold text-emerald-700">${formatBRL(totalGanho)}</div>
+                    <p class="text-[11px] text-slate-500 font-medium">${totalConvertiveis} paciente(s) convertível(is) no filtro atual${totalSemPreco > 0 ? ` — ${totalSemPreco} ainda sem valor base configurado` : ''}.</p>
+                </div>
+            `;
+        }
+
+        function renderGanhoEspecialidadeCard(especialidade, st, idx) {
+            const accent = GANHO_ACCENT_PALETTE[idx % GANHO_ACCENT_PALETTE.length];
+            const smallSample = st.total > 0 && st.total < MIN_SAMPLE_SIZE;
+            const valorMedio = st.convertiveis > 0 ? st.ganhoPotencial / st.convertiveis : 0;
+
+            return `
+                <div class="p-4 rounded-xl border border-${accent}-200 bg-${accent}-50/40 flex flex-col justify-between space-y-2">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-xs font-bold text-${accent}-800">
+                            <i data-lucide="stethoscope" class="w-4 h-4"></i>
+                            ${escapeHtml(especialidade.toUpperCase())}
+                        </div>
+                        ${smallSample ? `<span class="text-[9px] font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full whitespace-nowrap">AMOSTRA PEQUENA</span>` : ''}
+                    </div>
+                    <div class="text-sm text-slate-700 space-y-1">
+                        <p>Total de Pacientes: <strong>${st.total}</strong></p>
+                        <p>Total de Cirurgias Realizadas: <strong>${st.realizada}</strong></p>
+                        <p>Pacientes Convertíveis: <strong>${st.convertiveis}</strong></p>
+                        <p>Valor Médio da Cirurgia: <strong>${formatBRL(valorMedio)}</strong></p>
+                        ${st.semPreco > 0 ? `<p class="text-amber-700 text-xs">${st.semPreco} paciente(s) sem valor base configurado (não somados ao ganho abaixo).</p>` : ''}
+                    </div>
+                    <div class="pt-2 border-t border-${accent}-200/60">
+                        <p class="text-sm font-extrabold text-${accent}-800">GANHO POTENCIAL: ${formatBRL(st.ganhoPotencial)}</p>
+                    </div>
+                    <div class="text-sm font-bold text-${accent}-900 flex items-center gap-1.5">
+                        <i data-lucide="zap" class="w-4 h-4"></i>
+                        Acompanhar ${st.convertiveis} paciente${st.convertiveis !== 1 ? 's' : ''} para agendamento de cirurgia.
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderGanhoPotencialCards() {
+            const container = document.getElementById('ganhoCardsContainer');
+            const stats = buildGanhoEspecialidadeStats(ganhoFilteredData);
+            // Ordem de prioridade por nível de especialidade (primária > secundária > terciária);
+            // dentro do mesmo nível, maior potencial de ganho primeiro.
+            const entries = Object.entries(stats).sort((a, b) => {
+                const tierDiff = getSpecialtyTierOrder(a[0]) - getSpecialtyTierOrder(b[0]);
+                return tierDiff !== 0 ? tierDiff : b[1].ganhoPotencial - a[1].ganhoPotencial;
+            });
+
+            const totalConvertiveis = entries.reduce((sum, [, s]) => sum + s.convertiveis, 0);
+            const totalGanho = entries.reduce((sum, [, s]) => sum + s.ganhoPotencial, 0);
+            const totalSemPreco = entries.reduce((sum, [, s]) => sum + s.semPreco, 0);
+
+            let html = renderGanhoResumoCard(totalConvertiveis, totalGanho, totalSemPreco);
+            html += entries.map(([especialidade, st], idx) => renderGanhoEspecialidadeCard(especialidade, st, idx)).join('');
+            container.innerHTML = html || '<p class="col-span-full text-xs text-slate-400 text-center py-4">Nenhum paciente no filtro atual.</p>';
+            lucide.createIcons();
+        }
+
+        // Combinações (clínica, especialidade) que existem de fato no filtro atual — não o
+        // produto cartesiano de todas as clínicas x todas as especialidades, e não a planilha
+        // inteira: com filtro de Clínica/Especialidade ativo, só as combinações relevantes
+        // aparecem (evita mostrar clínica fora do filtro na hora de configurar o preço).
+        function buildValorBaseCombos() {
+            const combos = {};
+            ganhoFilteredData.forEach(item => {
+                const especialidade = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']) || 'Não Especificado';
+                const clinica = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']) || 'Não identificada';
+                if (!combos[especialidade]) combos[especialidade] = new Set();
+                combos[especialidade].add(clinica);
+            });
+            return combos;
+        }
+
+        function sortedEspecialidades(combos) {
+            // Ordem de prioridade por nível (primária > secundária > terciária); dentro do
+            // mesmo nível, ordem alfabética — é uma tabela de configuração, não um ranking.
+            return Object.keys(combos).sort((a, b) => {
+                const tierDiff = getSpecialtyTierOrder(a) - getSpecialtyTierOrder(b);
+                return tierDiff !== 0 ? tierDiff : a.localeCompare(b);
+            });
+        }
+
+        // Especialidades começam recolhidas (só o cabeçalho) — evita uma listona de clínicas
+        // quando a planilha tem muitas. Estado sobrevive a re-renders (filtro, edição de
+        // valor), mas não precisa persistir entre sessões — é só preferência de visualização.
+        let valorBaseExpandedGroups = new Set();
+
+        function renderValorBaseTable() {
+            const tbody = document.getElementById('valorBaseTableBody');
+            const combos = buildValorBaseCombos();
+            const especialidades = sortedEspecialidades(combos);
+
+            if (especialidades.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="2" class="p-4 text-center text-slate-400">Nenhum paciente no filtro atual.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = especialidades.map(especialidade => {
+                const clinicas = Array.from(combos[especialidade]).sort();
+                const isOpen = valorBaseExpandedGroups.has(especialidade);
+                const header = `
+                    <tr class="bg-slate-100 hover:bg-slate-200 cursor-pointer transition" data-toggle-especialidade="${escapeHtml(especialidade)}">
+                        <td colspan="2" class="p-2">
+                            <div class="flex items-center gap-1.5 font-bold text-slate-800 text-[11px] uppercase tracking-wide">
+                                <i data-lucide="chevron-${isOpen ? 'down' : 'right'}" class="w-3.5 h-3.5"></i>
+                                ${escapeHtml(especialidade)}
+                                <span class="text-slate-400 font-normal normal-case">(${clinicas.length} clínica${clinicas.length !== 1 ? 's' : ''})</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                const rows = !isOpen ? '' : clinicas.map(clinica => {
+                    const valor = getValorBase(clinica, especialidade);
+                    return `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-3 text-slate-700 text-[11px] font-medium">${escapeHtml(clinica)}</td>
+                            <td class="p-3">
+                                <div class="flex items-center gap-1">
+                                    <span class="text-slate-400 text-[11px]">R$</span>
+                                    <input type="number" min="0" step="0.01" inputmode="decimal"
+                                        class="valor-base-input w-28 bg-slate-50 border border-slate-300 rounded-lg p-1.5 text-xs focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition"
+                                        data-clinica="${escapeHtml(clinica)}" data-especialidade="${escapeHtml(especialidade)}"
+                                        value="${valor !== null ? valor : ''}" placeholder="0,00">
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+                return header + rows;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function handleValorBaseGroupToggle(e) {
+            const header = e.target.closest('tr[data-toggle-especialidade]');
+            if (!header) return;
+            const especialidade = header.dataset.toggleEspecialidade;
+            if (valorBaseExpandedGroups.has(especialidade)) valorBaseExpandedGroups.delete(especialidade);
+            else valorBaseExpandedGroups.add(especialidade);
+            renderValorBaseTable();
+        }
+
+        // Reativo — sem botão "Calcular", igual ao resto do painel: os cartões
+        // atualizam sozinhos a cada valor digitado.
+        function handleValorBaseInput(e) {
+            if (!e.target.classList.contains('valor-base-input')) return;
+            const clinica = e.target.dataset.clinica;
+            const especialidade = e.target.dataset.especialidade;
+            const valor = e.target.value === '' ? null : parseFloat(e.target.value);
+            setValorBase(clinica, especialidade, valor);
+            renderGanhoPotencialCards();
+        }
+
+        // Mesma fonte (combinações do filtro atual) e mesma ordem da tabela em tela.
+        function buildValorBaseExportRows() {
+            const combos = buildValorBaseCombos();
+            const rows = [];
+            sortedEspecialidades(combos).forEach(especialidade => {
+                Array.from(combos[especialidade]).sort().forEach(clinica => {
+                    const valor = getValorBase(clinica, especialidade);
+                    rows.push({
+                        'Especialidade': especialidade,
+                        'Clínica': clinica,
+                        'Valor Base (R$)': valor !== null ? valor : ''
+                    });
+                });
+            });
+            return rows;
+        }
+        function exportValorBaseAsSpreadsheet() {
+            closeExportMenus();
+            exportRowsAsSpreadsheet(buildValorBaseExportRows(), 'Valor Base', 'Configuracao_Valor_Base');
+        }
+        function exportValorBaseAsCSV() {
+            closeExportMenus();
+            exportRowsAsCSV(buildValorBaseExportRows(), 'Configuracao_Valor_Base');
+        }
+        function exportValorBaseAsPdf() {
+            closeExportMenus();
+            exportRowsAsPdf(buildValorBaseExportRows(), 'Configuração de Valor Base por Clínica e Especialidade', 'Configuracao_Valor_Base');
+        }
+
+        // ================================================================
+        // FILTRO DE SELEÇÃO MÚLTIPLA (Clínica e Especialidade, nas 4 páginas)
         //
         // Um <select multiple> nativo tem UX ruim (obriga a segurar Ctrl, não
         // mostra o que está marcado e não tem "selecionar todas"), então cada
@@ -1362,9 +1914,10 @@
         // estado de "todas".
         // ================================================================
         const MULTI_ACCENTS = {
-            indigo: { ring: 'focus:ring-indigo-500', text: 'text-indigo-700', badge: 'bg-indigo-50 border-indigo-200 text-indigo-700', check: 'accent-indigo-600' },
-            teal:   { ring: 'focus:ring-teal-500',   text: 'text-teal-700',   badge: 'bg-teal-50 border-teal-200 text-teal-700',       check: 'accent-teal-600' },
-            amber:  { ring: 'focus:ring-amber-500',  text: 'text-amber-700',  badge: 'bg-amber-50 border-amber-200 text-amber-700',    check: 'accent-amber-600' }
+            indigo:  { ring: 'focus:ring-indigo-500',  text: 'text-indigo-700',  badge: 'bg-indigo-50 border-indigo-200 text-indigo-700',   check: 'accent-indigo-600' },
+            teal:    { ring: 'focus:ring-teal-500',    text: 'text-teal-700',    badge: 'bg-teal-50 border-teal-200 text-teal-700',         check: 'accent-teal-600' },
+            amber:   { ring: 'focus:ring-amber-500',   text: 'text-amber-700',   badge: 'bg-amber-50 border-amber-200 text-amber-700',      check: 'accent-amber-600' },
+            emerald: { ring: 'focus:ring-emerald-500', text: 'text-emerald-700', badge: 'bg-emerald-50 border-emerald-200 text-emerald-700', check: 'accent-emerald-600' }
         };
 
         // id do filtro -> { options, selected, placeholder, onChange, accent }
@@ -1644,6 +2197,38 @@
                 }
             });
 
+            // Potencial de Ganho: Filtros (mesma base de dados da Página 1). Clínica e
+            // Especialidade são múltiplos e se religam via data-onchange; Status é
+            // select único, igual ao da página de Consultas.
+            ['ganhoFilterStatus', 'ganhoDateStart', 'ganhoDateEnd'].forEach(id => {
+                document.getElementById(id).addEventListener('change', applyGanhoFilters);
+            });
+            // Um único listener delegado cobre todos os inputs de valor base, mesmo
+            // depois que a tabela é re-renderizada (os elementos originais são trocados).
+            document.getElementById('valorBaseTableBody').addEventListener('input', handleValorBaseInput);
+            // Clique no cabeçalho de cada especialidade abre/fecha o grupo de clínicas.
+            document.getElementById('valorBaseTableBody').addEventListener('click', handleValorBaseGroupToggle);
+
+            // Potencial de Ganho: Lista de pacientes convertíveis (mesmo padrão da busca/
+            // paginação da Lista Detalhada de Pacientes, em Consultas).
+            document.getElementById('ganhoPatientSearch').addEventListener('input', () => {
+                ganhoPatientCurrentPage = 1;
+                renderGanhoPatientTable();
+            });
+            document.getElementById('ganhoPatientPrevPageBtn').addEventListener('click', () => {
+                if (ganhoPatientCurrentPage > 1) {
+                    ganhoPatientCurrentPage--;
+                    renderGanhoPatientTable();
+                }
+            });
+            document.getElementById('ganhoPatientNextPageBtn').addEventListener('click', () => {
+                const totalPages = Math.ceil(getSearchedGanhoPatientData().length / pageSize);
+                if (ganhoPatientCurrentPage < totalPages) {
+                    ganhoPatientCurrentPage++;
+                    renderGanhoPatientTable();
+                }
+            });
+
             // Botão flutuante "voltar ao topo": só aparece depois de rolar a página
             window.addEventListener('scroll', () => {
                 document.getElementById('backToTopBtn').classList.toggle('hidden', window.scrollY < 300);
@@ -1714,37 +2299,99 @@
         }
 
         // ================================================================
-        // INSIGHTS ESTRATÉGICOS — organizados por especialidade (Catarata,
-        // Refrativa, Blefaroplastia) + Resumo Geral + Mediana de conversão.
-        // Textos de recomendação são um primeiro rascunho — revisão de
-        // redação combinada para depois.
+        // INSIGHTS ESTRATÉGICOS — organizados por especialidade (Catarata, Refrativa,
+        // Blefaroplastia, Retina) + Resumo Geral + Mediana de conversão. Regras de negócio
+        // (metas de conversão, SLA de mediana, prioridade de recomendação) combinadas com o
+        // usuário em 2026-08 — ver CLAUDE.md para o histórico completo da decisão.
         // ================================================================
         const CORE_SPECIALTIES = [
             { key: 'CATARATA', label: 'Catarata', icon: 'eye', accent: 'indigo' },
             { key: 'REFRATIVA', label: 'Refrativa', icon: 'scan-eye', accent: 'blue' },
-            { key: 'BLEFAROPLASTIA', label: 'Blefaroplastia', icon: 'sparkles', accent: 'pink' }
+            { key: 'BLEFAROPLASTIA', label: 'Blefaroplastia', icon: 'sparkles', accent: 'pink' },
+            { key: 'RETINA', label: 'Retina', icon: 'aperture', accent: 'cyan' }
         ];
         const MIN_SAMPLE_SIZE = 10; // abaixo disso, avisamos que a amostra é pequena
 
+        // Metas por especialidade (parametrizado para facilitar incluir novas especialidades
+        // no futuro — só as "primárias" têm cartão próprio hoje em CORE_SPECIALTIES; as
+        // secundárias já ficam com a régua pronta, e as terciárias não entram nessas
+        // métricas por terem chance de indicação cirúrgica muito baixa).
+        // - conversionTarget: % de conversão cirúrgica sobre quem COMPARECEU à consulta
+        //   (não sobre o que foi agendado). Este dashboard só lida com quem compareceu — uma
+        //   análise incluindo falta comparecimento fica para um painel interno futuro.
+        // - sla: mediana (dias consulta → 1ª cirurgia) — excelenteMax/metaMax/atencaoMin/
+        //   criticoMin definem as faixas: <= excelenteMax é ótimo, <= metaMax é meta batida,
+        //   entre metaMax e atencaoMin é aceitável (sem alarme), >= atencaoMin é ponto de
+        //   atenção, >= criticoMin é crítico.
+        const SLA_PADRAO = { excelenteMax: 14, metaMax: 21, atencaoMin: 31, criticoMin: 41 };
+        const SPECIALTY_RULES = {
+            CATARATA: { tier: 'primaria', conversionTarget: 80, sla: SLA_PADRAO },
+            REFRATIVA: { tier: 'primaria', conversionTarget: 50, sla: SLA_PADRAO },
+            BLEFAROPLASTIA: { tier: 'primaria', conversionTarget: 40, sla: { excelenteMax: 29, metaMax: 39, atencaoMin: 51, criticoMin: 66 } },
+            RETINA: { tier: 'primaria', conversionTarget: 40, sla: SLA_PADRAO },
+            CAPSULOTOMIA: { tier: 'secundaria', conversionTarget: 30, sla: SLA_PADRAO },
+            CALAZIO: { tier: 'secundaria', conversionTarget: 30, sla: SLA_PADRAO },
+            PTERIGIO: { tier: 'secundaria', conversionTarget: 30, sla: SLA_PADRAO },
+            'CONSULTA OFTALMOLOGICA': { tier: 'secundaria', conversionTarget: 30, sla: SLA_PADRAO },
+            GLAUCOMA: { tier: 'terciaria' },
+            ESTRABISMO: { tier: 'terciaria' },
+            CERATOCONE: { tier: 'terciaria' },
+            CORNEA: { tier: 'terciaria' }
+        };
+        // Fallback pra especialidade fora da lista (ainda não mapeada) — mesma régua "padrão".
+        function getSpecialtyRule(key) {
+            return SPECIALTY_RULES[key] || { tier: 'secundaria', conversionTarget: 30, sla: SLA_PADRAO };
+        }
+
+        // Ordem de prioridade pra exibição (usada na página de Potencial de Ganho): primárias
+        // primeiro, depois secundárias, depois terciárias. Especialidade que não bate com
+        // nenhuma chave de SPECIALTY_RULES (nome fora da lista oficial) vai pro final —
+        // diferente do fallback de getSpecialtyRule(), que assume "secundária" só pra ter
+        // algum número de referência no cálculo, não pra decidir ordem de exibição.
+        const TIER_ORDER = { primaria: 0, secundaria: 1, terciaria: 2 };
+        function normalizeSpecialtyKey(s) {
+            return (s || '').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+        }
+        function getSpecialtyTierOrder(especialidade) {
+            const key = normalizeSpecialtyKey(especialidade);
+            const found = Object.keys(SPECIALTY_RULES).find(k => key.includes(k));
+            return found ? TIER_ORDER[SPECIALTY_RULES[found].tier] : 3;
+        }
+
         function buildGroupStats(data) {
             const stats = {
-                total: data.length, semStatus: 0, exames: 0, examesAtrasados: 0,
+                total: data.length, semStatus: 0, exames: 0,
                 aguardandoClinica: 0, agendada: 0, realizada: 0, desistiu: 0,
-                semIndicacao: 0, olho2Pendente: 0, topGargalo: null
+                semIndicacao: 0, olho2Pendente: 0, topGargalo: null, distinctClinics: 0,
+                // Gargalos: item ainda em andamento cuja data marcada já passou — granular por
+                // código pra alimentar a ordem de prioridade das recomendações.
+                overdue: {
+                    CIRURGIA_AGENDOU: 0,
+                    AGUARDANDO_CLINICA_AGENDAR: 0,
+                    EXAMES_REALIZOU_PENDENTE_RETORNO: 0,
+                    EXAMES_OFT_AGENDADOS: 0,
+                    EXAMES_OFT_PENDENTE: 0,
+                    EXAMES_CLINICO_AGENDADOS: 0,
+                    EXAMES_CLINICO_PENDENTE: 0
+                },
+                // Severidade de exame atrasado por tempo (5/15/30 dias) — combina os 5 códigos
+                // de exame acima, já que a régua de dias é a mesma pra qualquer status de exame.
+                examesSeveridade: { atencao: 0, ruim: 0, critico: 0 }
             };
             const clinicGargalos = {};
+            const clinicsSet = new Set();
 
             data.forEach(item => {
                 const statusRaw = getItemProp(item, ['agendamento_cirg_status_clinica']);
-                const group = statusGroup(classifyStatus(statusRaw));
+                const code = classifyStatus(statusRaw);
+                const group = statusGroup(code);
                 const especialidade = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']);
                 const clinic = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']) || 'Não identificada';
+                clinicsSet.add(clinic);
 
                 if (group === 'SEM_STATUS') stats.semStatus++;
-                else if (group === 'EXAMES') {
-                    stats.exames++;
-                    if (isStatusOverdue(item)) stats.examesAtrasados++;
-                } else if (group === 'AGUARDANDO_CLINICA') {
+                else if (group === 'EXAMES') stats.exames++;
+                else if (group === 'AGUARDANDO_CLINICA') {
                     stats.aguardandoClinica++;
                     clinicGargalos[clinic] = (clinicGargalos[clinic] || 0) + 1;
                 } else if (group === 'CIRURGIA_AGENDADA') stats.agendada++;
@@ -1752,10 +2399,23 @@
                 else if (group === 'ENCERROU_DESISTIU') stats.desistiu++;
                 else if (group === 'ENCERROU_SEM_INDICACAO') stats.semIndicacao++;
 
+                const overdueDays = getJourneyOverdueDays(item);
+                if (overdueDays !== null && stats.overdue.hasOwnProperty(code)) {
+                    stats.overdue[code]++;
+                    if (group === 'EXAMES') {
+                        if (overdueDays >= 30) stats.examesSeveridade.critico++;
+                        else if (overdueDays >= 15) stats.examesSeveridade.ruim++;
+                        else if (overdueDays >= 5) stats.examesSeveridade.atencao++;
+                    }
+                }
+
                 if (needsSecondEyeFollowUp(item, especialidade)) stats.olho2Pendente++;
             });
 
             stats.topGargalo = Object.entries(clinicGargalos).sort((a, b) => b[1] - a[1])[0] || null;
+            stats.distinctClinics = clinicsSet.size;
+            // Taxa de conversão cirúrgica sobre quem compareceu (= base do filtro atual).
+            stats.conversionRate = stats.total ? Math.round((stats.realizada / stats.total) * 100) : null;
             return stats;
         }
 
@@ -1776,6 +2436,16 @@
             const mid = Math.floor(days.length / 2);
             const median = days.length % 2 !== 0 ? days[mid] : Math.round((days[mid - 1] + days[mid]) / 2);
             return { median, count: days.length };
+        }
+
+        // Classifica a mediana de dias contra a régua de SLA da especialidade.
+        function classifyMedianSLA(days, sla) {
+            if (days === null || days === undefined) return null;
+            if (days <= sla.excelenteMax) return { level: 'excelente', label: 'melhor que o esperado', color: 'emerald' };
+            if (days <= sla.metaMax) return { level: 'meta', label: 'dentro da meta', color: 'emerald' };
+            if (days < sla.atencaoMin) return { level: 'aceitavel', label: 'aceitável', color: 'slate' };
+            if (days < sla.criticoMin) return { level: 'atencao', label: 'ponto de atenção', color: 'orange' };
+            return { level: 'critico', label: 'crítico', color: 'rose' };
         }
 
         function renderGeneralSummaryCard(stats) {
@@ -1807,11 +2477,64 @@
             `;
         }
 
-        function renderSpecialtyInsightCard(sp, stats) {
+        // Recomendações em ordem de prioridade (mais quente/fácil de converter primeiro):
+        // cirurgia agendada atrasada > aguardando clínica atrasada > exame com retorno
+        // pendente atrasado > exame oftalmológico atrasado > exame clínico atrasado > 2º olho
+        // > sem indicação alta > conversão abaixo da meta. Cada uma marca quem deve agir:
+        // "Clínica" (paciente já tem indicação, ação é da unidade parceira) ou "CdV" (fase de
+        // exames clínicos/laboratoriais, que a clínica não realiza — Central da Visão ajuda no
+        // contato) ou "CdV (gestão)" quando é revisão interna, não contato com paciente.
+        function buildRecommendations(sp, stats) {
+            const rule = getSpecialtyRule(sp.key);
+            const ov = stats.overdue;
+            const recs = [];
+
+            if (ov.CIRURGIA_AGENDOU > 0) {
+                recs.push({ responsavel: 'Clínica', text: `${ov.CIRURGIA_AGENDOU} com cirurgia marcada e data já vencida — reagendar/confirmar com o paciente.` });
+            }
+            if (ov.AGUARDANDO_CLINICA_AGENDAR > 0) {
+                recs.push({ responsavel: 'Clínica', text: `${ov.AGUARDANDO_CLINICA_AGENDAR} aguardando agendamento com prazo interno vencido — seguir com a marcação da cirurgia.` });
+            }
+            if (ov.EXAMES_REALIZOU_PENDENTE_RETORNO > 0) {
+                recs.push({ responsavel: 'Clínica', text: `${ov.EXAMES_REALIZOU_PENDENTE_RETORNO} com exame já realizado e retorno em atraso — dar sequência com o paciente.` });
+            }
+            const oftAtrasado = ov.EXAMES_OFT_AGENDADOS + ov.EXAMES_OFT_PENDENTE;
+            if (oftAtrasado > 0) {
+                recs.push({ responsavel: 'CdV', text: `${oftAtrasado} com exame oftalmológico em atraso — ajudar no contato com o paciente para remarcar.` });
+            }
+            const clinicoAtrasado = ov.EXAMES_CLINICO_AGENDADOS + ov.EXAMES_CLINICO_PENDENTE;
+            if (clinicoAtrasado > 0) {
+                recs.push({ responsavel: 'CdV', text: `${clinicoAtrasado} com exame clínico (laboratorial) em atraso — apoiar o paciente, já que a clínica não realiza esse exame internamente.` });
+            }
+            if (sp.key === 'CATARATA' && stats.olho2Pendente > 0) {
+                recs.push({ responsavel: 'Clínica', text: `${stats.olho2Pendente} operaram o 1º olho sem registro do 2º — acionar régua de acompanhamento para confirmação cirúrgica.` });
+            }
+            const semIndicacaoPct = stats.total ? Math.round((stats.semIndicacao / stats.total) * 100) : 0;
+            if (semIndicacaoPct > 30) {
+                recs.push({ responsavel: 'CdV (gestão)', text: `${semIndicacaoPct}% encerraram sem indicação cirúrgica, acima do esperado — revisar critérios de triagem pré-agendamento.` });
+            }
+            if (stats.conversionRate !== null && stats.conversionRate < rule.conversionTarget) {
+                recs.push({ responsavel: 'CdV (gestão)', text: `Conversão cirúrgica em ${stats.conversionRate}%, abaixo do esperado — avaliar causas (triagem, desistência ou acompanhamento).` });
+            }
+            if (recs.length === 0) {
+                recs.push({ responsavel: 'Geral', text: 'Sem pontos de atenção identificados no momento — acompanhar normalmente.' });
+            }
+            return recs;
+        }
+
+        const RESPONSAVEL_BADGE = {
+            'Clínica': 'bg-blue-100 text-blue-800',
+            'CdV': 'bg-purple-100 text-purple-800',
+            'CdV (gestão)': 'bg-purple-100 text-purple-800',
+            'Geral': 'bg-slate-200 text-slate-700'
+        };
+
+        function renderSpecialtyInsightCard(sp, stats, medianResult) {
             const smallSample = stats.total > 0 && stats.total < MIN_SAMPLE_SIZE;
             const pct = n => stats.total ? Math.round((n / stats.total) * 100) : 0;
             const semIndicacaoPct = pct(stats.semIndicacao);
-            const semIndicacaoAlert = semIndicacaoPct > 20;
+            const semIndicacaoAlert = semIndicacaoPct > 30;
+            const rule = getSpecialtyRule(sp.key);
 
             if (stats.total === 0) {
                 return `
@@ -1825,32 +2548,43 @@
                 `;
             }
 
-            const parts = [];
-            parts.push(`<strong>${stats.total}</strong> pacientes no filtro atual.`);
+            // Cada assunto vira o seu próprio item de lista, em vez de um parágrafo corrido
+            // misturando tudo — mais fácil de escanear visualmente.
+            const bullets = [`<strong>${stats.total}</strong> paciente${stats.total > 1 ? 's' : ''} no filtro atual.`];
+
             if (stats.aguardandoClinica > 0) {
-                parts.push(`<strong>${stats.aguardandoClinica} (${pct(stats.aguardandoClinica)}%)</strong> aguardando a clínica agendar${stats.topGargalo ? ` (maior acúmulo: <strong>${stats.topGargalo[0]}</strong>)` : ''}.`);
+                const atrasados = stats.overdue.AGUARDANDO_CLINICA_AGENDAR;
+                bullets.push(`<strong>${stats.aguardandoClinica} (${pct(stats.aguardandoClinica)}%)</strong> aguardando a clínica agendar${atrasados > 0 ? `, <strong class="text-orange-700">${atrasados} com prazo já vencido</strong>` : ''}.`);
+                // "Maior acúmulo" só faz sentido comparando clínicas — com uma única
+                // unidade no filtro, apontar "maior acúmulo" seria óbvio/redundante.
+                if (stats.topGargalo && stats.distinctClinics > 1) {
+                    bullets.push(`Maior acúmulo: <strong>${stats.topGargalo[0]}</strong> (${stats.topGargalo[1]} paciente${stats.topGargalo[1] > 1 ? 's' : ''}).`);
+                }
+            }
+            if (stats.agendada > 0) {
+                const atrasados = stats.overdue.CIRURGIA_AGENDOU;
+                bullets.push(`<strong>${stats.agendada} (${pct(stats.agendada)}%)</strong> com cirurgia agendada${atrasados > 0 ? `, <strong class="text-orange-700">${atrasados} com data já vencida</strong> (paciente não voltou após a data marcada)` : ''}.`);
             }
             if (stats.exames > 0) {
-                parts.push(`<strong>${stats.exames} (${pct(stats.exames)}%)</strong> na fase de exames${stats.examesAtrasados > 0 ? `, sendo <strong class="text-rose-700">${stats.examesAtrasados} com data agendada já atrasada</strong> (precisa contato)` : ''}.`);
+                bullets.push(`<strong>${stats.exames} (${pct(stats.exames)}%)</strong> na fase de exames.`);
+                const sev = stats.examesSeveridade;
+                if (sev.critico > 0) bullets.push(`<strong class="text-rose-700">${sev.critico} em atraso crítico</strong>, sem atualização há bastante tempo.`);
+                if (sev.ruim > 0) bullets.push(`<strong class="text-orange-700">${sev.ruim} em atraso relevante</strong>, precisa de contato.`);
+                if (sev.atencao > 0) bullets.push(`<strong class="text-amber-700">${sev.atencao} em ponto de atenção</strong>.`);
             }
             if (stats.realizada > 0) {
-                parts.push(`<strong>${stats.realizada} (${pct(stats.realizada)}%)</strong> já realizaram a cirurgia.`);
+                bullets.push(`<strong>${stats.realizada} (${pct(stats.realizada)}%)</strong> já realizaram a cirurgia.`);
             }
             if (sp.key === 'CATARATA' && stats.olho2Pendente > 0) {
-                parts.push(`<strong class="text-indigo-700">${stats.olho2Pendente} pacientes</strong> operaram o 1º olho e ainda não têm registro do 2º em nenhuma aba — oportunidade de acompanhamento.`);
+                bullets.push(`<strong class="text-indigo-700">${stats.olho2Pendente} paciente${stats.olho2Pendente > 1 ? 's' : ''}</strong> operaram o 1º olho e ainda não têm registro do 2º em nenhuma aba — oportunidade de acompanhamento.`);
             }
             if (semIndicacaoAlert) {
-                parts.push(`<strong class="text-rose-700">${semIndicacaoPct}%</strong> encerraram por "sem indicação cirúrgica" — acima de 20%, vale revisar a triagem pré-agendamento.`);
+                bullets.push(`<strong class="text-rose-700">${semIndicacaoPct}%</strong> encerraram por "sem indicação cirúrgica" — acima do esperado.`);
             }
 
-            let recomendacao = 'Priorizar retorno de contato com os pacientes aguardando clínica/exames.';
-            if (sp.key === 'CATARATA' && stats.olho2Pendente > 0) {
-                recomendacao = 'Acionar régua de acompanhamento para confirmação cirúrgica do 2º olho.';
-            } else if (semIndicacaoAlert) {
-                recomendacao = 'Revisar critérios de triagem antes do agendamento — % de "sem indicação" acima do esperado.';
-            } else if (stats.examesAtrasados > 0) {
-                recomendacao = 'Contatar pacientes com exame agendado e data já vencida para reagendar.';
-            }
+            const slaInfo = medianResult ? classifyMedianSLA(medianResult.median, rule.sla) : null;
+            const conversionBelowTarget = stats.conversionRate !== null && stats.conversionRate < rule.conversionTarget;
+            const recomendacoes = buildRecommendations(sp, stats);
 
             return `
                 <div class="p-4 rounded-xl border border-${sp.accent}-200 bg-${sp.accent}-50/40 flex flex-col justify-between space-y-2">
@@ -1861,12 +2595,29 @@
                         </div>
                         ${smallSample ? `<span class="text-[9px] font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full whitespace-nowrap">AMOSTRA PEQUENA</span>` : ''}
                     </div>
-                    <p class="text-xs text-slate-700 leading-relaxed">
-                        ${smallSample ? '<em>Amostra pequena — percentuais abaixo podem não ser representativos.</em> ' : ''}${parts.join(' ')}
-                    </p>
-                    <div class="pt-2 border-t border-${sp.accent}-200/60 text-[11px] font-semibold text-${sp.accent}-900 flex items-center gap-1.5">
-                        <i data-lucide="zap" class="w-3.5 h-3.5"></i>
-                        Recomendação: ${recomendacao}
+                    ${smallSample ? '<p class="text-[11px] text-slate-500 italic">Amostra pequena — percentuais abaixo podem não ser representativos.</p>' : ''}
+                    <ul class="text-xs text-slate-700 leading-relaxed space-y-1 list-disc list-outside pl-4">
+                        ${bullets.map(b => `<li>${b}</li>`).join('')}
+                    </ul>
+                    ${stats.conversionRate !== null ? `
+                        <div class="text-[11px] font-semibold ${conversionBelowTarget ? 'text-rose-700' : 'text-emerald-700'} flex items-center gap-1.5">
+                            <i data-lucide="percent" class="w-3.5 h-3.5"></i>
+                            Conversão cirúrgica: <strong>${stats.conversionRate}%</strong>${conversionBelowTarget ? ' — abaixo do esperado' : ' — dentro do esperado'}
+                        </div>
+                    ` : ''}
+                    ${medianResult ? `
+                        <div class="text-[11px] font-semibold text-${slaInfo.color}-700 flex items-center gap-1.5">
+                            <i data-lucide="hourglass" class="w-3.5 h-3.5"></i>
+                            Mediana consulta → 1ª cirurgia: <strong>${medianResult.median} dia(s)</strong> (${medianResult.count} pac.) — ${slaInfo.label}
+                        </div>
+                    ` : ''}
+                    <div class="pt-2 border-t border-${sp.accent}-200/60 space-y-1.5">
+                        ${recomendacoes.map(r => `
+                            <div class="text-[11px] font-semibold text-${sp.accent}-900 flex items-start gap-1.5">
+                                <i data-lucide="zap" class="w-3.5 h-3.5 mt-0.5 shrink-0"></i>
+                                <span><span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold ${RESPONSAVEL_BADGE[r.responsavel]} mr-1 whitespace-nowrap">${r.responsavel}</span>${r.text}</span>
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
             `;
@@ -1878,7 +2629,7 @@
                 <div class="p-4 rounded-xl border border-violet-200 bg-violet-50/50 space-y-2">
                     <div class="flex items-center gap-2 text-xs font-bold text-violet-800">
                         <i data-lucide="hourglass" class="w-4 h-4"></i>
-                        MEDIANA: CONSULTA → 1ª CIRURGIA
+                        MEDIANA GERAL: CONSULTA → 1ª CIRURGIA (TODAS AS ESPECIALIDADES)
                     </div>
                     ${result
                         ? `<div class="text-2xl font-extrabold text-violet-700">${result.median} dia(s)</div>
@@ -1907,7 +2658,7 @@
                     const esp = (getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']) || '').toUpperCase();
                     return esp.includes(sp.key);
                 });
-                html += renderSpecialtyInsightCard(sp, buildGroupStats(data));
+                html += renderSpecialtyInsightCard(sp, buildGroupStats(data), computeMedianDaysToFirstSurgery(data));
             });
 
             html += renderMedianSurgeryCard(filteredData);
@@ -2153,6 +2904,47 @@
             });
         }
 
+        // Extraído pra ser reaproveitado pela lista de pacientes convertíveis da página de
+        // Potencial de Ganho — mesma regra de cor de status/atraso nas duas telas.
+        function buildStatusJourneyCell(item) {
+            const statusStr = getItemProp(item, ['agendamento_cirg_status_clinica', 'status', 'Status']) || 'Sem Status';
+            const obsStr = getItemProp(item, ['agendamento_obs', 'agendamento_cirg_obs', 'obs', 'observacao']);
+            const code = classifyStatus(statusStr);
+            const group = statusGroup(code);
+
+            let badgeColor = 'bg-slate-100 text-slate-700 border-slate-200';
+            if (group === 'EXAMES') badgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
+            else if (group === 'AGUARDANDO_CLINICA') badgeColor = 'bg-rose-100 text-rose-800 border-rose-300';
+            else if (group === 'CIRURGIA_AGENDADA') badgeColor = 'bg-blue-100 text-blue-800 border-blue-300';
+            else if (group === 'CIRURGIA_REALIZADA') badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+            else if (group === 'SEM_STATUS') badgeColor = 'bg-slate-200 text-slate-700 border-slate-300';
+            // Encerrou (desistiu ou sem indicação): vermelho claro, sempre — não depende de data.
+            else if (group === 'ENCERROU_DESISTIU' || group === 'ENCERROU_SEM_INDICACAO') badgeColor = 'bg-red-50 text-red-500 border-red-200';
+
+            // Data do procedimento/retorno marcado (mesma aba do status mostrado ao lado).
+            const journeyDate = parseFlexibleDate(getItemProp(item, ['agendamento_cirg_data_clinica_r']));
+            const journeyDateStr = journeyDate ? journeyDate.toLocaleDateString('pt-BR') : '-';
+            let journeyDateColor = 'text-slate-600 font-medium';
+            let overdueTag = '';
+            // getJourneyOverdueDays já cobre "pendente" também: mesmo sendo uma data de
+            // controle interno, se ela passou, o paciente ficou pra trás por algum motivo.
+            if (getJourneyOverdueDays(item) !== null) {
+                // Atrasada: sobrescreve a cor do status (inclusive o azul de "cirurgia
+                // agendada") pra laranja, sinalizando status desatualizado/alerta.
+                badgeColor = 'bg-orange-100 text-orange-800 border-orange-300';
+                journeyDateColor = 'text-orange-600 font-bold';
+                overdueTag = '<span class="ml-1 text-[9px] font-bold text-orange-600 whitespace-nowrap">(atrasado)</span>';
+            }
+            // Futura: mantém a cor padrão do grupo (ex.: azul de cirurgia agendada) — nada a fazer aqui.
+
+            // Regra de negócio: desistência sem motivo registrado precisa ficar visível
+            const semMotivoTag = (group === 'ENCERROU_DESISTIU' && !obsStr)
+                ? '<span class="ml-1 text-[9px] font-bold text-rose-600 whitespace-nowrap">(sem motivo registrado)</span>'
+                : '';
+
+            return { statusStr, badgeColor, journeyDateStr, journeyDateColor, overdueTag, semMotivoTag };
+        }
+
         function renderPatientTable(exportAll = false) {
             const tbody = document.getElementById('patientTableBody');
             const searchedData = getSearchedPatientData();
@@ -2171,13 +2963,6 @@
                 pageData = searchedData.slice(startIndex, startIndex + pageSize);
             }
 
-            // Só status com data REAL marcada ("agendado") entram na checagem de atraso —
-            // mesma regra do KPI de "exames atrasados": "pendente" usa a data como controle
-            // interno e não indica atraso (ver isAgendadoTypeStatus). Cirurgia agendada entra
-            // aqui também: é o caso que motivou este alerta (data passou e status não foi
-            // atualizado pra "realizou").
-            const AGENDADO_TYPE_CODES = ['EXAMES_OFT_AGENDADOS', 'EXAMES_CLINICO_AGENDADOS', 'EXAMES_REALIZOU_PENDENTE_RETORNO', 'CIRURGIA_AGENDOU'];
-
             tbody.innerHTML = pageData.map(item => {
                 const nameStr = getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']) || 'Sem Nome';
                 const idStr = getItemProp(item, ['clientes_id', 'id', 'ID']);
@@ -2187,43 +2972,9 @@
                 const dataStr = getItemProp(item, ['agendamento_data', 'data', 'Data']);
                 const surgStr = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']);
                 const clinicStr = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']);
-                const statusStr = getItemProp(item, ['agendamento_cirg_status_clinica', 'status', 'Status']) || 'Sem Status';
                 const docStr = getItemProp(item, ['medicos', 'medico', 'Médico']);
-                const obsStr = getItemProp(item, ['agendamento_obs', 'agendamento_cirg_obs', 'obs', 'observacao']);
 
-                const code = classifyStatus(statusStr);
-                const group = statusGroup(code);
-                let badgeColor = 'bg-slate-100 text-slate-700 border-slate-200';
-                if (group === 'EXAMES') badgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
-                else if (group === 'AGUARDANDO_CLINICA') badgeColor = 'bg-rose-100 text-rose-800 border-rose-300';
-                else if (group === 'CIRURGIA_AGENDADA') badgeColor = 'bg-blue-100 text-blue-800 border-blue-300';
-                else if (group === 'CIRURGIA_REALIZADA') badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
-                else if (group === 'SEM_STATUS') badgeColor = 'bg-slate-200 text-slate-700 border-slate-300';
-                // Encerrou (desistiu ou sem indicação): vermelho claro, sempre — não depende de data.
-                else if (group === 'ENCERROU_DESISTIU' || group === 'ENCERROU_SEM_INDICACAO') badgeColor = 'bg-red-50 text-red-500 border-red-200';
-
-                // Data do procedimento/retorno marcado (mesma aba do status mostrado ao lado).
-                const journeyDate = parseFlexibleDate(getItemProp(item, ['agendamento_cirg_data_clinica_r']));
-                const journeyDateStr = journeyDate ? journeyDate.toLocaleDateString('pt-BR') : '-';
-                let journeyDateColor = 'text-slate-600 font-medium';
-                let overdueTag = '';
-                if (journeyDate && AGENDADO_TYPE_CODES.includes(code)) {
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    // Atrasada: sobrescreve a cor do status (inclusive o azul de "cirurgia
-                    // agendada") pra laranja, sinalizando status desatualizado/alerta.
-                    if (journeyDate < today) {
-                        badgeColor = 'bg-orange-100 text-orange-800 border-orange-300';
-                        journeyDateColor = 'text-orange-600 font-bold';
-                        overdueTag = '<span class="ml-1 text-[9px] font-bold text-orange-600 whitespace-nowrap">(atrasado)</span>';
-                    }
-                    // Futura: mantém a cor padrão do grupo (ex.: azul de cirurgia agendada) — nada a fazer aqui.
-                }
-
-                // Regra de negócio: desistência sem motivo registrado precisa ficar visível
-                const semMotivoTag = (group === 'ENCERROU_DESISTIU' && !obsStr)
-                    ? '<span class="ml-1 text-[9px] font-bold text-rose-600 whitespace-nowrap">(sem motivo registrado)</span>'
-                    : '';
+                const { statusStr, badgeColor, journeyDateStr, journeyDateColor, overdueTag, semMotivoTag } = buildStatusJourneyCell(item);
 
                 return `
                     <tr class="hover:bg-slate-50 transition">
@@ -2255,6 +3006,118 @@
             document.getElementById('paginationInfo').textContent = `Mostrando ${totalRecords === 0 ? 0 : startIndex + 1} até ${Math.min(startIndex + pageSize, totalRecords)} de ${totalRecords} paciente(s)`;
             document.getElementById('prevPageBtn').disabled = currentPage === 1;
             document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+        }
+
+        // ================================================================
+        // LISTA DE PACIENTES CONVERTÍVEIS — página de Potencial de Ganho.
+        // Mesmo formato da Lista Detalhada de Pacientes (Consultas), mas restrita aos
+        // pacientes "convertíveis" (mesma regra do cálculo de ganho: nem realizou, nem
+        // sem indicação) dentro do filtro atual da própria página (ganhoFilteredData).
+        // ================================================================
+        let ganhoPatientCurrentPage = 1;
+
+        function getGanhoConvertiblePatients(data) {
+            return data.filter(item => {
+                const group = statusGroup(classifyStatus(getItemProp(item, ['agendamento_cirg_status_clinica'])));
+                return group !== 'CIRURGIA_REALIZADA' && group !== 'ENCERROU_SEM_INDICACAO';
+            });
+        }
+
+        function getSearchedGanhoPatientData() {
+            const search = (document.getElementById('ganhoPatientSearch').value || '').toLowerCase();
+            return getGanhoConvertiblePatients(ganhoFilteredData).filter(item => {
+                const name = getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']).toLowerCase();
+                const id = getItemProp(item, ['clientes_id', 'id', 'ID']).toLowerCase();
+                const doc = getItemProp(item, ['medicos', 'medico', 'Médico']).toLowerCase();
+                const obs = getItemProp(item, ['agendamento_obs', 'obs', 'observacao']).toLowerCase();
+                return name.includes(search) || id.includes(search) || doc.includes(search) || obs.includes(search);
+            });
+        }
+
+        function renderGanhoPatientTable(exportAll = false) {
+            const tbody = document.getElementById('ganhoPatientTableBody');
+            const searchedData = getSearchedGanhoPatientData();
+            const totalRecords = searchedData.length;
+
+            let pageData, startIndex;
+            if (exportAll) {
+                pageData = searchedData;
+                startIndex = 0;
+            } else {
+                const totalPages = Math.ceil(totalRecords / pageSize) || 1;
+                if (ganhoPatientCurrentPage > totalPages) ganhoPatientCurrentPage = totalPages;
+                startIndex = (ganhoPatientCurrentPage - 1) * pageSize;
+                pageData = searchedData.slice(startIndex, startIndex + pageSize);
+            }
+
+            tbody.innerHTML = pageData.map(item => {
+                const nameStr = getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']) || 'Sem Nome';
+                const idStr = getItemProp(item, ['clientes_id', 'id', 'ID']);
+                const telefoneStr = npsFormatTelefone(getPatientTelefone(item));
+                const nascDate = parseFlexibleDate(getPatientNascimento(item));
+                const nascStr = nascDate ? nascDate.toLocaleDateString('pt-BR') : '';
+                const dataStr = getItemProp(item, ['agendamento_data', 'data', 'Data']);
+                const surgStr = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']);
+                const clinicStr = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']);
+                const docStr = getItemProp(item, ['medicos', 'medico', 'Médico']);
+
+                const { statusStr, badgeColor, journeyDateStr, journeyDateColor, overdueTag, semMotivoTag } = buildStatusJourneyCell(item);
+
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-3">
+                            <div class="font-bold text-slate-900">${nameStr}</div>
+                            <div class="text-[10px] text-slate-400 font-semibold">ID: ${idStr || '-'}</div>
+                            ${telefoneStr ? `<div class="text-[10px] text-slate-500 font-medium">${escapeHtml(telefoneStr)}</div>` : ''}
+                            ${nascStr ? `<div class="text-[10px] text-slate-400 font-medium">Nasc.: ${nascStr}</div>` : ''}
+                        </td>
+                        <td class="p-3 text-slate-600 font-medium">${dataStr || '-'}</td>
+                        <td class="p-3 font-semibold text-indigo-700">${surgStr || '-'}</td>
+                        <td class="p-3 text-slate-700 text-[11px] font-medium">${clinicStr || '-'}</td>
+                        <td class="p-3">
+                            <span class="inline-block px-2.5 py-1 text-[10px] font-bold rounded-full border ${badgeColor}">
+                                ${statusStr}
+                            </span>${semMotivoTag}
+                        </td>
+                        <td class="p-3 ${journeyDateColor} text-[11px]">${journeyDateStr}${overdueTag}</td>
+                        <td class="p-3 text-slate-600 text-[11px] font-medium">${docStr || '-'}</td>
+                    </tr>
+                `;
+            }).join('') || '<tr><td colspan="7" class="p-4 text-center text-slate-400">Nenhum paciente convertível no filtro atual.</td></tr>';
+
+            document.getElementById('ganhoPatientPrintCount').textContent = `Relatório com ${totalRecords} paciente(s) convertível(is) — filtro atual aplicado no momento da exportação.`;
+
+            if (exportAll) return;
+
+            const totalPages = Math.ceil(totalRecords / pageSize) || 1;
+            document.getElementById('ganhoPatientPaginationInfo').textContent = `Mostrando ${totalRecords === 0 ? 0 : startIndex + 1} até ${Math.min(startIndex + pageSize, totalRecords)} de ${totalRecords} paciente(s)`;
+            document.getElementById('ganhoPatientPrevPageBtn').disabled = ganhoPatientCurrentPage === 1;
+            document.getElementById('ganhoPatientNextPageBtn').disabled = ganhoPatientCurrentPage === totalPages;
+        }
+
+        function buildGanhoPatientExportRows() {
+            return getSearchedGanhoPatientData().map(item => ({
+                'ID': getItemProp(item, ['clientes_id', 'id', 'ID']) || '-',
+                'Paciente': getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']) || 'Sem Nome',
+                'Telefone': npsFormatTelefone(getPatientTelefone(item)) || '-',
+                'Data da Consulta': getItemProp(item, ['agendamento_data', 'data', 'Data']) || '-',
+                'Cirurgia': getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']) || '-',
+                'Clínica Parceira': getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']) || '-',
+                'Status da Jornada': getItemProp(item, ['agendamento_cirg_status_clinica', 'status', 'Status']) || 'Sem Status',
+                'Médico / Equipe': getItemProp(item, ['medicos', 'medico', 'Médico']) || '-'
+            }));
+        }
+        function exportGanhoPatientsAsSpreadsheet() {
+            closeExportMenus();
+            exportRowsAsSpreadsheet(buildGanhoPatientExportRows(), 'Pacientes Convertiveis', 'Pacientes_Potencial_Ganho');
+        }
+        function exportGanhoPatientsAsCSV() {
+            closeExportMenus();
+            exportRowsAsCSV(buildGanhoPatientExportRows(), 'Pacientes_Potencial_Ganho');
+        }
+        function exportGanhoPatientsAsPdf() {
+            closeExportMenus();
+            exportRowsAsPdf(buildGanhoPatientExportRows(), 'Pacientes Convertíveis — Potencial de Ganho', 'Pacientes_Potencial_Ganho');
         }
 
         // ================================================================
@@ -2353,6 +3216,8 @@
                         updateDashboard();
                         populateFaturamentoFilters();
                         applyFaturamentoFilters();
+                        populateGanhoFilters();
+                        applyGanhoFilters();
                         alert(`Planilha carregada com sucesso! ${parsedRecords.length} registros importados.`);
                     } else {
                         alert('Nenhum registro válido foi encontrado na planilha.');
@@ -2896,7 +3761,8 @@
         const TAB_LABELS = {
             consultas: 'Imprimir Painel de Consultas',
             nps: 'Imprimir Painel de NPS',
-            faturamento: '' // ver updateTabNav(): o botão não aparece aqui
+            faturamento: '', // ver updateTabNav(): o botão não aparece aqui
+            ganho: 'Imprimir Painel de Potencial de Ganho'
         };
 
         function updateTabNav() {
@@ -2904,6 +3770,7 @@
             document.getElementById('navTabConsultas').className = `${base} ${activeTab === 'consultas' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
             document.getElementById('navTabNps').className = `${base} ${activeTab === 'nps' ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
             document.getElementById('navTabFaturamento').className = `${base} ${activeTab === 'faturamento' ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
+            document.getElementById('navTabGanho').className = `${base} ${activeTab === 'ganho' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
             document.getElementById('exportBtnLabel').textContent = TAB_LABELS[activeTab];
 
             // O relatório completo é só de gráficos/indicadores, e Faturamento
@@ -2925,6 +3792,7 @@
             document.getElementById('tabConsultas').classList.toggle('hidden', tab !== 'consultas');
             document.getElementById('tabNps').classList.toggle('hidden', tab !== 'nps');
             document.getElementById('tabFaturamento').classList.toggle('hidden', tab !== 'faturamento');
+            document.getElementById('tabGanho').classList.toggle('hidden', tab !== 'ganho');
             updateTabNav();
             updateStickyOffsets();
         }
