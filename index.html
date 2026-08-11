@@ -334,71 +334,48 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="aiInsightsContainer">
+            <div class="flex flex-col gap-3" id="aiInsightsContainer">
                 <!-- Dynamic AI Insights cards generated here -->
             </div>
         </div>
 
-        <!-- Funil da Jornada Cirúrgica -->
-        <div class="white-card rounded-2xl p-6 space-y-4" id="cardFunil">
-            <div class="flex items-center justify-between">
-                <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                    <i data-lucide="git-commit" class="w-5 h-5 text-indigo-600"></i>
-                    Funil da Jornada de Atendimento até a Cirurgia
-                </h3>
-                <div class="flex items-center gap-3">
-                    <div class="relative no-print">
-                        <button onclick="toggleExportMenu(event, 'menuFunil')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
-                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                            Exportar como...
-                            <i data-lucide="chevron-down" class="w-3 h-3"></i>
-                        </button>
-                        <div id="menuFunil" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
-                            <button onclick="exportSectionAsPdf('cardFunil','Funil_Jornada_Cirurgica')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-                                <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
-                            </button>
-                            <button onclick="exportSectionAsJpeg('cardFunil','Funil_Jornada_Cirurgica')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
-                                <i data-lucide="image" class="w-3.5 h-3.5 text-indigo-500"></i> Exportar como JPEG
-                            </button>
-                        </div>
-                    </div>
-                    <span class="text-xs text-slate-500 font-medium no-print">Visão Geral do Fluxo dos Pacientes</span>
-                </div>
-            </div>
-
-            <div id="funnelContainer" class="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-3">
-                <!-- Populated dynamically via JS -->
-            </div>
-        </div>
-
-        <!-- Distribuição dos Pacientes por Status (Seção Dedicada) -->
-        <div class="white-card rounded-2xl p-6 space-y-5" id="cardStatusDist">
+        <!-- Funil da Jornada + Distribuição por Status (mesclados: falam da mesma
+             distribuição de status, um em contagem por etapa, outro em % visual —
+             pedido do usuário em 2026-08-11 pra não repetir a mesma informação em
+             2 cards separados). renderFunnel() e renderCharts() continuam
+             preenchendo #funnelContainer/#chartStatus/#statusLegendContainer
+             normalmente — só o wrapper e o cabeçalho/exportação viraram 1 só. -->
+        <div class="white-card rounded-2xl p-6 space-y-5" id="cardFunilStatus">
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                        <i data-lucide="pie-chart" class="w-5 h-5 text-indigo-600"></i>
-                        Distribuição dos Pacientes por Status
+                        <i data-lucide="git-commit" class="w-5 h-5 text-indigo-600"></i>
+                        Funil e Distribuição de Status da Jornada
                     </h3>
-                    <p class="text-xs text-slate-500">Visão consolidada de onde cada paciente está na jornada</p>
+                    <p class="text-xs text-slate-500">Fluxo dos pacientes por etapa e a mesma distribuição em % por status</p>
                 </div>
                 <div class="relative no-print">
-                    <button onclick="toggleExportMenu(event, 'menuStatusDist')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                    <button onclick="toggleExportMenu(event, 'menuFunilStatus')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
                         Exportar como...
                         <i data-lucide="chevron-down" class="w-3 h-3"></i>
                     </button>
-                    <div id="menuStatusDist" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
-                        <button onclick="exportSectionAsPdf('cardStatusDist','Distribuicao_Status_Pacientes')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                    <div id="menuFunilStatus" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
+                        <button onclick="exportSectionAsPdf('cardFunilStatus','Funil_e_Distribuicao_Status')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
                             <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
                         </button>
-                        <button onclick="exportSectionAsJpeg('cardStatusDist','Distribuicao_Status_Pacientes')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                        <button onclick="exportSectionAsJpeg('cardFunilStatus','Funil_e_Distribuicao_Status')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
                             <i data-lucide="image" class="w-3.5 h-3.5 text-indigo-500"></i> Exportar como JPEG
                         </button>
                     </div>
                 </div>
             </div>
 
-            <div class="flex flex-col lg:flex-row items-center gap-8">
+            <div id="funnelContainer" class="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-3">
+                <!-- Populated dynamically via JS -->
+            </div>
+
+            <div class="flex flex-col lg:flex-row items-center gap-8 pt-3 border-t border-slate-100">
                 <div class="relative w-full lg:w-[340px] h-[340px] shrink-0 flex items-center justify-center">
                     <canvas id="chartStatus"></canvas>
                     <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
@@ -2181,6 +2158,11 @@
                 () => currentPage, v => currentPage = v,
                 () => filteredData.length, renderPatientTable);
 
+            // Cartões de Insights: clique no cabeçalho expande/recolhe o cartão da
+            // especialidade (listener delegado, já que os cartões são recriados a cada
+            // renderAIInsights()).
+            document.getElementById('aiInsightsContainer').addEventListener('click', handleInsightCardToggle);
+
             // File Upload Handler
             document.getElementById('fileInput').addEventListener('change', handleFileUpload);
 
@@ -2457,7 +2439,7 @@
                 ['Sem Indicação', stats.semIndicacao, 'slate']
             ];
             return `
-                <div class="col-span-full p-4 rounded-xl border border-slate-300 bg-slate-50 space-y-3">
+                <div class="p-4 rounded-xl border border-slate-300 bg-slate-50 space-y-3">
                     <div class="flex items-center gap-2 text-xs font-bold text-slate-800">
                         <i data-lucide="globe" class="w-4 h-4"></i>
                         RESUMO GERAL — TODAS AS ESPECIALIDADES (${stats.total} pacientes no filtro atual)
@@ -2476,146 +2458,238 @@
 
         // Recomendações em ordem de prioridade (mais quente/fácil de converter primeiro):
         // cirurgia agendada atrasada > aguardando clínica atrasada > exame com retorno
-        // pendente atrasado > exame oftalmológico atrasado > exame clínico atrasado > 2º olho
-        // > sem indicação alta > conversão abaixo da meta. Cada uma marca quem deve agir:
-        // "Clínica" (paciente já tem indicação, ação é da unidade parceira) ou "CdV" (fase de
-        // exames clínicos/laboratoriais, que a clínica não realiza — Central da Visão ajuda no
-        // contato) ou "CdV (gestão)" quando é revisão interna, não contato com paciente.
+        // pendente atrasado > 2º olho de catarata pendente > exame oftalmológico/clínico
+        // atrasado > sem indicação alta > conversão abaixo da meta.
+        // Reordenado em 2026-08-11 (pedido do usuário): 2º olho passou a vir ANTES dos
+        // exames atrasados — é considerado o item de maior oportunidade de conversão
+        // rápida, mesmo não sendo "vencido" como os 3 primeiros.
+        //
+        // Cada item tem 2 dimensões independentes de estilo (ver ACTION_PRIORITY_META /
+        // RESPONSAVEL_META): "priority" (temperatura da ação: urgente/oportunidade/atencao/
+        // gestao) e "responsavel" (quem deve agir) — "Clínica" quando o paciente já tem
+        // indicação cirúrgica (aguardando clínica agendar, cirurgia agendada atrasada, exame
+        // com retorno pendente, 2º olho — decisão explícita do usuário: mesmo sendo uma
+        // ação de reconquista, quem contata e agenda o 2º olho é a própria unidade parceira,
+        // não a Central da Visão) ou "CdV" na fase de exames clínicos/oftalmológicos (a
+        // clínica parceira não faz exame de laboratório) ou "CdV (gestão)" para revisões
+        // internas (sem indicação alta, conversão abaixo da meta) — não são contato direto
+        // com paciente, por isso ficam sempre por último, com tag visual diferente (cinza).
         function buildRecommendations(sp, stats) {
             const rule = getSpecialtyRule(sp.key);
             const ov = stats.overdue;
             const recs = [];
 
             if (ov.CIRURGIA_AGENDOU > 0) {
-                recs.push({ responsavel: 'Clínica', text: `${ov.CIRURGIA_AGENDOU} com cirurgia marcada e data já vencida — reagendar/confirmar com o paciente.` });
+                recs.push({
+                    priority: 'urgente', responsavel: 'Clínica',
+                    headline: `Reagendar ${ov.CIRURGIA_AGENDOU} cirurgia${ov.CIRURGIA_AGENDOU > 1 ? 's' : ''} vencida${ov.CIRURGIA_AGENDOU > 1 ? 's' : ''}`,
+                    detail: 'Paciente não voltou após a data marcada — contato urgente pra reagendar ou confirmar.'
+                });
             }
             if (ov.AGUARDANDO_CLINICA_AGENDAR > 0) {
-                recs.push({ responsavel: 'Clínica', text: `${ov.AGUARDANDO_CLINICA_AGENDAR} aguardando agendamento com prazo interno vencido — seguir com a marcação da cirurgia.` });
+                // "Maior acúmulo" só faz sentido comparando clínicas — com uma única unidade
+                // no filtro, apontar "maior acúmulo" seria óbvio/redundante.
+                const gargaloTxt = (stats.topGargalo && stats.distinctClinics > 1)
+                    ? `Maior acúmulo em ${escapeHtml(stats.topGargalo[0])} (${stats.topGargalo[1]} pac.) — `
+                    : '';
+                recs.push({
+                    priority: 'urgente', responsavel: 'Clínica',
+                    headline: `Destravar ${ov.AGUARDANDO_CLINICA_AGENDAR} paciente${ov.AGUARDANDO_CLINICA_AGENDAR > 1 ? 's' : ''} aguardando agendamento de cirurgia vencido${ov.AGUARDANDO_CLINICA_AGENDAR > 1 ? 's' : ''}`,
+                    detail: `${gargaloTxt}Prazo interno vencido — seguir com a marcação da cirurgia.`
+                });
             }
             if (ov.EXAMES_REALIZOU_PENDENTE_RETORNO > 0) {
-                recs.push({ responsavel: 'Clínica', text: `${ov.EXAMES_REALIZOU_PENDENTE_RETORNO} com exame já realizado e retorno em atraso — dar sequência com o paciente.` });
-            }
-            const oftAtrasado = ov.EXAMES_OFT_AGENDADOS + ov.EXAMES_OFT_PENDENTE;
-            if (oftAtrasado > 0) {
-                recs.push({ responsavel: 'CdV', text: `${oftAtrasado} com exame oftalmológico em atraso — ajudar no contato com o paciente para remarcar.` });
-            }
-            const clinicoAtrasado = ov.EXAMES_CLINICO_AGENDADOS + ov.EXAMES_CLINICO_PENDENTE;
-            if (clinicoAtrasado > 0) {
-                recs.push({ responsavel: 'CdV', text: `${clinicoAtrasado} com exame clínico (laboratorial) em atraso — apoiar o paciente, já que a clínica não realiza esse exame internamente.` });
+                recs.push({
+                    priority: 'urgente', responsavel: 'Clínica',
+                    headline: `Dar sequência a ${ov.EXAMES_REALIZOU_PENDENTE_RETORNO} retorno${ov.EXAMES_REALIZOU_PENDENTE_RETORNO > 1 ? 's' : ''} em atraso`,
+                    detail: 'Exame já foi realizado — só falta retomar contato pra fechar o retorno.'
+                });
             }
             if (sp.key === 'CATARATA' && stats.olho2Pendente > 0) {
-                recs.push({ responsavel: 'Clínica', text: `${stats.olho2Pendente} operaram o 1º olho sem registro do 2º — acionar régua de acompanhamento para confirmação cirúrgica.` });
+                recs.push({
+                    priority: 'oportunidade', responsavel: 'Clínica',
+                    headline: `Acionar régua do 2º olho (${stats.olho2Pendente} pac.)`,
+                    detail: 'Operou o 1º olho e não tem registro do 2º — oportunidade de alta conversão.'
+                });
+            }
+            const oftAtrasado = ov.EXAMES_OFT_AGENDADOS + ov.EXAMES_OFT_PENDENTE;
+            const clinicoAtrasado = ov.EXAMES_CLINICO_AGENDADOS + ov.EXAMES_CLINICO_PENDENTE;
+            if (oftAtrasado > 0 || clinicoAtrasado > 0) {
+                const partes = [];
+                if (oftAtrasado > 0) partes.push(`${oftAtrasado} oftalmológico`);
+                if (clinicoAtrasado > 0) partes.push(`${clinicoAtrasado} laboratorial`);
+                recs.push({
+                    priority: 'atencao', responsavel: 'CdV',
+                    headline: 'Destravar exames em atraso',
+                    detail: `${partes.join(' + ')} — ajudar no contato com o paciente pra remarcar.`
+                });
             }
             const semIndicacaoPct = stats.total ? Math.round((stats.semIndicacao / stats.total) * 100) : 0;
             if (semIndicacaoPct > 30) {
-                recs.push({ responsavel: 'CdV (gestão)', text: `${semIndicacaoPct}% encerraram sem indicação cirúrgica, acima do esperado — revisar critérios de triagem pré-agendamento.` });
+                recs.push({
+                    priority: 'gestao', responsavel: 'CdV (gestão)',
+                    headline: 'Revisar critérios de triagem',
+                    detail: `${semIndicacaoPct}% encerraram sem indicação cirúrgica, acima do esperado.`
+                });
             }
             if (stats.conversionRate !== null && stats.conversionRate < rule.conversionTarget) {
-                recs.push({ responsavel: 'CdV (gestão)', text: `Conversão cirúrgica em ${stats.conversionRate}%, abaixo do esperado — avaliar causas (triagem, desistência ou acompanhamento).` });
-            }
-            if (recs.length === 0) {
-                recs.push({ responsavel: 'Geral', text: 'Sem pontos de atenção identificados no momento — acompanhar normalmente.' });
+                recs.push({
+                    priority: 'gestao', responsavel: 'CdV (gestão)',
+                    headline: 'Avaliar queda na conversão cirúrgica',
+                    detail: `Conversão em ${stats.conversionRate}%, abaixo do esperado — checar triagem, desistência ou acompanhamento.`
+                });
             }
             return recs;
         }
 
-        const RESPONSAVEL_BADGE = {
-            'Clínica': 'bg-blue-100 text-blue-800',
-            'CdV': 'bg-purple-100 text-purple-800',
-            'CdV (gestão)': 'bg-purple-100 text-purple-800',
-            'Geral': 'bg-slate-200 text-slate-700'
+        // Estilo por "temperatura" da ação (independente de quem executa — ver
+        // RESPONSAVEL_META abaixo). Só 3 emojis, por pedido explícito do usuário; "gestao"
+        // (revisão interna) usa um marcador neutro próprio pra não competir com as cores de
+        // urgência de contato com paciente.
+        const ACTION_PRIORITY_META = {
+            urgente: { emoji: '🔴', accent: 'rose' },
+            oportunidade: { emoji: '🟣', accent: 'purple' },
+            atencao: { emoji: '🟡', accent: 'orange' },
+            gestao: { emoji: '⚙️', accent: 'slate' }
         };
 
+        // Tag de responsável — dimensão independente da "temperatura" (ACTION_PRIORITY_META).
+        // Cores exigidas pelo usuário: Clínica azul, CdV roxo, Gestão cinza.
+        const RESPONSAVEL_META = {
+            'Clínica': { tag: 'CLÍNICA', badge: 'bg-blue-100 text-blue-800' },
+            'CdV': { tag: 'CDV', badge: 'bg-purple-100 text-purple-800' },
+            'CdV (gestão)': { tag: 'GESTÃO', badge: 'bg-slate-200 text-slate-700' }
+        };
+
+        // Estado de expandido/recolhido dos cartões de insight (mesmo padrão de
+        // valorBaseExpandedGroups) — não persiste entre sessões, só entre re-renders.
+        let insightsExpandedSpecialties = new Set();
+
+        function handleInsightCardToggle(e) {
+            const header = e.target.closest('[data-toggle-specialty]');
+            if (!header) return;
+            const key = header.dataset.toggleSpecialty;
+            if (insightsExpandedSpecialties.has(key)) insightsExpandedSpecialties.delete(key);
+            else insightsExpandedSpecialties.add(key);
+            renderAIInsights();
+        }
+
         function renderSpecialtyInsightCard(sp, stats, medianResult) {
+            // Especialidade sem nenhum paciente no filtro/planilha atual: cartão some por
+            // completo em vez de ocupar espaço — pedido explícito do usuário.
+            if (stats.total === 0) return '';
+
             const smallSample = stats.total > 0 && stats.total < MIN_SAMPLE_SIZE;
-            const pct = n => stats.total ? Math.round((n / stats.total) * 100) : 0;
-            const semIndicacaoPct = pct(stats.semIndicacao);
-            const semIndicacaoAlert = semIndicacaoPct > 30;
             const rule = getSpecialtyRule(sp.key);
-
-            if (stats.total === 0) {
-                return `
-                    <div class="p-4 rounded-xl border border-${sp.accent}-200 bg-${sp.accent}-50/40 space-y-2">
-                        <div class="flex items-center gap-2 text-xs font-bold text-${sp.accent}-800">
-                            <i data-lucide="${sp.icon}" class="w-4 h-4"></i>
-                            ${sp.label.toUpperCase()}
-                        </div>
-                        <p class="text-xs text-slate-400">Nenhum paciente de ${sp.label} no filtro atual.</p>
-                    </div>
-                `;
-            }
-
-            // Cada assunto vira o seu próprio item de lista, em vez de um parágrafo corrido
-            // misturando tudo — mais fácil de escanear visualmente.
-            const bullets = [`<strong>${stats.total}</strong> paciente${stats.total > 1 ? 's' : ''} no filtro atual.`];
-
-            if (stats.aguardandoClinica > 0) {
-                const atrasados = stats.overdue.AGUARDANDO_CLINICA_AGENDAR;
-                bullets.push(`<strong>${stats.aguardandoClinica} (${pct(stats.aguardandoClinica)}%)</strong> aguardando a clínica agendar${atrasados > 0 ? `, <strong class="text-orange-700">${atrasados} com prazo já vencido</strong>` : ''}.`);
-                // "Maior acúmulo" só faz sentido comparando clínicas — com uma única
-                // unidade no filtro, apontar "maior acúmulo" seria óbvio/redundante.
-                if (stats.topGargalo && stats.distinctClinics > 1) {
-                    bullets.push(`Maior acúmulo: <strong>${stats.topGargalo[0]}</strong> (${stats.topGargalo[1]} paciente${stats.topGargalo[1] > 1 ? 's' : ''}).`);
-                }
-            }
-            if (stats.agendada > 0) {
-                const atrasados = stats.overdue.CIRURGIA_AGENDOU;
-                bullets.push(`<strong>${stats.agendada} (${pct(stats.agendada)}%)</strong> com cirurgia agendada${atrasados > 0 ? `, <strong class="text-orange-700">${atrasados} com data já vencida</strong> (paciente não voltou após a data marcada)` : ''}.`);
-            }
-            if (stats.exames > 0) {
-                bullets.push(`<strong>${stats.exames} (${pct(stats.exames)}%)</strong> na fase de exames.`);
-                const sev = stats.examesSeveridade;
-                if (sev.critico > 0) bullets.push(`<strong class="text-rose-700">${sev.critico} em atraso crítico</strong>, sem atualização há bastante tempo.`);
-                if (sev.ruim > 0) bullets.push(`<strong class="text-orange-700">${sev.ruim} em atraso relevante</strong>, precisa de contato.`);
-                if (sev.atencao > 0) bullets.push(`<strong class="text-amber-700">${sev.atencao} em ponto de atenção</strong>.`);
-            }
-            if (stats.realizada > 0) {
-                bullets.push(`<strong>${stats.realizada} (${pct(stats.realizada)}%)</strong> já realizaram a cirurgia.`);
-            }
-            if (sp.key === 'CATARATA' && stats.olho2Pendente > 0) {
-                bullets.push(`<strong class="text-indigo-700">${stats.olho2Pendente} paciente${stats.olho2Pendente > 1 ? 's' : ''}</strong> operaram o 1º olho e ainda não têm registro do 2º em nenhuma aba — oportunidade de acompanhamento.`);
-            }
-            if (semIndicacaoAlert) {
-                bullets.push(`<strong class="text-rose-700">${semIndicacaoPct}%</strong> encerraram por "sem indicação cirúrgica" — acima do esperado.`);
-            }
-
+            const ov = stats.overdue;
             const slaInfo = medianResult ? classifyMedianSLA(medianResult.median, rule.sla) : null;
             const conversionBelowTarget = stats.conversionRate !== null && stats.conversionRate < rule.conversionTarget;
             const recomendacoes = buildRecommendations(sp, stats);
+            const expanded = insightsExpandedSpecialties.has(sp.key);
+
+            // SEÇÃO 1 (cabeçalho) — banner só aparece se houver algo "pronto pra fechar"
+            // agora (cirurgia ou agendamento de cirurgia vencido); é a soma que o usuário
+            // pediu, não inclui exames/retorno pendente (esses ficam no plano de ação).
+            const hotCount = ov.CIRURGIA_AGENDOU + ov.AGUARDANDO_CLINICA_AGENDAR;
+            const hotParts = [];
+            if (ov.CIRURGIA_AGENDOU > 0) hotParts.push(`${ov.CIRURGIA_AGENDOU} cirurgia${ov.CIRURGIA_AGENDOU > 1 ? 's' : ''} vencida${ov.CIRURGIA_AGENDOU > 1 ? 's' : ''}`);
+            if (ov.AGUARDANDO_CLINICA_AGENDAR > 0) hotParts.push(`${ov.AGUARDANDO_CLINICA_AGENDAR} agend. de cirurgia vencido${ov.AGUARDANDO_CLINICA_AGENDAR > 1 ? 's' : ''}`);
+            const bannerHtml = hotCount > 0 ? `
+                <div class="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-rose-100 border border-rose-300">
+                    <span class="text-base leading-none">🚨</span>
+                    <p class="text-sm font-bold text-rose-900 leading-snug">
+                        ${hotCount} paciente${hotCount > 1 ? 's' : ''} pronto${hotCount > 1 ? 's' : ''} para fechar
+                        <span class="font-semibold text-rose-800">(${hotParts.join(' + ')})</span>
+                    </p>
+                </div>
+            ` : '';
+
+            // SEÇÃO 2 (funil resumido) — tags/pills enxutas em vez de frases longas. Nome
+            // literal "Aguardando agendamento de cirurgia" (não só "Agendamento") por pedido
+            // do usuário — deixa claro que não é a consulta, é a cirurgia que está pendente
+            // de marcação; junto com "cirurgia vencida" são os itens mais quentes do funil.
+            const pillClass = 'inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-800';
+            const pills = [];
+            if (stats.aguardandoClinica > 0) {
+                const atrasados = ov.AGUARDANDO_CLINICA_AGENDAR;
+                pills.push(`<span class="${pillClass}">Aguardando agendamento de cirurgia: ${stats.aguardandoClinica} pac.${atrasados > 0 ? ` (${atrasados} vencidos)` : ''}</span>`);
+                // "Maior acúmulo" só faz sentido comparando clínicas — com uma única
+                // unidade no filtro, apontar "maior acúmulo" seria óbvio/redundante.
+                if (stats.topGargalo && stats.distinctClinics > 1) {
+                    pills.push(`<span class="${pillClass}">📍 Gargalo: ${escapeHtml(stats.topGargalo[0])} (${stats.topGargalo[1]} pac.)</span>`);
+                }
+            }
+            if (stats.agendada > 0) {
+                const atrasados = ov.CIRURGIA_AGENDOU;
+                pills.push(`<span class="${pillClass}">Cirurgias agendadas: ${stats.agendada} pac.${atrasados > 0 ? ` (${atrasados} com data vencida)` : ''}</span>`);
+            }
+            if (stats.exames > 0) {
+                const sev = stats.examesSeveridade;
+                const sevParts = [];
+                if (sev.critico > 0) sevParts.push(`${sev.critico} crítico`);
+                if (sev.ruim > 0) sevParts.push(`${sev.ruim} relevante`);
+                if (sev.atencao > 0) sevParts.push(`${sev.atencao} atenção`);
+                pills.push(`<span class="${pillClass}">Exames: ${stats.exames} pac.${sevParts.length ? ` (${sevParts.join(' / ')})` : ''}</span>`);
+            }
+            if (sp.key === 'CATARATA' && stats.olho2Pendente > 0) {
+                pills.push(`<span class="${pillClass}">Operou 1º olho: ${stats.olho2Pendente} pac. sem registro do 2º</span>`);
+            }
 
             return `
-                <div class="p-4 rounded-xl border border-${sp.accent}-200 bg-${sp.accent}-50/40 flex flex-col justify-between space-y-2">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2 text-xs font-bold text-${sp.accent}-800">
-                            <i data-lucide="${sp.icon}" class="w-4 h-4"></i>
-                            ${sp.label.toUpperCase()}
-                        </div>
-                        ${smallSample ? `<span class="text-[9px] font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full whitespace-nowrap">AMOSTRA PEQUENA</span>` : ''}
-                    </div>
-                    ${smallSample ? '<p class="text-[11px] text-slate-500 italic">Amostra pequena — percentuais abaixo podem não ser representativos.</p>' : ''}
-                    <ul class="text-xs text-slate-700 leading-relaxed space-y-1 list-disc list-outside pl-4">
-                        ${bullets.map(b => `<li>${b}</li>`).join('')}
-                    </ul>
-                    ${stats.conversionRate !== null ? `
-                        <div class="text-[11px] font-semibold ${conversionBelowTarget ? 'text-rose-700' : 'text-emerald-700'} flex items-center gap-1.5">
-                            <i data-lucide="percent" class="w-3.5 h-3.5"></i>
-                            Conversão cirúrgica: <strong>${stats.conversionRate}%</strong>${conversionBelowTarget ? ' — abaixo do esperado' : ' — dentro do esperado'}
-                        </div>
-                    ` : ''}
-                    ${medianResult ? `
-                        <div class="text-[11px] font-semibold text-${slaInfo.color}-700 flex items-center gap-1.5">
-                            <i data-lucide="hourglass" class="w-3.5 h-3.5"></i>
-                            Mediana consulta → 1ª cirurgia: <strong>${medianResult.median} dia(s)</strong> (${medianResult.count} pac.) — ${slaInfo.label}
-                        </div>
-                    ` : ''}
-                    <div class="pt-2 border-t border-${sp.accent}-200/60 space-y-1.5">
-                        ${recomendacoes.map(r => `
-                            <div class="text-[11px] font-semibold text-${sp.accent}-900 flex items-start gap-1.5">
-                                <i data-lucide="zap" class="w-3.5 h-3.5 mt-0.5 shrink-0"></i>
-                                <span><span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold ${RESPONSAVEL_BADGE[r.responsavel]} mr-1 whitespace-nowrap">${r.responsavel}</span>${r.text}</span>
+                <div class="rounded-xl border border-${sp.accent}-200 bg-${sp.accent}-50/40 overflow-hidden">
+                    <button type="button" data-toggle-specialty="${sp.key}" class="w-full text-left p-4 flex items-center justify-between gap-3 hover:bg-${sp.accent}-100/50 transition">
+                        <div class="flex items-center gap-3 flex-wrap">
+                            <div class="flex items-center gap-2 text-sm font-extrabold text-${sp.accent}-900">
+                                <i data-lucide="${sp.icon}" class="w-5 h-5"></i>
+                                ${sp.label.toUpperCase()}
                             </div>
-                        `).join('')}
-                    </div>
+                            <span class="text-sm font-bold text-slate-700">${stats.total} pac.</span>
+                            ${smallSample ? `<span class="inline-flex items-center rounded-full bg-slate-200 px-2.5 py-1 text-xs font-bold text-slate-700 whitespace-nowrap">AMOSTRA PEQUENA</span>` : ''}
+                            ${!expanded && hotCount > 0 ? `<span class="inline-flex items-center gap-1 rounded-full bg-rose-100 border border-rose-300 px-2.5 py-1 text-xs font-bold text-rose-800 whitespace-nowrap">🚨 ${hotCount} pronto${hotCount > 1 ? 's' : ''} p/ fechar</span>` : ''}
+                        </div>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-${sp.accent}-700 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}"></i>
+                    </button>
+                    ${expanded ? `
+                        <div class="px-4 pb-4 space-y-3 border-t border-${sp.accent}-200/60">
+                            ${smallSample ? '<p class="text-xs text-slate-600 italic pt-3">Amostra pequena — percentuais podem não ser representativos.</p>' : ''}
+                            ${bannerHtml ? `<div class="pt-3">${bannerHtml}</div>` : ''}
+
+                            ${pills.length > 0 ? `<div class="flex flex-wrap gap-2 pt-1">${pills.join('')}</div>` : ''}
+
+                            <div class="pt-2 border-t border-${sp.accent}-200/60">
+                                <div class="text-xs font-extrabold text-slate-700 uppercase tracking-wide mb-2">Plano de Ação Imediato</div>
+                                ${recomendacoes.length === 0 ? `
+                                    <p class="text-sm text-emerald-800 font-semibold flex items-center gap-1.5">
+                                        <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                                        Sem pontos de atenção — acompanhar normalmente.
+                                    </p>
+                                ` : recomendacoes.map((r, idx) => {
+                                    const priorityMeta = ACTION_PRIORITY_META[r.priority];
+                                    const respMeta = RESPONSAVEL_META[r.responsavel];
+                                    return `
+                                        <div class="flex items-start gap-2 py-2${idx > 0 ? ` border-t border-${sp.accent}-200/40` : ''}">
+                                            <span class="text-sm font-extrabold text-slate-700 w-5 shrink-0">${idx + 1}.</span>
+                                            <span class="text-base leading-none shrink-0" title="${r.priority}">${priorityMeta.emoji}</span>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-center gap-1.5 flex-wrap">
+                                                    <span class="px-2 py-0.5 rounded-full text-xs font-bold ${respMeta.badge} whitespace-nowrap">${respMeta.tag}</span>
+                                                    <span class="text-sm font-bold text-slate-900">${r.headline}</span>
+                                                </div>
+                                                <p class="text-xs text-slate-600 mt-0.5 leading-snug">↳ ${r.detail}</p>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+
+                            ${(stats.conversionRate !== null || medianResult) ? `
+                                <div class="pt-2 border-t border-${sp.accent}-200/60 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600 font-semibold">
+                                    ${stats.conversionRate !== null ? `<span>Conversão: <strong class="${conversionBelowTarget ? 'text-rose-700' : 'text-emerald-700'}">${stats.conversionRate}%</strong> ${conversionBelowTarget ? '(abaixo do esperado)' : '(dentro do esperado)'}</span>` : ''}
+                                    ${medianResult ? `<span>Mediana 1ª cirurgia: <strong class="text-${slaInfo.color}-700">${medianResult.median}d</strong> (${slaInfo.label})</span>` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
+                    ` : ''}
                 </div>
             `;
         }
@@ -3730,8 +3804,27 @@
             else if (activeTab === 'faturamento') renderFaturamentoTable(exportAll);
         }
 
-        window.addEventListener('beforeprint', () => setTablesPrintMode(true));
-        window.addEventListener('afterprint', () => setTablesPrintMode(false)); // volta à visualização paginada em tela
+        // Os cartões de insight por especialidade começam recolhidos (clique pra
+        // expandir — ver renderSpecialtyInsightCard). Recolhido, o plano de ação nem
+        // está no DOM (não é só CSS escondendo), então imprimir/exportar sem expandir
+        // primeiro sairia faltando conteúdo. Especialidade sem paciente no filtro
+        // continua sem cartão nenhum (return '' antes de checar "expanded") — por
+        // isso "expandir todas" aqui nunca faz uma especialidade vazia aparecer.
+        let insightsPrintPreviousExpanded = null;
+        function setInsightsPrintMode(expandAll) {
+            if (activeTab !== 'consultas') return;
+            if (expandAll) {
+                insightsPrintPreviousExpanded = insightsExpandedSpecialties;
+                insightsExpandedSpecialties = new Set(CORE_SPECIALTIES.map(sp => sp.key));
+            } else if (insightsPrintPreviousExpanded !== null) {
+                insightsExpandedSpecialties = insightsPrintPreviousExpanded;
+                insightsPrintPreviousExpanded = null;
+            }
+            renderAIInsights();
+        }
+
+        window.addEventListener('beforeprint', () => { setTablesPrintMode(true); setInsightsPrintMode(true); });
+        window.addEventListener('afterprint', () => { setTablesPrintMode(false); setInsightsPrintMode(false); }); // volta à visualização paginada/recolhida em tela
 
         // ================================================================
         // EXPORTAÇÃO GRANULAR POR SEÇÃO
@@ -3790,52 +3883,62 @@
         async function captureSectionCanvas(elementId) {
             const el = document.getElementById(elementId);
 
-            // Seção sem dimensão = está dentro de uma aba oculta (display:none).
-            // Sem essa checagem o html2canvas devolve um canvas vazio e o
-            // navegador baixa um arquivo de 0 byte, sem nenhum aviso.
-            const rect = el.getBoundingClientRect();
-            if (rect.width === 0 || rect.height === 0) {
-                throw new Error('Seção não está visível na tela — abra a página correspondente antes de exportar.');
-            }
+            // Cartões de insight recolhidos não têm o plano de ação no DOM (ver
+            // setInsightsPrintMode) — expande tudo antes de capturar esta seção
+            // específica e desfaz no final, mesmo se a captura der erro.
+            const isInsights = elementId === 'cardInsights';
+            if (isInsights) setInsightsPrintMode(true);
 
-            if (document.fonts && document.fonts.ready) {
-                try { await document.fonts.ready; } catch (e) { /* segue com as métricas disponíveis */ }
-            }
-
-            return html2canvas(el, {
-                scale: 2,
-                backgroundColor: '#ffffff',
-                useCORS: true,
-                ignoreElements: (node) => node.classList && node.classList.contains('no-print'),
-                onclone: (clonedDoc) => {
-                    const style = clonedDoc.createElement('style');
-                    // `truncate` = overflow:hidden + ellipsis + nowrap. Na exportação
-                    // queremos o texto completo, sem recorte vertical.
-                    style.textContent = `
-                        .truncate { overflow: visible !important; text-overflow: clip !important; }
-                        .export-no-clip { overflow: visible !important; }
-                        /* Caixas com rolagem própria (ex.: lista de destaques do NPS)
-                           precisam crescer na exportação: a imagem não tem rolagem,
-                           então sem isso o conteúdo fora da área visível sumiria. */
-                        .export-expand { max-height: none !important; overflow: visible !important; }
-                    `;
-                    clonedDoc.head.appendChild(style);
-
-                    // Folga para a linha de base em qualquer outra caixa que contenha
-                    // apenas texto e esteja recortando conteúdo. Elementos com filhos
-                    // (barra de progresso, cards com overflow-hidden proposital) ficam de
-                    // fora. Escopado só à seção exportada: o clone contém a página toda,
-                    // incluindo as tabelas das outras abas.
-                    const target = clonedDoc.getElementById(elementId);
-                    if (target) {
-                        target.querySelectorAll('*').forEach(node => {
-                            if (node.children.length === 0 && node.textContent.trim() !== '') {
-                                node.classList.add('export-no-clip');
-                            }
-                        });
-                    }
+            try {
+                // Seção sem dimensão = está dentro de uma aba oculta (display:none).
+                // Sem essa checagem o html2canvas devolve um canvas vazio e o
+                // navegador baixa um arquivo de 0 byte, sem nenhum aviso.
+                const rect = el.getBoundingClientRect();
+                if (rect.width === 0 || rect.height === 0) {
+                    throw new Error('Seção não está visível na tela — abra a página correspondente antes de exportar.');
                 }
-            });
+
+                if (document.fonts && document.fonts.ready) {
+                    try { await document.fonts.ready; } catch (e) { /* segue com as métricas disponíveis */ }
+                }
+
+                return await html2canvas(el, {
+                    scale: 2,
+                    backgroundColor: '#ffffff',
+                    useCORS: true,
+                    ignoreElements: (node) => node.classList && node.classList.contains('no-print'),
+                    onclone: (clonedDoc) => {
+                        const style = clonedDoc.createElement('style');
+                        // `truncate` = overflow:hidden + ellipsis + nowrap. Na exportação
+                        // queremos o texto completo, sem recorte vertical.
+                        style.textContent = `
+                            .truncate { overflow: visible !important; text-overflow: clip !important; }
+                            .export-no-clip { overflow: visible !important; }
+                            /* Caixas com rolagem própria (ex.: lista de destaques do NPS)
+                               precisam crescer na exportação: a imagem não tem rolagem,
+                               então sem isso o conteúdo fora da área visível sumiria. */
+                            .export-expand { max-height: none !important; overflow: visible !important; }
+                        `;
+                        clonedDoc.head.appendChild(style);
+
+                        // Folga para a linha de base em qualquer outra caixa que contenha
+                        // apenas texto e esteja recortando conteúdo. Elementos com filhos
+                        // (barra de progresso, cards com overflow-hidden proposital) ficam de
+                        // fora. Escopado só à seção exportada: o clone contém a página toda,
+                        // incluindo as tabelas das outras abas.
+                        const target = clonedDoc.getElementById(elementId);
+                        if (target) {
+                            target.querySelectorAll('*').forEach(node => {
+                                if (node.children.length === 0 && node.textContent.trim() !== '') {
+                                    node.classList.add('export-no-clip');
+                                }
+                            });
+                        }
+                    }
+                });
+            } finally {
+                if (isInsights) setInsightsPrintMode(false);
+            }
         }
 
         async function exportSectionAsJpeg(elementId, filenameBase) {
