@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Jornada do Paciente - Cirurgias Oftalmológicas</title>
-    <!-- Tailwind CSS CDN -->
+    <!-- Tailwind CSS CDN (Play CDN — compilador em runtime, sem build estável pra fixar
+         versão/hash de integridade da mesma forma que os demais scripts abaixo) -->
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Fontes Google -->
@@ -12,15 +13,16 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Chart.js & SheetJS (xlsx) & Lucide Icons -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js & SheetJS (xlsx) & Lucide Icons — versão fixa + SRI (integrity) contra
+         adulteração do CDN; hashes gerados a partir da versão que já estava em uso -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/lucide@1.31.0/dist/umd/lucide.min.js" integrity="sha384-/ApD3KXMqTmTxEJjuldaZDgdJj7/Hox2LRuKqV3rC7Bu/wE4obLaJRjF1rLHNP57" crossorigin="anonymous"></script>
 
     <!-- html2canvas & jsPDF (+ autotable) — exportação granular por seção (gráficos/insights em imagem, listas/relatórios em tabela real) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js" integrity="sha384-fCAW/rDWORTbQXSiB7mOg0QtQ5c+r0f544y6XoKjuVva0nMBlCpNUjiFeG5iMdS3" crossorigin="anonymous"></script>
 
     <script>
         tailwind.config = {
@@ -60,6 +62,14 @@
         .custom-scrollbar::-webkit-scrollbar-thumb {
             background: #cbd5e1;
             border-radius: 4px;
+        }
+        .badge-pill {
+            display: inline-block;
+            padding: 0.25rem 0.625rem;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: 9999px;
+            border-width: 1px;
         }
         @media print {
             /* Paisagem: o painel é um dashboard largo (gráficos de ~1180px na
@@ -1418,6 +1428,15 @@
             return !hasOtherRealizou;
         }
 
+        // Candidatos de coluna reaproveitados em getItemProp() por várias funções (planilha
+        // "completa" tem nome canônico em minúsculo; "resumida"/exports antigos variam
+        // capitalização e acento) — nomes únicos aqui evitam retypar o array em cada lugar
+        // e cobrem os dois formatos automaticamente se um novo alias precisar ser somado.
+        const CLINIC_ALIASES = ['clinicas', 'clínica', 'clinica', 'Unidade'];
+        const SURGERY_ALIASES = ['especialidades', 'especialidade', 'Cirurgia'];
+        const STATUS_ALIASES = ['agendamento_cirg_status_clinica', 'status', 'Status'];
+        const MEDICO_ALIASES = ['medicos', 'medico', 'Médico'];
+
         // Pendências de faturamento: cada procedimento "realizou" (1º ou 2º olho) cuja
         // trava (lock) DA MESMA ABA ainda está vazia — ou seja, ainda não foi reportado/pago.
         function getPendingBillingRecords(data) {
@@ -1432,9 +1451,9 @@
                             // localiza o paciente para conferir o faturamento.
                             id: getItemProp(item, ['clientes_id', 'id', 'ID']),
                             paciente: getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']) || 'Sem Nome',
-                            clinica: getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']) || 'Sem Clínica',
-                            especialidade: getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']) || 'Não Especificado',
-                            medico: getItemProp(item, ['medicos', 'medico', 'Médico']) || '-',
+                            clinica: getItemProp(item, CLINIC_ALIASES) || 'Sem Clínica',
+                            especialidade: getItemProp(item, SURGERY_ALIASES) || 'Não Especificado',
+                            medico: getItemProp(item, MEDICO_ALIASES) || '-',
                             procedimento: sl.code === 'CIRURGIA_REALIZOU_1' ? '1º Olho' : '2º Olho',
                             slot: sl.slot,
                             data: sl.date
@@ -1479,8 +1498,8 @@
             const clinics = new Set();
             const surgeries = new Set();
             rawData.forEach(item => {
-                const c = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']);
-                const s = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']);
+                const c = getItemProp(item, CLINIC_ALIASES);
+                const s = getItemProp(item, SURGERY_ALIASES);
                 if (c) clinics.add(c.trim());
                 if (s) surgeries.add(s.trim());
             });
@@ -1508,43 +1527,53 @@
             renderFaturamentoTable();
         }
 
+        // Paginação compartilhada pelas 4 tabelas paginadas (Faturamento, Lista de
+        // Pacientes, Lista de Pacientes Convertíveis e Avaliações de NPS). Na
+        // exportação (exportAll) devolve a lista inteira, ignorando a página atual.
+        function paginate(data, currentPageVal, pageSizeVal, exportAll) {
+            const totalRecords = data.length;
+            const totalPages = Math.ceil(totalRecords / pageSizeVal) || 1;
+            if (exportAll) {
+                return { pageData: data, startIndex: 0, endIndex: totalRecords, page: currentPageVal, totalPages, totalRecords };
+            }
+            const page = Math.min(currentPageVal, totalPages);
+            const startIndex = (page - 1) * pageSizeVal;
+            const endIndex = Math.min(startIndex + pageSizeVal, totalRecords);
+            return { pageData: data.slice(startIndex, endIndex), startIndex, endIndex, page, totalPages, totalRecords };
+        }
+
+        // Atualiza o texto "Mostrando X até Y de Z" e o disabled dos botões
+        // anterior/próxima com base no resultado de paginate().
+        function updatePaginationFooter(infoId, prevId, nextId, p, unitLabel) {
+            document.getElementById(infoId).textContent = `Mostrando ${p.totalRecords === 0 ? 0 : p.startIndex + 1} até ${p.endIndex} de ${p.totalRecords} ${unitLabel}`;
+            document.getElementById(prevId).disabled = p.page === 1;
+            document.getElementById(nextId).disabled = p.page === p.totalPages;
+        }
+
         function renderFaturamentoTable(exportAll = false) {
             const tbody = document.getElementById('faturamentoTableBody');
-            const totalRecords = faturamentoFilteredRecords.length;
-
-            let pageData, startIndex;
-            if (exportAll) {
-                pageData = faturamentoFilteredRecords;
-                startIndex = 0;
-            } else {
-                const totalPages = Math.ceil(totalRecords / pageSize) || 1;
-                if (faturamentoCurrentPage > totalPages) faturamentoCurrentPage = totalPages;
-                startIndex = (faturamentoCurrentPage - 1) * pageSize;
-                pageData = faturamentoFilteredRecords.slice(startIndex, startIndex + pageSize);
-            }
+            const p = paginate(faturamentoFilteredRecords, faturamentoCurrentPage, pageSize, exportAll);
+            faturamentoCurrentPage = p.page;
+            const pageData = p.pageData;
 
             tbody.innerHTML = pageData.map(rec => `
                 <tr class="hover:bg-slate-50 transition">
-                    <td class="p-3 text-slate-500 text-[11px] font-semibold whitespace-nowrap">${rec.id || '-'}</td>
-                    <td class="p-3 font-bold text-slate-900">${rec.paciente}</td>
-                    <td class="p-3 text-slate-700 text-[11px] font-medium">${rec.clinica}</td>
-                    <td class="p-3 text-slate-700 text-[11px] font-medium">${rec.especialidade}</td>
+                    <td class="p-3 text-slate-500 text-[11px] font-semibold whitespace-nowrap">${escapeHtml(rec.id) || '-'}</td>
+                    <td class="p-3 font-bold text-slate-900">${escapeHtml(rec.paciente)}</td>
+                    <td class="p-3 text-slate-700 text-[11px] font-medium">${escapeHtml(rec.clinica)}</td>
+                    <td class="p-3 text-slate-700 text-[11px] font-medium">${escapeHtml(rec.especialidade)}</td>
                     <td class="p-3">
-                        <span class="inline-block px-2.5 py-1 text-[10px] font-bold rounded-full border bg-amber-100 text-amber-800 border-amber-300">${rec.procedimento}</span>
+                        <span class="badge-pill bg-amber-100 text-amber-800 border-amber-300">${rec.procedimento}</span>
                     </td>
                     <td class="p-3 text-slate-600 font-medium">${rec.data ? rec.data.toLocaleDateString('pt-BR') : '-'}</td>
-                    <td class="p-3 text-slate-600 text-[11px] font-medium">${rec.medico}</td>
+                    <td class="p-3 text-slate-600 text-[11px] font-medium">${escapeHtml(rec.medico)}</td>
                 </tr>
             `).join('') || '<tr><td colspan="7" class="p-4 text-center text-slate-400">Nenhuma pendência de faturamento encontrada no filtro atual.</td></tr>';
 
-            document.getElementById('faturamentoPrintCount').textContent = `Relatório com ${totalRecords} pendência(s) — filtro atual aplicado no momento da exportação.`;
+            document.getElementById('faturamentoPrintCount').textContent = `Relatório com ${p.totalRecords} pendência(s) — filtro atual aplicado no momento da exportação.`;
 
             if (exportAll) return;
-
-            const totalPages = Math.ceil(totalRecords / pageSize) || 1;
-            document.getElementById('faturamentoPaginationInfo').textContent = `Mostrando ${totalRecords === 0 ? 0 : startIndex + 1} até ${Math.min(startIndex + pageSize, totalRecords)} de ${totalRecords} pendência(s)`;
-            document.getElementById('faturamentoPrevPageBtn').disabled = faturamentoCurrentPage === 1;
-            document.getElementById('faturamentoNextPageBtn').disabled = faturamentoCurrentPage === totalPages;
+            updatePaginationFooter('faturamentoPaginationInfo', 'faturamentoPrevPageBtn', 'faturamentoNextPageBtn', p, 'pendência(s)');
         }
 
         // O antigo downloadFaturamentoReport() (botão "Baixar (.xlsx)" na barra de
@@ -1620,9 +1649,9 @@
             const surgeries = new Set();
             const statuses = new Set();
             rawData.forEach(item => {
-                const c = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']);
-                const s = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']);
-                const st = getItemProp(item, ['agendamento_cirg_status_clinica', 'status', 'Status']);
+                const c = getItemProp(item, CLINIC_ALIASES);
+                const s = getItemProp(item, SURGERY_ALIASES);
+                const st = getItemProp(item, STATUS_ALIASES);
                 if (c) clinics.add(c.trim());
                 if (s) surgeries.add(s.trim());
                 if (st) statuses.add(st.trim());
@@ -1655,9 +1684,9 @@
             const dateEnd = document.getElementById('ganhoDateEnd').value;
 
             ganhoFilteredData = rawData.filter(item => {
-                const c = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']);
-                const s = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']);
-                const st = getItemProp(item, ['agendamento_cirg_status_clinica', 'status', 'Status']);
+                const c = getItemProp(item, CLINIC_ALIASES);
+                const s = getItemProp(item, SURGERY_ALIASES);
+                const st = getItemProp(item, STATUS_ALIASES);
                 const d = parseFlexibleDate(getItemProp(item, ['agendamento_data', 'data', 'Data']));
 
                 const matchClinic = matchesMultiSelect(clinics, c);
@@ -1679,8 +1708,8 @@
         function buildGanhoEspecialidadeStats(data) {
             const bySpecialty = {};
             data.forEach(item => {
-                const especialidade = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']) || 'Não Especificado';
-                const clinica = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']) || 'Não identificada';
+                const especialidade = getItemProp(item, SURGERY_ALIASES) || 'Não Especificado';
+                const clinica = getItemProp(item, CLINIC_ALIASES) || 'Não identificada';
                 const group = statusGroup(classifyStatus(getItemProp(item, ['agendamento_cirg_status_clinica'])));
 
                 if (!bySpecialty[especialidade]) {
@@ -1781,8 +1810,8 @@
         function buildValorBaseCombos() {
             const combos = {};
             ganhoFilteredData.forEach(item => {
-                const especialidade = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']) || 'Não Especificado';
-                const clinica = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']) || 'Não identificada';
+                const especialidade = getItemProp(item, SURGERY_ALIASES) || 'Não Especificado';
+                const clinica = getItemProp(item, CLINIC_ALIASES) || 'Não identificada';
                 if (!combos[especialidade]) combos[especialidade] = new Set();
                 combos[especialidade].add(clinica);
             });
@@ -1885,18 +1914,9 @@
             });
             return rows;
         }
-        function exportValorBaseAsSpreadsheet() {
-            closeExportMenus();
-            exportRowsAsSpreadsheet(buildValorBaseExportRows(), 'Valor Base', 'Configuracao_Valor_Base');
-        }
-        function exportValorBaseAsCSV() {
-            closeExportMenus();
-            exportRowsAsCSV(buildValorBaseExportRows(), 'Configuracao_Valor_Base');
-        }
-        function exportValorBaseAsPdf() {
-            closeExportMenus();
-            exportRowsAsPdf(buildValorBaseExportRows(), 'Configuração de Valor Base por Clínica e Especialidade', 'Configuracao_Valor_Base');
-        }
+        function exportValorBaseAsSpreadsheet() { exportAs('valorBase', 'spreadsheet'); }
+        function exportValorBaseAsCSV() { exportAs('valorBase', 'csv'); }
+        function exportValorBaseAsPdf() { exportAs('valorBase', 'pdf'); }
 
         // ================================================================
         // FILTRO DE SELEÇÃO MÚLTIPLA (Clínica e Especialidade, nas 4 páginas)
@@ -2082,11 +2102,11 @@
             const statuses = new Set();
 
             rawData.forEach(item => {
-                const c = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']);
+                const c = getItemProp(item, CLINIC_ALIASES);
                 const s = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia', 'especialidade_nome']);
                 // OBS: NÃO incluir 'agendamento_status' aqui — esse campo é o status de
                 // COMPARECEU/FALTOU da consulta, não o status da jornada cirúrgica na clínica.
-                const st = getItemProp(item, ['agendamento_cirg_status_clinica', 'status', 'Status']);
+                const st = getItemProp(item, STATUS_ALIASES);
 
                 if (c) clinics.add(c.trim());
                 if (s) surgeries.add(s.trim());
@@ -2126,6 +2146,25 @@
             return '';
         }
 
+        // Liga um par de botões anterior/próxima ao mesmo padrão das 4 tabelas paginadas:
+        // getPage/setPage leem e escrevem a variável de página (cada página tem a sua,
+        // não dá pra passar por referência), getTotalCount é o tamanho da lista atual.
+        function bindPrevNext(prevId, nextId, getPage, setPage, getTotalCount, renderFn) {
+            document.getElementById(prevId).addEventListener('click', () => {
+                if (getPage() > 1) {
+                    setPage(getPage() - 1);
+                    renderFn();
+                }
+            });
+            document.getElementById(nextId).addEventListener('click', () => {
+                const totalPages = Math.ceil(getTotalCount() / pageSize);
+                if (getPage() < totalPages) {
+                    setPage(getPage() + 1);
+                    renderFn();
+                }
+            });
+        }
+
         function setupEventListeners() {
             // Clínica e Especialidade são filtros de seleção múltipla: eles se
             // religam sozinhos via data-onchange (ver initMultiSelects).
@@ -2138,20 +2177,9 @@
                 renderPatientTable();
             });
 
-            document.getElementById('prevPageBtn').addEventListener('click', () => {
-                if (currentPage > 1) {
-                    currentPage--;
-                    renderPatientTable();
-                }
-            });
-
-            document.getElementById('nextPageBtn').addEventListener('click', () => {
-                const totalPages = Math.ceil(filteredData.length / pageSize);
-                if (currentPage < totalPages) {
-                    currentPage++;
-                    renderPatientTable();
-                }
-            });
+            bindPrevNext('prevPageBtn', 'nextPageBtn',
+                () => currentPage, v => currentPage = v,
+                () => filteredData.length, renderPatientTable);
 
             // File Upload Handler
             document.getElementById('fileInput').addEventListener('change', handleFileUpload);
@@ -2163,38 +2191,18 @@
             });
             document.getElementById('npsFileInput').addEventListener('change', npsHandleFileUpload);
 
-            document.getElementById('npsPrevPageBtn').addEventListener('click', () => {
-                if (npsCurrentPage > 1) {
-                    npsCurrentPage--;
-                    renderNpsTable();
-                }
-            });
-            document.getElementById('npsNextPageBtn').addEventListener('click', () => {
-                const totalPages = Math.ceil(npsFilteredData.length / pageSize);
-                if (npsCurrentPage < totalPages) {
-                    npsCurrentPage++;
-                    renderNpsTable();
-                }
-            });
+            bindPrevNext('npsPrevPageBtn', 'npsNextPageBtn',
+                () => npsCurrentPage, v => npsCurrentPage = v,
+                () => npsFilteredData.length, renderNpsTable);
 
             // Faturamento: Filtros (mesma base de dados da Página 1). Clínica e
             // Especialidade são múltiplos e se religam via data-onchange.
             ['faturamentoDateStart', 'faturamentoDateEnd'].forEach(id => {
                 document.getElementById(id).addEventListener('change', applyFaturamentoFilters);
             });
-            document.getElementById('faturamentoPrevPageBtn').addEventListener('click', () => {
-                if (faturamentoCurrentPage > 1) {
-                    faturamentoCurrentPage--;
-                    renderFaturamentoTable();
-                }
-            });
-            document.getElementById('faturamentoNextPageBtn').addEventListener('click', () => {
-                const totalPages = Math.ceil(faturamentoFilteredRecords.length / pageSize);
-                if (faturamentoCurrentPage < totalPages) {
-                    faturamentoCurrentPage++;
-                    renderFaturamentoTable();
-                }
-            });
+            bindPrevNext('faturamentoPrevPageBtn', 'faturamentoNextPageBtn',
+                () => faturamentoCurrentPage, v => faturamentoCurrentPage = v,
+                () => faturamentoFilteredRecords.length, renderFaturamentoTable);
 
             // Potencial de Ganho: Filtros (mesma base de dados da Página 1). Clínica e
             // Especialidade são múltiplos e se religam via data-onchange; Status é
@@ -2214,19 +2222,9 @@
                 ganhoPatientCurrentPage = 1;
                 renderGanhoPatientTable();
             });
-            document.getElementById('ganhoPatientPrevPageBtn').addEventListener('click', () => {
-                if (ganhoPatientCurrentPage > 1) {
-                    ganhoPatientCurrentPage--;
-                    renderGanhoPatientTable();
-                }
-            });
-            document.getElementById('ganhoPatientNextPageBtn').addEventListener('click', () => {
-                const totalPages = Math.ceil(getSearchedGanhoPatientData().length / pageSize);
-                if (ganhoPatientCurrentPage < totalPages) {
-                    ganhoPatientCurrentPage++;
-                    renderGanhoPatientTable();
-                }
-            });
+            bindPrevNext('ganhoPatientPrevPageBtn', 'ganhoPatientNextPageBtn',
+                () => ganhoPatientCurrentPage, v => ganhoPatientCurrentPage = v,
+                () => getSearchedGanhoPatientData().length, renderGanhoPatientTable);
 
             // Botão flutuante "voltar ao topo": só aparece depois de rolar a página
             window.addEventListener('scroll', () => {
@@ -2242,9 +2240,9 @@
             const dateEnd = document.getElementById('filterDateEnd').value;
 
             filteredData = rawData.filter(item => {
-                const c = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']);
-                const s = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']);
-                const st = getItemProp(item, ['agendamento_cirg_status_clinica', 'status', 'Status']);
+                const c = getItemProp(item, CLINIC_ALIASES);
+                const s = getItemProp(item, SURGERY_ALIASES);
+                const st = getItemProp(item, STATUS_ALIASES);
                 const d = parseFlexibleDate(getItemProp(item, ['agendamento_data', 'data', 'Data']));
 
                 const matchClinic = matchesMultiSelect(clinics, c);
@@ -2384,8 +2382,8 @@
                 const statusRaw = getItemProp(item, ['agendamento_cirg_status_clinica']);
                 const code = classifyStatus(statusRaw);
                 const group = statusGroup(code);
-                const especialidade = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']);
-                const clinic = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']) || 'Não identificada';
+                const especialidade = getItemProp(item, SURGERY_ALIASES);
+                const clinic = getItemProp(item, CLINIC_ALIASES) || 'Não identificada';
                 clinicsSet.add(clinic);
 
                 if (group === 'SEM_STATUS') stats.semStatus++;
@@ -2654,7 +2652,7 @@
 
             CORE_SPECIALTIES.forEach(sp => {
                 const data = filteredData.filter(item => {
-                    const esp = (getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']) || '').toUpperCase();
+                    const esp = (getItemProp(item, SURGERY_ALIASES) || '').toUpperCase();
                     return esp.includes(sp.key);
                 });
                 html += renderSpecialtyInsightCard(sp, buildGroupStats(data), computeMedianDaysToFirstSurgery(data));
@@ -2722,7 +2720,7 @@
             // Status Chart (doughnut com legenda custom + total central)
             const statusCounts = {};
             filteredData.forEach(item => {
-                const st = getItemProp(item, ['agendamento_cirg_status_clinica', 'status', 'Status']) || 'Sem Status';
+                const st = getItemProp(item, STATUS_ALIASES) || 'Sem Status';
                 statusCounts[st] = (statusCounts[st] || 0) + 1;
             });
 
@@ -2761,7 +2759,7 @@
                 return `
                     <div class="flex items-center gap-3">
                         <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${color}"></span>
-                        <span class="text-xs font-semibold text-slate-700 flex-1 truncate" title="${label}">${label}</span>
+                        <span class="text-xs font-semibold text-slate-700 flex-1 truncate" title="${escapeHtml(label)}">${escapeHtml(label)}</span>
                         <span class="text-xs font-bold text-slate-900 w-10 text-right">${count}</span>
                         <div class="w-24 h-1.5 rounded-full bg-slate-100 overflow-hidden shrink-0">
                             <div class="h-full rounded-full" style="width:${pct}%; background:${color}"></div>
@@ -2774,7 +2772,7 @@
             // Surgeries Chart
             const surgCounts = {};
             filteredData.forEach(item => {
-                const sg = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']) || 'Não Especificado';
+                const sg = getItemProp(item, SURGERY_ALIASES) || 'Não Especificado';
                 surgCounts[sg] = (surgCounts[sg] || 0) + 1;
             });
 
@@ -2804,7 +2802,7 @@
             // Clinics Chart (Top 10 Clinics)
             const clinicCounts = {};
             filteredData.forEach(item => {
-                const cl = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']) || 'Sem Clínica';
+                const cl = getItemProp(item, CLINIC_ALIASES) || 'Sem Clínica';
                 clinicCounts[cl] = (clinicCounts[cl] || 0) + 1;
             });
 
@@ -2844,7 +2842,7 @@
             const summary = {};
 
             filteredData.forEach(item => {
-                const cl = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']) || 'Outros / Não Especificado';
+                const cl = getItemProp(item, CLINIC_ALIASES) || 'Outros / Não Especificado';
                 if (!summary[cl]) {
                     summary[cl] = { total: 0, semStatus: 0, exames: 0, aguardando: 0, agendadas: 0, realizadas: 0, desistiu: 0, semIndicacao: 0 };
                 }
@@ -2869,7 +2867,7 @@
 
             tbody.innerHTML = sortedList.map(([clinicName, counts]) => `
                 <tr class="hover:bg-slate-50 transition">
-                    <td class="p-3 font-semibold text-slate-900">${clinicName}</td>
+                    <td class="p-3 font-semibold text-slate-900">${escapeHtml(clinicName)}</td>
                     <td class="p-3 text-center font-bold text-slate-800">${counts.total}</td>
                     <td class="p-3 text-center text-slate-500">${counts.semStatus}</td>
                     <td class="p-3 text-center text-amber-700 font-bold">${counts.exames}</td>
@@ -2892,21 +2890,27 @@
 
         // Extraído para função própria para ser reaproveitado pelas exportações
         // (planilha/csv/pdf) sem duplicar a regra de busca.
+        // Predicado de busca por nome/id/médico/observação, reaproveitado pela Lista
+        // Detalhada de Pacientes (Consultas) e pela Lista de Pacientes Potenciais (Ganho).
+        function patientMatchesSearch(item, search) {
+            const name = getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']).toLowerCase();
+            const id = getItemProp(item, ['clientes_id', 'id', 'ID']).toLowerCase();
+            const doc = getItemProp(item, MEDICO_ALIASES).toLowerCase();
+            const obs = getItemProp(item, ['agendamento_obs', 'obs', 'observacao']).toLowerCase();
+            return name.includes(search) || id.includes(search) || doc.includes(search) || obs.includes(search);
+        }
+
         function getSearchedPatientData() {
             const search = document.getElementById('tableSearch').value.toLowerCase();
-            return filteredData.filter(item => {
-                const name = getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']).toLowerCase();
-                const id = getItemProp(item, ['clientes_id', 'id', 'ID']).toLowerCase();
-                const doc = getItemProp(item, ['medicos', 'medico', 'Médico']).toLowerCase();
-                const obs = getItemProp(item, ['agendamento_obs', 'obs', 'observacao']).toLowerCase();
-                return name.includes(search) || id.includes(search) || doc.includes(search) || obs.includes(search);
-            });
+            return filteredData.filter(item => patientMatchesSearch(item, search));
         }
 
         // Extraído pra ser reaproveitado pela lista de pacientes convertíveis da página de
         // Potencial de Ganho — mesma regra de cor de status/atraso nas duas telas.
         function buildStatusJourneyCell(item) {
-            const statusStr = getItemProp(item, ['agendamento_cirg_status_clinica', 'status', 'Status']) || 'Sem Status';
+            // escapeHtml aqui (não em cada chamador) porque o valor volta pronto pra
+            // interpolação em innerHTML nas duas telas que usam esta função.
+            const statusStr = escapeHtml(getItemProp(item, STATUS_ALIASES) || 'Sem Status');
             const obsStr = getItemProp(item, ['agendamento_obs', 'agendamento_cirg_obs', 'obs', 'observacao']);
             const code = classifyStatus(statusStr);
             const group = statusGroup(code);
@@ -2944,67 +2948,55 @@
             return { statusStr, badgeColor, journeyDateStr, journeyDateColor, overdueTag, semMotivoTag };
         }
 
+        // Linha <tr> da tabela de pacientes, reaproveitada pela Lista Detalhada de
+        // Pacientes (Consultas) e pela Lista de Pacientes Potenciais (Ganho) — mesmas
+        // colunas nas duas telas, então qualquer ajuste vale pras duas de uma vez.
+        function buildPatientRowHtml(item) {
+            const nameStr = getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']) || 'Sem Nome';
+            const idStr = getItemProp(item, ['clientes_id', 'id', 'ID']);
+            const telefoneStr = npsFormatTelefone(getPatientTelefone(item));
+            const nascDate = parseFlexibleDate(getPatientNascimento(item));
+            const nascStr = nascDate ? nascDate.toLocaleDateString('pt-BR') : '';
+            const dataStr = getItemProp(item, ['agendamento_data', 'data', 'Data']);
+            const surgStr = getItemProp(item, SURGERY_ALIASES);
+            const clinicStr = getItemProp(item, CLINIC_ALIASES);
+            const docStr = getItemProp(item, MEDICO_ALIASES);
+
+            const { statusStr, badgeColor, journeyDateStr, journeyDateColor, overdueTag, semMotivoTag } = buildStatusJourneyCell(item);
+
+            return `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-3">
+                        <div class="font-bold text-slate-900">${escapeHtml(nameStr)}</div>
+                        <div class="text-[10px] text-slate-400 font-semibold">ID: ${escapeHtml(idStr) || '-'}</div>
+                        ${telefoneStr ? `<div class="text-[10px] text-slate-500 font-medium">${escapeHtml(telefoneStr)}</div>` : ''}
+                        ${nascStr ? `<div class="text-[10px] text-slate-400 font-medium">Nasc.: ${nascStr}</div>` : ''}
+                    </td>
+                    <td class="p-3 text-slate-600 font-medium">${escapeHtml(dataStr) || '-'}</td>
+                    <td class="p-3 font-semibold text-indigo-700">${escapeHtml(surgStr) || '-'}</td>
+                    <td class="p-3 text-slate-700 text-[11px] font-medium">${escapeHtml(clinicStr) || '-'}</td>
+                    <td class="p-3">
+                        <span class="badge-pill ${badgeColor}">
+                            ${statusStr}
+                        </span>${semMotivoTag}
+                    </td>
+                    <td class="p-3 ${journeyDateColor} text-[11px]">${journeyDateStr}${overdueTag}</td>
+                    <td class="p-3 text-slate-600 text-[11px] font-medium">${escapeHtml(docStr) || '-'}</td>
+                </tr>
+            `;
+        }
+
         function renderPatientTable(exportAll = false) {
             const tbody = document.getElementById('patientTableBody');
-            const searchedData = getSearchedPatientData();
-            const totalRecords = searchedData.length;
+            const p = paginate(getSearchedPatientData(), currentPage, pageSize, exportAll);
+            currentPage = p.page;
 
-            // Exportação/impressão sempre considera TODAS as linhas do filtro atual,
-            // ignorando a paginação usada apenas para navegação em tela.
-            let pageData, startIndex;
-            if (exportAll) {
-                pageData = searchedData;
-                startIndex = 0;
-            } else {
-                const totalPages = Math.ceil(totalRecords / pageSize) || 1;
-                if (currentPage > totalPages) currentPage = totalPages;
-                startIndex = (currentPage - 1) * pageSize;
-                pageData = searchedData.slice(startIndex, startIndex + pageSize);
-            }
+            tbody.innerHTML = p.pageData.map(buildPatientRowHtml).join('');
 
-            tbody.innerHTML = pageData.map(item => {
-                const nameStr = getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']) || 'Sem Nome';
-                const idStr = getItemProp(item, ['clientes_id', 'id', 'ID']);
-                const telefoneStr = npsFormatTelefone(getPatientTelefone(item));
-                const nascDate = parseFlexibleDate(getPatientNascimento(item));
-                const nascStr = nascDate ? nascDate.toLocaleDateString('pt-BR') : '';
-                const dataStr = getItemProp(item, ['agendamento_data', 'data', 'Data']);
-                const surgStr = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']);
-                const clinicStr = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']);
-                const docStr = getItemProp(item, ['medicos', 'medico', 'Médico']);
-
-                const { statusStr, badgeColor, journeyDateStr, journeyDateColor, overdueTag, semMotivoTag } = buildStatusJourneyCell(item);
-
-                return `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="p-3">
-                            <div class="font-bold text-slate-900">${nameStr}</div>
-                            <div class="text-[10px] text-slate-400 font-semibold">ID: ${idStr || '-'}</div>
-                            ${telefoneStr ? `<div class="text-[10px] text-slate-500 font-medium">${escapeHtml(telefoneStr)}</div>` : ''}
-                            ${nascStr ? `<div class="text-[10px] text-slate-400 font-medium">Nasc.: ${nascStr}</div>` : ''}
-                        </td>
-                        <td class="p-3 text-slate-600 font-medium">${dataStr || '-'}</td>
-                        <td class="p-3 font-semibold text-indigo-700">${surgStr || '-'}</td>
-                        <td class="p-3 text-slate-700 text-[11px] font-medium">${clinicStr || '-'}</td>
-                        <td class="p-3">
-                            <span class="inline-block px-2.5 py-1 text-[10px] font-bold rounded-full border ${badgeColor}">
-                                ${statusStr}
-                            </span>${semMotivoTag}
-                        </td>
-                        <td class="p-3 ${journeyDateColor} text-[11px]">${journeyDateStr}${overdueTag}</td>
-                        <td class="p-3 text-slate-600 text-[11px] font-medium">${docStr || '-'}</td>
-                    </tr>
-                `;
-            }).join('');
-
-            document.getElementById('patientPrintCount').textContent = `Relatório com ${totalRecords} paciente(s) — filtro atual aplicado no momento da exportação.`;
+            document.getElementById('patientPrintCount').textContent = `Relatório com ${p.totalRecords} paciente(s) — filtro atual aplicado no momento da exportação.`;
 
             if (exportAll) return;
-
-            const totalPages = Math.ceil(totalRecords / pageSize) || 1;
-            document.getElementById('paginationInfo').textContent = `Mostrando ${totalRecords === 0 ? 0 : startIndex + 1} até ${Math.min(startIndex + pageSize, totalRecords)} de ${totalRecords} paciente(s)`;
-            document.getElementById('prevPageBtn').disabled = currentPage === 1;
-            document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+            updatePaginationFooter('paginationInfo', 'prevPageBtn', 'nextPageBtn', p, 'paciente(s)');
         }
 
         // ================================================================
@@ -3024,74 +3016,20 @@
 
         function getSearchedGanhoPatientData() {
             const search = (document.getElementById('ganhoPatientSearch').value || '').toLowerCase();
-            return getGanhoConvertiblePatients(ganhoFilteredData).filter(item => {
-                const name = getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']).toLowerCase();
-                const id = getItemProp(item, ['clientes_id', 'id', 'ID']).toLowerCase();
-                const doc = getItemProp(item, ['medicos', 'medico', 'Médico']).toLowerCase();
-                const obs = getItemProp(item, ['agendamento_obs', 'obs', 'observacao']).toLowerCase();
-                return name.includes(search) || id.includes(search) || doc.includes(search) || obs.includes(search);
-            });
+            return getGanhoConvertiblePatients(ganhoFilteredData).filter(item => patientMatchesSearch(item, search));
         }
 
         function renderGanhoPatientTable(exportAll = false) {
             const tbody = document.getElementById('ganhoPatientTableBody');
-            const searchedData = getSearchedGanhoPatientData();
-            const totalRecords = searchedData.length;
+            const p = paginate(getSearchedGanhoPatientData(), ganhoPatientCurrentPage, pageSize, exportAll);
+            ganhoPatientCurrentPage = p.page;
 
-            let pageData, startIndex;
-            if (exportAll) {
-                pageData = searchedData;
-                startIndex = 0;
-            } else {
-                const totalPages = Math.ceil(totalRecords / pageSize) || 1;
-                if (ganhoPatientCurrentPage > totalPages) ganhoPatientCurrentPage = totalPages;
-                startIndex = (ganhoPatientCurrentPage - 1) * pageSize;
-                pageData = searchedData.slice(startIndex, startIndex + pageSize);
-            }
+            tbody.innerHTML = p.pageData.map(buildPatientRowHtml).join('') || '<tr><td colspan="7" class="p-4 text-center text-slate-400">Nenhum paciente convertível no filtro atual.</td></tr>';
 
-            tbody.innerHTML = pageData.map(item => {
-                const nameStr = getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']) || 'Sem Nome';
-                const idStr = getItemProp(item, ['clientes_id', 'id', 'ID']);
-                const telefoneStr = npsFormatTelefone(getPatientTelefone(item));
-                const nascDate = parseFlexibleDate(getPatientNascimento(item));
-                const nascStr = nascDate ? nascDate.toLocaleDateString('pt-BR') : '';
-                const dataStr = getItemProp(item, ['agendamento_data', 'data', 'Data']);
-                const surgStr = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']);
-                const clinicStr = getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']);
-                const docStr = getItemProp(item, ['medicos', 'medico', 'Médico']);
-
-                const { statusStr, badgeColor, journeyDateStr, journeyDateColor, overdueTag, semMotivoTag } = buildStatusJourneyCell(item);
-
-                return `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="p-3">
-                            <div class="font-bold text-slate-900">${nameStr}</div>
-                            <div class="text-[10px] text-slate-400 font-semibold">ID: ${idStr || '-'}</div>
-                            ${telefoneStr ? `<div class="text-[10px] text-slate-500 font-medium">${escapeHtml(telefoneStr)}</div>` : ''}
-                            ${nascStr ? `<div class="text-[10px] text-slate-400 font-medium">Nasc.: ${nascStr}</div>` : ''}
-                        </td>
-                        <td class="p-3 text-slate-600 font-medium">${dataStr || '-'}</td>
-                        <td class="p-3 font-semibold text-indigo-700">${surgStr || '-'}</td>
-                        <td class="p-3 text-slate-700 text-[11px] font-medium">${clinicStr || '-'}</td>
-                        <td class="p-3">
-                            <span class="inline-block px-2.5 py-1 text-[10px] font-bold rounded-full border ${badgeColor}">
-                                ${statusStr}
-                            </span>${semMotivoTag}
-                        </td>
-                        <td class="p-3 ${journeyDateColor} text-[11px]">${journeyDateStr}${overdueTag}</td>
-                        <td class="p-3 text-slate-600 text-[11px] font-medium">${docStr || '-'}</td>
-                    </tr>
-                `;
-            }).join('') || '<tr><td colspan="7" class="p-4 text-center text-slate-400">Nenhum paciente convertível no filtro atual.</td></tr>';
-
-            document.getElementById('ganhoPatientPrintCount').textContent = `Relatório com ${totalRecords} paciente(s) convertível(is) — filtro atual aplicado no momento da exportação.`;
+            document.getElementById('ganhoPatientPrintCount').textContent = `Relatório com ${p.totalRecords} paciente(s) convertível(is) — filtro atual aplicado no momento da exportação.`;
 
             if (exportAll) return;
-
-            const totalPages = Math.ceil(totalRecords / pageSize) || 1;
-            document.getElementById('ganhoPatientPaginationInfo').textContent = `Mostrando ${totalRecords === 0 ? 0 : startIndex + 1} até ${Math.min(startIndex + pageSize, totalRecords)} de ${totalRecords} paciente(s)`;
-            document.getElementById('ganhoPatientPrevPageBtn').disabled = ganhoPatientCurrentPage === 1;
-            document.getElementById('ganhoPatientNextPageBtn').disabled = ganhoPatientCurrentPage === totalPages;
+            updatePaginationFooter('ganhoPatientPaginationInfo', 'ganhoPatientPrevPageBtn', 'ganhoPatientNextPageBtn', p, 'paciente(s)');
         }
 
         function buildGanhoPatientExportRows() {
@@ -3100,24 +3038,15 @@
                 'Paciente': getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']) || 'Sem Nome',
                 'Telefone': npsFormatTelefone(getPatientTelefone(item)) || '-',
                 'Data da Consulta': getItemProp(item, ['agendamento_data', 'data', 'Data']) || '-',
-                'Cirurgia': getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']) || '-',
-                'Clínica Parceira': getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']) || '-',
-                'Status da Jornada': getItemProp(item, ['agendamento_cirg_status_clinica', 'status', 'Status']) || 'Sem Status',
-                'Médico / Equipe': getItemProp(item, ['medicos', 'medico', 'Médico']) || '-'
+                'Cirurgia': getItemProp(item, SURGERY_ALIASES) || '-',
+                'Clínica Parceira': getItemProp(item, CLINIC_ALIASES) || '-',
+                'Status da Jornada': getItemProp(item, STATUS_ALIASES) || 'Sem Status',
+                'Médico / Equipe': getItemProp(item, MEDICO_ALIASES) || '-'
             }));
         }
-        function exportGanhoPatientsAsSpreadsheet() {
-            closeExportMenus();
-            exportRowsAsSpreadsheet(buildGanhoPatientExportRows(), 'Pacientes Convertiveis', 'Pacientes_Potencial_Ganho');
-        }
-        function exportGanhoPatientsAsCSV() {
-            closeExportMenus();
-            exportRowsAsCSV(buildGanhoPatientExportRows(), 'Pacientes_Potencial_Ganho');
-        }
-        function exportGanhoPatientsAsPdf() {
-            closeExportMenus();
-            exportRowsAsPdf(buildGanhoPatientExportRows(), 'Pacientes Convertíveis — Potencial de Ganho', 'Pacientes_Potencial_Ganho');
-        }
+        function exportGanhoPatientsAsSpreadsheet() { exportAs('ganhoPatients', 'spreadsheet'); }
+        function exportGanhoPatientsAsCSV() { exportAs('ganhoPatients', 'csv'); }
+        function exportGanhoPatientsAsPdf() { exportAs('ganhoPatients', 'pdf'); }
 
         // ================================================================
         // COMPATIBILIDADE DE FORMATOS DE PLANILHA
@@ -3381,7 +3310,7 @@
             }).map(campo => NPS_AVAL_LABELS[campo]);
         }
 
-        const NPS_AVAL_FIELDS = ['Aval. de Atendimento CDV', 'Aval. de Acompanhamento CDV', 'Aval. Clínica', 'Aval. Médico'];
+        const NPS_AVAL_FIELDS = Object.keys(NPS_AVAL_LABELS);
 
         function npsUpdateDashboard() {
             document.getElementById('npsDataCountLabel').textContent = npsRawData.length > 0
@@ -3419,7 +3348,7 @@
             document.getElementById('npsKpiPassives').textContent = `${pctPassives}%`;
             document.getElementById('npsKpiDetractors').textContent = `${pctDetractors}%`;
 
-            renderNpsGauge(Math.max(0, npsScore));
+            renderNpsGauge(npsScore);
             renderNpsClinicsChart();
             renderNpsCategories();
             renderNpsDestaques();
@@ -3429,6 +3358,10 @@
         // Gauge semicircular em SVG puro (0-100), com faixas de cor e ponteiro
         function renderNpsGauge(value) {
             const container = document.getElementById('npsGaugeContainer');
+            // v (clampado 0-100) só posiciona o ponteiro/arcos na escala visual da régua;
+            // o número exibido no centro usa `value` sem clamp, senão um NPS negativo
+            // (possível pela fórmula %promotores - %detratores) aparece como "0,00",
+            // indistinguível de um NPS realmente neutro.
             const v = Math.max(0, Math.min(100, value));
             const cx = 150, cy = 145, r = 110, sw = 26;
 
@@ -3473,7 +3406,7 @@
                     <line x1="${needleBase1.x}" y1="${needleBase1.y}" x2="${needleTip.x}" y2="${needleTip.y}" stroke="#334155" stroke-width="4" stroke-linecap="round"/>
                     <line x1="${needleBase2.x}" y1="${needleBase2.y}" x2="${needleTip.x}" y2="${needleTip.y}" stroke="#334155" stroke-width="4" stroke-linecap="round"/>
                     <circle cx="${cx}" cy="${cy}" r="9" fill="#334155"/>
-                    <text x="${cx}" y="${cy - 34}" font-size="34" font-weight="800" fill="#0f172a" text-anchor="middle">${v.toFixed(2).replace('.', ',')}</text>
+                    <text x="${cx}" y="${cy - 34}" font-size="34" font-weight="800" fill="#0f172a" text-anchor="middle">${value.toFixed(2).replace('.', ',')}</text>
                 </svg>
             `;
         }
@@ -3513,7 +3446,7 @@
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        x: { min: 0, max: 100, ticks: { color: '#475569' }, grid: { color: '#f1f5f9' } },
+                        x: { min: -100, max: 100, ticks: { color: '#475569' }, grid: { color: '#f1f5f9' } },
                         y: { ticks: { color: '#334155', font: { size: 10, weight: 600 } }, grid: { display: false } }
                     }
                 }
@@ -3695,22 +3628,10 @@
 
         function renderNpsTable(exportAll = false) {
             const tbody = document.getElementById('npsTableBody');
-            const totalRecords = npsFilteredData.length;
+            const p = paginate(npsFilteredData, npsCurrentPage, pageSize, exportAll);
+            npsCurrentPage = p.page;
 
-            // Em tela: paginado (igual à Página 1). Na exportação/impressão:
-            // sempre a lista completa do filtro atual, ignorando a paginação.
-            let pageData, startIndex;
-            if (exportAll) {
-                pageData = npsFilteredData;
-                startIndex = 0;
-            } else {
-                const totalPages = Math.ceil(totalRecords / pageSize) || 1;
-                if (npsCurrentPage > totalPages) npsCurrentPage = totalPages;
-                startIndex = (npsCurrentPage - 1) * pageSize;
-                pageData = npsFilteredData.slice(startIndex, startIndex + pageSize);
-            }
-
-            tbody.innerHTML = pageData.map(item => {
+            tbody.innerHTML = p.pageData.map(item => {
                 const nome = npsGetPaciente(item) || 'Sem Nome';
                 const telefone = npsFormatTelefone(npsGetTelefone(item));
                 const clinica = npsGetClinica(item);
@@ -3729,12 +3650,12 @@
 
                 return `
                     <tr class="hover:bg-slate-50 transition">
-                        <td class="p-3 font-bold text-slate-900">${nome}</td>
-                        <td class="p-3 text-slate-700 text-[11px] font-medium whitespace-nowrap">${telefone || '-'}</td>
-                        <td class="p-3 text-slate-700 text-[11px] font-medium">${clinica || '-'}</td>
-                        <td class="p-3 text-slate-600 text-[11px] font-medium">${medico || '-'}</td>
+                        <td class="p-3 font-bold text-slate-900">${escapeHtml(nome)}</td>
+                        <td class="p-3 text-slate-700 text-[11px] font-medium whitespace-nowrap">${escapeHtml(telefone) || '-'}</td>
+                        <td class="p-3 text-slate-700 text-[11px] font-medium">${escapeHtml(clinica) || '-'}</td>
+                        <td class="p-3 text-slate-600 text-[11px] font-medium">${escapeHtml(medico) || '-'}</td>
                         <td class="p-3 text-center">
-                            <span class="inline-block px-2.5 py-1 text-[10px] font-bold rounded-full border ${notaColor}">${nota !== null ? nota : '-'}</span>
+                            <span class="badge-pill ${notaColor}">${nota !== null ? nota : '-'}</span>
                         </td>
                         <td class="p-3 text-slate-600 font-medium">${dCirurgia ? dCirurgia.toLocaleDateString('pt-BR') : '-'}</td>
                         <td class="p-3 text-slate-600 font-medium">${dAval ? dAval.toLocaleDateString('pt-BR') : '-'}</td>
@@ -3742,14 +3663,10 @@
                 `;
             }).join('') || '<tr><td colspan="7" class="p-4 text-center text-slate-400">Carregue a planilha de NPS para visualizar as avaliações.</td></tr>';
 
-            document.getElementById('npsPrintCount').textContent = `Relatório com ${totalRecords} avaliação(ões) — filtro atual aplicado no momento da exportação.`;
+            document.getElementById('npsPrintCount').textContent = `Relatório com ${p.totalRecords} avaliação(ões) — filtro atual aplicado no momento da exportação.`;
 
             if (exportAll) return;
-
-            const totalPages = Math.ceil(totalRecords / pageSize) || 1;
-            document.getElementById('npsPaginationInfo').textContent = `Mostrando ${totalRecords === 0 ? 0 : startIndex + 1} até ${Math.min(startIndex + pageSize, totalRecords)} de ${totalRecords} avaliação(ões)`;
-            document.getElementById('npsPrevPageBtn').disabled = npsCurrentPage === 1;
-            document.getElementById('npsNextPageBtn').disabled = npsCurrentPage === totalPages;
+            updatePaginationFooter('npsPaginationInfo', 'npsPrevPageBtn', 'npsNextPageBtn', p, 'avaliação(ões)');
         }
 
         // ================================================================
@@ -4017,9 +3934,29 @@
             XLSX.writeFile(wb, `${filenameBase}_${todayStamp()}.xlsx`);
         }
 
+        // Mitigação de "CSV injection": um valor que começa com =, +, - ou @ é
+        // interpretado como fórmula viva ao abrir um .csv no Excel/Sheets/LibreOffice,
+        // já que CSV puro não tem metadado de tipo de célula (diferente do .xlsx, onde
+        // XLSX.utils.json_to_sheet já grava strings como texto, nunca como fórmula).
+        // Prefixar com aspas simples força o valor a ser tratado como texto.
+        function sanitizeForCsvFormula(value) {
+            if (typeof value === 'string' && /^[=+\-@]/.test(value)) {
+                return `'${value}`;
+            }
+            return value;
+        }
+
+        function sanitizeRowsForCsvFormula(rows) {
+            return rows.map(row => {
+                const safeRow = {};
+                Object.keys(row).forEach(key => { safeRow[key] = sanitizeForCsvFormula(row[key]); });
+                return safeRow;
+            });
+        }
+
         function exportRowsAsCSV(rows, filenameBase) {
             if (!hasRowsToExport(rows)) return;
-            const ws = XLSX.utils.json_to_sheet(rows);
+            const ws = XLSX.utils.json_to_sheet(sanitizeRowsForCsvFormula(rows));
             const csv = XLSX.utils.sheet_to_csv(ws);
             downloadTextFile(csv, `${filenameBase}_${todayStamp()}.csv`, 'text/csv;charset=utf-8;');
         }
@@ -4042,6 +3979,29 @@
             pdf.save(`${filenameBase}_${todayStamp()}.pdf`);
         }
 
+        // Dispatcher central das 6 listas exportáveis (patients/clinicSummary/nps/
+        // faturamento/valorBase/ganhoPatients) x 3 formatos — cada wrapper export*As*()
+        // abaixo vira 1 linha chamando exportAs(entity, format) em vez de repetir
+        // closeExportMenus()+exportRowsAsX(); um 7º relatório futuro só precisa de
+        // uma entrada nova aqui, não de 3 funções novas.
+        const EXPORT_CONFIGS = {
+            patients: { build: () => buildPatientExportRows(), sheet: 'Pacientes', file: 'Lista_Detalhada_Pacientes', title: 'Lista Detalhada dos Pacientes' },
+            clinicSummary: { build: () => buildClinicExportRows(), sheet: 'Consolidado Clínicas', file: 'Relatorio_Consolidado_Clinicas', title: 'Relatório Consolidado para Envio à Gestão das Clínicas' },
+            nps: { build: () => buildNpsExportRows(), sheet: 'Avaliacoes NPS', file: 'Avaliacoes_NPS', title: 'Avaliações Detalhadas de NPS (Base para Envio à Clínica)' },
+            faturamento: { build: () => buildFaturamentoExportRows(), sheet: 'Pendencias Faturamento', file: 'Pendencias_Faturamento', title: 'Pendências de Faturamento — Cirurgias Realizadas e Não Reportadas' },
+            valorBase: { build: () => buildValorBaseExportRows(), sheet: 'Valor Base', file: 'Configuracao_Valor_Base', title: 'Configuração de Valor Base por Clínica e Especialidade' },
+            ganhoPatients: { build: () => buildGanhoPatientExportRows(), sheet: 'Pacientes Convertiveis', file: 'Pacientes_Potencial_Ganho', title: 'Pacientes Convertíveis — Potencial de Ganho' },
+        };
+
+        function exportAs(entity, format) {
+            closeExportMenus();
+            const cfg = EXPORT_CONFIGS[entity];
+            const rows = cfg.build();
+            if (format === 'spreadsheet') exportRowsAsSpreadsheet(rows, cfg.sheet, cfg.file);
+            else if (format === 'csv') exportRowsAsCSV(rows, cfg.file);
+            else if (format === 'pdf') exportRowsAsPdf(rows, cfg.title, cfg.file);
+        }
+
         // Lista Detalhada dos Pacientes
         function buildPatientExportRows() {
             return getSearchedPatientData().map(item => {
@@ -4053,26 +4013,17 @@
                     'Telefone': npsFormatTelefone(getPatientTelefone(item)) || '-',
                     'Data de Nascimento': nascDate ? nascDate.toLocaleDateString('pt-BR') : '-',
                     'Data da Consulta': getItemProp(item, ['agendamento_data', 'data', 'Data']) || '-',
-                    'Cirurgia': getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia']) || '-',
-                    'Clínica Parceira': getItemProp(item, ['clinicas', 'clínica', 'clinica', 'Unidade']) || '-',
-                    'Status da Jornada': getItemProp(item, ['agendamento_cirg_status_clinica', 'status', 'Status']) || 'Sem Status',
+                    'Cirurgia': getItemProp(item, SURGERY_ALIASES) || '-',
+                    'Clínica Parceira': getItemProp(item, CLINIC_ALIASES) || '-',
+                    'Status da Jornada': getItemProp(item, STATUS_ALIASES) || 'Sem Status',
                     'Data do Status': journeyDate ? journeyDate.toLocaleDateString('pt-BR') : '-',
-                    'Médico / Equipe': getItemProp(item, ['medicos', 'medico', 'Médico']) || '-'
+                    'Médico / Equipe': getItemProp(item, MEDICO_ALIASES) || '-'
                 };
             });
         }
-        function exportPatientsAsSpreadsheet() {
-            closeExportMenus();
-            exportRowsAsSpreadsheet(buildPatientExportRows(), 'Pacientes', 'Lista_Detalhada_Pacientes');
-        }
-        function exportPatientsAsCSV() {
-            closeExportMenus();
-            exportRowsAsCSV(buildPatientExportRows(), 'Lista_Detalhada_Pacientes');
-        }
-        function exportPatientsAsPdf() {
-            closeExportMenus();
-            exportRowsAsPdf(buildPatientExportRows(), 'Lista Detalhada dos Pacientes', 'Lista_Detalhada_Pacientes');
-        }
+        function exportPatientsAsSpreadsheet() { exportAs('patients', 'spreadsheet'); }
+        function exportPatientsAsCSV() { exportAs('patients', 'csv'); }
+        function exportPatientsAsPdf() { exportAs('patients', 'pdf'); }
 
         // Relatório Consolidado para Envio à Gestão das Clínicas
         function buildClinicExportRows() {
@@ -4088,18 +4039,9 @@
                 'Sem Indicação': c.semIndicacao
             }));
         }
-        function exportClinicSummaryAsSpreadsheet() {
-            closeExportMenus();
-            exportRowsAsSpreadsheet(buildClinicExportRows(), 'Consolidado Clínicas', 'Relatorio_Consolidado_Clinicas');
-        }
-        function exportClinicSummaryAsCSV() {
-            closeExportMenus();
-            exportRowsAsCSV(buildClinicExportRows(), 'Relatorio_Consolidado_Clinicas');
-        }
-        function exportClinicSummaryAsPdf() {
-            closeExportMenus();
-            exportRowsAsPdf(buildClinicExportRows(), 'Relatório Consolidado para Envio à Gestão das Clínicas', 'Relatorio_Consolidado_Clinicas');
-        }
+        function exportClinicSummaryAsSpreadsheet() { exportAs('clinicSummary', 'spreadsheet'); }
+        function exportClinicSummaryAsCSV() { exportAs('clinicSummary', 'csv'); }
+        function exportClinicSummaryAsPdf() { exportAs('clinicSummary', 'pdf'); }
 
         // --- PÁGINA NPS: Avaliações Detalhadas ---
         // Usa npsFilteredData (base própria do NPS) e npsGetNota — as mesmas
@@ -4126,18 +4068,9 @@
                 };
             });
         }
-        function exportNpsAsSpreadsheet() {
-            closeExportMenus();
-            exportRowsAsSpreadsheet(buildNpsExportRows(), 'Avaliacoes NPS', 'Avaliacoes_NPS');
-        }
-        function exportNpsAsCSV() {
-            closeExportMenus();
-            exportRowsAsCSV(buildNpsExportRows(), 'Avaliacoes_NPS');
-        }
-        function exportNpsAsPdf() {
-            closeExportMenus();
-            exportRowsAsPdf(buildNpsExportRows(), 'Avaliações Detalhadas de NPS (Base para Envio à Clínica)', 'Avaliacoes_NPS');
-        }
+        function exportNpsAsSpreadsheet() { exportAs('nps', 'spreadsheet'); }
+        function exportNpsAsCSV() { exportAs('nps', 'csv'); }
+        function exportNpsAsPdf() { exportAs('nps', 'pdf'); }
 
         // --- PÁGINA FATURAMENTO: Pendências ---
         // faturamentoFilteredRecords já vem pronto de applyFaturamentoFilters().
@@ -4152,18 +4085,9 @@
                 'Médico': rec.medico
             }));
         }
-        function exportFaturamentoAsSpreadsheet() {
-            closeExportMenus();
-            exportRowsAsSpreadsheet(buildFaturamentoExportRows(), 'Pendencias Faturamento', 'Pendencias_Faturamento');
-        }
-        function exportFaturamentoAsCSV() {
-            closeExportMenus();
-            exportRowsAsCSV(buildFaturamentoExportRows(), 'Pendencias_Faturamento');
-        }
-        function exportFaturamentoAsPdf() {
-            closeExportMenus();
-            exportRowsAsPdf(buildFaturamentoExportRows(), 'Pendências de Faturamento — Cirurgias Realizadas e Não Reportadas', 'Pendencias_Faturamento');
-        }
+        function exportFaturamentoAsSpreadsheet() { exportAs('faturamento', 'spreadsheet'); }
+        function exportFaturamentoAsCSV() { exportAs('faturamento', 'csv'); }
+        function exportFaturamentoAsPdf() { exportAs('faturamento', 'pdf'); }
     </script>
 </body>
 </html>
