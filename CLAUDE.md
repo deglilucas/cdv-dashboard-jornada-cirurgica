@@ -110,6 +110,7 @@ O botão do header (`exportReport()` → `window.print()`) **não gera mais o PD
 ## Deploy
 
 - Repositório: `https://github.com/deglilucas/cdv-dashboard-jornada-cirurgica` (**público** — decisão deliberada, necessária pro GitHub Pages gratuito funcionar; o código não tem nenhum dado de paciente embutido, então isso é seguro).
+- **Planilhas de teste com dados reais de paciente ficam SEMPRE só locais, nunca sobem pro GitHub.** A pasta `Planilhas de teste/` (usada para testar upload/render no navegador antes de um PR) está no `.gitignore` por isso — não remover essa regra, e não commitar planilha nenhuma (mesmo que "de teste") em nenhum outro lugar do repo, já que ele é público.
 - **Netlify** (link principal usado pela equipe): `https://cdv-cxdashboard.netlify.app/` — conectado via "Import from Git", publica automaticamente a cada push/merge na `main`.
 - **GitHub Pages** (link de backup): `https://deglilucas.github.io/cdv-dashboard-jornada-cirurgica/` — também publica automaticamente a partir da `main`.
 - Fluxo de trabalho: criar branch (`feature/...`), commit, push, abrir PR, e só mesclar (merge) na `main` depois de confirmar com o usuário — merge = publicação imediata nos dois links.
