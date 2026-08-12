@@ -24,6 +24,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js" integrity="sha384-fCAW/rDWORTbQXSiB7mOg0QtQ5c+r0f544y6XoKjuVva0nMBlCpNUjiFeG5iMdS3" crossorigin="anonymous"></script>
 
+    <!-- ExcelJS — só é usado pra gerar o .xlsx COLORIDO (células de Status/Observação da
+         Data) da Lista Detalhada de Pacientes e da Lista de Pacientes Potenciais (Ganho).
+         O SheetJS (xlsx@0.18.5 acima) continua sendo quem lê toda planilha carregada pelo
+         usuário e quem gera os outros 4 relatórios/CSV/PDF — não foi trocado. Motivo de ter
+         2 bibliotecas: a versão livre do SheetJS não grava cor de célula ao escrever .xlsx
+         (é recurso pago da versão Pro); ExcelJS é gratuita, madura e feita pra isso. -->
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js" integrity="sha384-Pqp51FUN2/qzfxZxBCtF0stpc9ONI6MYZpVqmo8m20SoaQCzf+arZvACkLkirlPz" crossorigin="anonymous"></script>
+
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -481,16 +489,8 @@
             <div class="overflow-x-auto custom-scrollbar">
                 <table class="w-full text-left text-xs text-slate-700">
                     <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200">
-                        <tr>
-                            <th class="p-3">Clínica Parceira</th>
-                            <th class="p-3 text-center">Total Pacientes</th>
-                            <th class="p-3 text-center text-slate-500">Sem Status</th>
-                            <th class="p-3 text-center text-amber-700 font-bold">Exames Pendentes</th>
-                            <th class="p-3 text-center text-rose-700 font-bold">Aguardando Clínica</th>
-                            <th class="p-3 text-center text-blue-700 font-bold">Cirurgia Agendada</th>
-                            <th class="p-3 text-center text-emerald-700 font-bold">Cirurgia Realizada</th>
-                            <th class="p-3 text-center text-slate-500">Desistiu</th>
-                            <th class="p-3 text-center text-slate-500">Sem Indicação</th>
+                        <tr id="clinicTableHeadRow">
+                            <!-- Populated via JS (renderClinicSummaryTableHead) -->
                         </tr>
                     </thead>
                     <tbody id="clinicTableBody" class="divide-y divide-slate-100 font-medium">
@@ -1354,16 +1354,26 @@
         // fora: não há prazo perdido a cobrar ali.
         const GARGALO_GROUPS = ['EXAMES', 'AGUARDANDO_CLINICA', 'CIRURGIA_AGENDADA'];
 
-        // Dias de atraso (> 0) do procedimento em andamento, ou null se não há atraso / não se aplica.
-        function getJourneyOverdueDays(item) {
-            const code = classifyStatus(getItemProp(item, ['agendamento_cirg_status_clinica']));
-            if (!GARGALO_GROUPS.includes(statusGroup(code))) return null;
-            const date = parseFlexibleDate(getItemProp(item, ['agendamento_cirg_data_clinica_r']));
-            if (!date) return null;
+        // Dias até a data marcada do procedimento em andamento (negativo = já venceu,
+        // 0 = vence hoje, positivo = ainda no prazo), ou null se o status não é um
+        // gargalo com data ou não há data. Base de getJourneyOverdueDays (atraso) e da
+        // cor do "balão" de data na Lista de Pacientes (futuro/hoje/atrasado). Usa o
+        // "procedimento ativo" (ver getActiveProcedureSlot(), abaixo) — se a aba 1 já foi
+        // concluída mas existe uma 2ª/3ª cirurgia em andamento numa aba seguinte, é a data
+        // DELA que importa pra saber se esse próximo passo está atrasado.
+        function getJourneyDueDiffDays(item) {
+            const slot = getActiveProcedureSlot(item);
+            if (!GARGALO_GROUPS.includes(statusGroup(slot.code))) return null;
+            if (!slot.date) return null;
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            if (date >= today) return null;
-            return Math.round((today - date) / 86400000);
+            return Math.round((slot.date - today) / 86400000);
+        }
+
+        // Dias de atraso (> 0) do procedimento em andamento, ou null se não há atraso / não se aplica.
+        function getJourneyOverdueDays(item) {
+            const diff = getJourneyDueDiffDays(item);
+            return (diff !== null && diff < 0) ? -diff : null;
         }
 
         // O Farol acompanha até 5 procedimentos dentro da mesma consulta (abas 1 a 5).
@@ -1393,16 +1403,39 @@
             }).filter(Boolean);
         }
 
-        // Regra: para CATARATA, se a aba 1 é "realizou 1º olho" e nenhuma outra aba (2-5)
-        // mostra um "realizou" (1º ou 2º), falta o acompanhamento obrigatório do 2º olho.
+        // "Procedimento ativo" do paciente — pedido do usuário em 2026-08-12 pra deixar de
+        // olhar sempre só a aba 1 (`getProcedureSlots()` já garante a regra que ele fechou:
+        // a aba 1 sempre conta, mesmo vazia — é o pior caso, "Sem Status"/"Aguardando
+        // Retorno" —, mas abas 2-5 só contam se tiverem QUALQUER valor preenchido; abas
+        // vazias são descartadas, porque a maioria dos pacientes não vai ter 2º/3º
+        // procedimento). "Ativo" = a ÚLTIMA aba preenchida: se ela ainda está em aberto
+        // (exame/aguardando clínica/cirurgia agendada), é ela que deve alimentar status,
+        // data e atraso em todo o painel — não mais sempre a aba 1, que já "acabou". Se a
+        // última aba já é um status resolvido (realizou/encerrou), o paciente conta como
+        // resolvido normalmente (não há mais nada em aberto pra cobrar).
+        function getActiveProcedureSlot(item) {
+            const slots = getProcedureSlots(item);
+            return slots[slots.length - 1];
+        }
+
+        // Regra: para CATARATA, se a aba 1 é "realizou 1º olho" e NENHUMA outra aba (2-5)
+        // tem QUALQUER valor, falta o acompanhamento do 2º olho (potencial, ainda nem
+        // acionado). Corrigido em 2026-08-12 (pedido do usuário): antes checava só se
+        // faltava um "realizou" nas abas seguintes, então uma aba 2 já em andamento (ex.:
+        // "CIRURGIA - AGENDOU", 2º olho já marcado pela clínica) ainda disparava esse
+        // alerta — falso positivo, já que `getActiveProcedureSlot()` acima passa a
+        // acompanhar essa aba 2 como o procedimento ativo do paciente. Como
+        // `getProcedureSlots()` já descarta abas 2-5 vazias, "só existe a aba 1" (slots.length
+        // === 1) é exatamente "nenhuma aba seguinte tem QUALQUER valor" — a única situação
+        // que ainda precisa desse alerta genérico. Exceção mantida: se a aba 1 já É o 2º
+        // olho (cirurgia isolada, sem 1º olho registrado aqui), não há mais o que acompanhar.
         function needsSecondEyeFollowUp(item, especialidade) {
             if (!/CATARATA/i.test(especialidade || '')) return false;
             const slots = getProcedureSlots(item);
             if (slots.length === 0) return false;
             const primary = slots[0];
             if (primary.code !== 'CIRURGIA_REALIZOU_1') return false;
-            const hasOtherRealizou = slots.some((sl, i) => i > 0 && (sl.code === 'CIRURGIA_REALIZOU_1' || sl.code === 'CIRURGIA_REALIZOU_2'));
-            return !hasOtherRealizou;
+            return slots.length === 1;
         }
 
         // Candidatos de coluna reaproveitados em getItemProp() por várias funções (planilha
@@ -1411,7 +1444,6 @@
         // e cobrem os dois formatos automaticamente se um novo alias precisar ser somado.
         const CLINIC_ALIASES = ['clinicas', 'clínica', 'clinica', 'Unidade'];
         const SURGERY_ALIASES = ['especialidades', 'especialidade', 'Cirurgia'];
-        const STATUS_ALIASES = ['agendamento_cirg_status_clinica', 'status', 'Status'];
         const MEDICO_ALIASES = ['medicos', 'medico', 'Médico'];
 
         // Pendências de faturamento: cada procedimento "realizou" (1º ou 2º olho) cuja
@@ -1444,9 +1476,9 @@
         function collectUnknownStatuses(data) {
             const set = new Set();
             data.forEach(item => {
-                const raw = getItemProp(item, ['agendamento_cirg_status_clinica']);
-                if (!raw) return;
-                if (classifyStatus(raw) === 'OUTROS') set.add(raw);
+                const slot = getActiveProcedureSlot(item);
+                if (!slot.statusRaw) return;
+                if (slot.code === 'OUTROS') set.add(slot.statusRaw);
             });
             return set;
         }
@@ -1628,7 +1660,10 @@
             rawData.forEach(item => {
                 const c = getItemProp(item, CLINIC_ALIASES);
                 const s = getItemProp(item, SURGERY_ALIASES);
-                const st = getItemProp(item, STATUS_ALIASES);
+                // Texto bruto do procedimento ATIVO (ver getActiveProcedureSlot) — se o
+                // filtro listasse sempre a aba 1, um paciente com 2ª cirurgia em andamento
+                // não apareceria filtrável pelo status real que está sendo acompanhado.
+                const st = getActiveProcedureSlot(item).statusRaw;
                 if (c) clinics.add(c.trim());
                 if (s) surgeries.add(s.trim());
                 if (st) statuses.add(st.trim());
@@ -1663,7 +1698,7 @@
             ganhoFilteredData = rawData.filter(item => {
                 const c = getItemProp(item, CLINIC_ALIASES);
                 const s = getItemProp(item, SURGERY_ALIASES);
-                const st = getItemProp(item, STATUS_ALIASES);
+                const st = getActiveProcedureSlot(item).statusRaw;
                 const d = parseFlexibleDate(getItemProp(item, ['agendamento_data', 'data', 'Data']));
 
                 const matchClinic = matchesMultiSelect(clinics, c);
@@ -2083,7 +2118,9 @@
                 const s = getItemProp(item, ['especialidades', 'especialidade', 'Cirurgia', 'especialidade_nome']);
                 // OBS: NÃO incluir 'agendamento_status' aqui — esse campo é o status de
                 // COMPARECEU/FALTOU da consulta, não o status da jornada cirúrgica na clínica.
-                const st = getItemProp(item, STATUS_ALIASES);
+                // Texto bruto do procedimento ATIVO (ver getActiveProcedureSlot) — mesma
+                // razão do comentário em populateGanhoFilters.
+                const st = getActiveProcedureSlot(item).statusRaw;
 
                 if (c) clinics.add(c.trim());
                 if (s) surgeries.add(s.trim());
@@ -2224,7 +2261,7 @@
             filteredData = rawData.filter(item => {
                 const c = getItemProp(item, CLINIC_ALIASES);
                 const s = getItemProp(item, SURGERY_ALIASES);
-                const st = getItemProp(item, STATUS_ALIASES);
+                const st = getActiveProcedureSlot(item).statusRaw;
                 const d = parseFlexibleDate(getItemProp(item, ['agendamento_data', 'data', 'Data']));
 
                 const matchClinic = matchesMultiSelect(clinics, c);
@@ -2251,30 +2288,19 @@
             renderPatientTable();
         }
 
+        // Reaproveita buildGroupStats() em vez de reclassificar status por conta própria —
+        // essa duplicação (mesma lógica de agrupamento reescrita aqui e em buildGroupStats)
+        // é exatamente o tipo de divergência que classifyStatus() foi centralizado pra
+        // evitar; também já vem pronta pra usar o procedimento ativo (ver
+        // getActiveProcedureSlot), sem precisar reaplicar a mesma correção 2 vezes.
         function updateKPIs() {
-            const total = filteredData.length;
-
-            let semStatusCount = 0;
-            let examsCount = 0;
-            let aguardandoClinicaCount = 0;
-            let agendadasCount = 0;
-            let realizadasCount = 0;
-
-            filteredData.forEach(item => {
-                const group = statusGroup(classifyStatus(getItemProp(item, ['agendamento_cirg_status_clinica'])));
-                if (group === 'SEM_STATUS') semStatusCount++;
-                else if (group === 'EXAMES') examsCount++;
-                else if (group === 'AGUARDANDO_CLINICA') aguardandoClinicaCount++;
-                else if (group === 'CIRURGIA_AGENDADA') agendadasCount++;
-                else if (group === 'CIRURGIA_REALIZADA') realizadasCount++;
-            });
-
-            document.getElementById('kpiTotal').textContent = total.toLocaleString('pt-BR');
-            document.getElementById('kpiSemStatus').textContent = semStatusCount.toLocaleString('pt-BR');
-            document.getElementById('kpiExams').textContent = examsCount.toLocaleString('pt-BR');
-            document.getElementById('kpiAguardandoClinica').textContent = aguardandoClinicaCount.toLocaleString('pt-BR');
-            document.getElementById('kpiAgendadas').textContent = agendadasCount.toLocaleString('pt-BR');
-            document.getElementById('kpiRealizadas').textContent = realizadasCount.toLocaleString('pt-BR');
+            const stats = buildGroupStats(filteredData);
+            document.getElementById('kpiTotal').textContent = stats.total.toLocaleString('pt-BR');
+            document.getElementById('kpiSemStatus').textContent = stats.semStatus.toLocaleString('pt-BR');
+            document.getElementById('kpiExams').textContent = stats.exames.toLocaleString('pt-BR');
+            document.getElementById('kpiAguardandoClinica').textContent = stats.aguardandoClinica.toLocaleString('pt-BR');
+            document.getElementById('kpiAgendadas').textContent = stats.agendada.toLocaleString('pt-BR');
+            document.getElementById('kpiRealizadas').textContent = stats.realizada.toLocaleString('pt-BR');
         }
 
         // ================================================================
@@ -2355,14 +2381,21 @@
                 },
                 // Severidade de exame atrasado por tempo (5/15/30 dias) — combina os 5 códigos
                 // de exame acima, já que a régua de dias é a mesma pra qualquer status de exame.
-                examesSeveridade: { atencao: 0, ruim: 0, critico: 0 }
+                examesSeveridade: { atencao: 0, ruim: 0, critico: 0 },
+                // Severidade por urgência (dias de atraso) dos outros 2 gargalos com data —
+                // pedido do usuário em 2026-08-12 pra colorir os mini-campos do Insights:
+                // atenção (vermelho vivo só entra a partir de 5 dias de atraso).
+                gargaloUrgencia: {
+                    AGUARDANDO_CLINICA_AGENDAR: { atencao: 0, critico: 0 },
+                    CIRURGIA_AGENDOU: { atencao: 0, critico: 0 }
+                }
             };
             const clinicGargalos = {};
             const clinicsSet = new Set();
 
             data.forEach(item => {
-                const statusRaw = getItemProp(item, ['agendamento_cirg_status_clinica']);
-                const code = classifyStatus(statusRaw);
+                // Procedimento ATIVO (ver getActiveProcedureSlot) — não mais sempre a aba 1.
+                const code = getActiveProcedureSlot(item).code;
                 const group = statusGroup(code);
                 const especialidade = getItemProp(item, SURGERY_ALIASES);
                 const clinic = getItemProp(item, CLINIC_ALIASES) || 'Não identificada';
@@ -2385,6 +2418,9 @@
                         if (overdueDays >= 30) stats.examesSeveridade.critico++;
                         else if (overdueDays >= 15) stats.examesSeveridade.ruim++;
                         else if (overdueDays >= 5) stats.examesSeveridade.atencao++;
+                    } else if (stats.gargaloUrgencia[code]) {
+                        if (overdueDays >= 5) stats.gargaloUrgencia[code].critico++;
+                        else stats.gargaloUrgencia[code].atencao++;
                     }
                 }
 
@@ -2512,16 +2548,25 @@
                     detail: 'Operou o 1º olho e não tem registro do 2º — oportunidade de alta conversão.'
                 });
             }
+            // Exame oftalmológico é feito na própria clínica parceira — quem contata o
+            // paciente pra remarcar é a clínica. Exame clínico/laboratorial não é feito
+            // lá, então a CdV ajuda nesse contato. Corrigido em 2026-08-12 (pedido do
+            // usuário): antes as duas entravam numa recomendação só com responsável
+            // "CdV", atribuindo à CdV uma ação que é da clínica.
             const oftAtrasado = ov.EXAMES_OFT_AGENDADOS + ov.EXAMES_OFT_PENDENTE;
             const clinicoAtrasado = ov.EXAMES_CLINICO_AGENDADOS + ov.EXAMES_CLINICO_PENDENTE;
-            if (oftAtrasado > 0 || clinicoAtrasado > 0) {
-                const partes = [];
-                if (oftAtrasado > 0) partes.push(`${oftAtrasado} oftalmológico`);
-                if (clinicoAtrasado > 0) partes.push(`${clinicoAtrasado} laboratorial`);
+            if (oftAtrasado > 0) {
+                recs.push({
+                    priority: 'atencao', responsavel: 'Clínica',
+                    headline: `Destravar ${oftAtrasado} exame${oftAtrasado > 1 ? 's' : ''} oftalmológico${oftAtrasado > 1 ? 's' : ''} em atraso`,
+                    detail: 'Exame realizado na própria clínica — contato direto com o paciente pra remarcar.'
+                });
+            }
+            if (clinicoAtrasado > 0) {
                 recs.push({
                     priority: 'atencao', responsavel: 'CdV',
-                    headline: 'Destravar exames em atraso',
-                    detail: `${partes.join(' + ')} — ajudar no contato com o paciente pra remarcar.`
+                    headline: `Destravar ${clinicoAtrasado} exame${clinicoAtrasado > 1 ? 's' : ''} ${clinicoAtrasado > 1 ? 'laboratoriais' : 'laboratorial'} em atraso`,
+                    detail: 'Exame fora da clínica (laboratório) — CdV ajuda no contato com o paciente pra remarcar.'
                 });
             }
             const semIndicacaoPct = stats.total ? Math.round((stats.semIndicacao / stats.total) * 100) : 0;
@@ -2609,10 +2654,21 @@
             // do usuário — deixa claro que não é a consulta, é a cirurgia que está pendente
             // de marcação; junto com "cirurgia vencida" são os itens mais quentes do funil.
             const pillClass = 'inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-800';
+            // Semáforo de urgência pedido pelo usuário em 2026-08-12: verde = dentro do
+            // prazo/não vencido, amarelo = vencido há menos de 5 dias, vermelho vivo =
+            // vencido há 5+ dias — pra clínica bater o olho e saber o que é prioridade.
+            const okTag = '<span class="text-emerald-600 font-extrabold">dentro do prazo</span>';
+            const urgencyParts = urg => {
+                const parts = [];
+                if (urg.critico > 0) parts.push(`<span class="text-red-600 font-extrabold">${urg.critico} crítico${urg.critico > 1 ? 's' : ''}</span>`);
+                if (urg.atencao > 0) parts.push(`<span class="text-amber-500 font-extrabold">${urg.atencao} em atenção</span>`);
+                return parts;
+            };
             const pills = [];
             if (stats.aguardandoClinica > 0) {
-                const atrasados = ov.AGUARDANDO_CLINICA_AGENDAR;
-                pills.push(`<span class="${pillClass}">Aguardando agendamento de cirurgia: ${stats.aguardandoClinica} pac.${atrasados > 0 ? ` (${atrasados} vencidos)` : ''}</span>`);
+                const urg = stats.gargaloUrgencia.AGUARDANDO_CLINICA_AGENDAR;
+                const parts = urgencyParts(urg);
+                pills.push(`<span class="${pillClass}">Aguardando agendamento de cirurgia: ${stats.aguardandoClinica} pac. (${parts.length ? parts.join(' / ') : okTag})</span>`);
                 // "Maior acúmulo" só faz sentido comparando clínicas — com uma única
                 // unidade no filtro, apontar "maior acúmulo" seria óbvio/redundante.
                 if (stats.topGargalo && stats.distinctClinics > 1) {
@@ -2620,16 +2676,17 @@
                 }
             }
             if (stats.agendada > 0) {
-                const atrasados = ov.CIRURGIA_AGENDOU;
-                pills.push(`<span class="${pillClass}">Cirurgias agendadas: ${stats.agendada} pac.${atrasados > 0 ? ` (${atrasados} com data vencida)` : ''}</span>`);
+                const urg = stats.gargaloUrgencia.CIRURGIA_AGENDOU;
+                const parts = urgencyParts(urg);
+                pills.push(`<span class="${pillClass}">Cirurgias agendadas: ${stats.agendada} pac. (${parts.length ? parts.join(' / ') : okTag})</span>`);
             }
             if (stats.exames > 0) {
                 const sev = stats.examesSeveridade;
                 const sevParts = [];
-                if (sev.critico > 0) sevParts.push(`${sev.critico} crítico`);
-                if (sev.ruim > 0) sevParts.push(`${sev.ruim} relevante`);
-                if (sev.atencao > 0) sevParts.push(`${sev.atencao} atenção`);
-                pills.push(`<span class="${pillClass}">Exames: ${stats.exames} pac.${sevParts.length ? ` (${sevParts.join(' / ')})` : ''}</span>`);
+                if (sev.critico > 0) sevParts.push(`<span class="text-red-600 font-extrabold">${sev.critico} crítico${sev.critico > 1 ? 's' : ''}</span>`);
+                if (sev.ruim > 0) sevParts.push(`<span class="text-orange-500 font-extrabold">${sev.ruim} relevante${sev.ruim > 1 ? 's' : ''}</span>`);
+                if (sev.atencao > 0) sevParts.push(`<span class="text-amber-500 font-extrabold">${sev.atencao} atenção</span>`);
+                pills.push(`<span class="${pillClass}">Exames: ${stats.exames} pac. (${sevParts.length ? sevParts.join(' / ') : okTag})</span>`);
             }
             if (sp.key === 'CATARATA' && stats.olho2Pendente > 0) {
                 pills.push(`<span class="${pillClass}">Operou 1º olho: ${stats.olho2Pendente} pac. sem registro do 2º</span>`);
@@ -2675,7 +2732,7 @@
                                                     <span class="px-2 py-0.5 rounded-full text-xs font-bold ${respMeta.badge} whitespace-nowrap">${respMeta.tag}</span>
                                                     <span class="text-sm font-bold text-slate-900">${r.headline}</span>
                                                 </div>
-                                                <p class="text-xs text-slate-600 mt-0.5 leading-snug">↳ ${r.detail}</p>
+                                                <p class="text-sm text-slate-900 font-medium mt-0.5 leading-snug">↳ ${r.detail}</p>
                                             </div>
                                         </div>
                                     `;
@@ -2738,38 +2795,22 @@
             lucide.createIcons();
         }
 
+        // Reaproveita buildGroupStats() em vez de reclassificar status por conta própria —
+        // mesmo motivo do updateKPIs (evitar divergência com o resto do painel).
         function renderFunnel() {
             const container = document.getElementById('funnelContainer');
             const total = filteredData.length || 1;
-
-            let semStatus = 0;
-            let examesPendente = 0;
-            let aguardandoClinica = 0;
-            let agendou = 0;
-            let realizou = 0;
-            let desistiu = 0;
-            let semIndicacao = 0;
-
-            filteredData.forEach(item => {
-                const group = statusGroup(classifyStatus(getItemProp(item, ['agendamento_cirg_status_clinica'])));
-                if (group === 'SEM_STATUS') semStatus++;
-                else if (group === 'EXAMES') examesPendente++;
-                else if (group === 'AGUARDANDO_CLINICA') aguardandoClinica++;
-                else if (group === 'CIRURGIA_AGENDADA') agendou++;
-                else if (group === 'CIRURGIA_REALIZADA') realizou++;
-                else if (group === 'ENCERROU_DESISTIU') desistiu++;
-                else if (group === 'ENCERROU_SEM_INDICACAO') semIndicacao++;
-            });
+            const stats = buildGroupStats(filteredData);
 
             const stages = [
                 { name: '1. Atendidos', count: filteredData.length, color: 'bg-indigo-50 border-indigo-200 text-indigo-900', icon: 'users' },
-                { name: '2. Sem Status', count: semStatus, color: 'bg-slate-200 border-slate-300 text-slate-800', icon: 'help-circle' },
-                { name: '3. Fase de Exames', count: examesPendente, color: 'bg-amber-50 border-amber-200 text-amber-900', icon: 'file-clock' },
-                { name: '4. Aguardando Clínica', count: aguardandoClinica, color: 'bg-rose-50 border-rose-200 text-rose-900', icon: 'alert-circle' },
-                { name: '5. Cirurgia Agendada', count: agendou, color: 'bg-blue-50 border-blue-200 text-blue-900', icon: 'calendar-check' },
-                { name: '6. Cirurgia Realizada', count: realizou, color: 'bg-emerald-50 border-emerald-200 text-emerald-900', icon: 'check-circle' },
-                { name: 'Desistiu', count: desistiu, color: 'bg-slate-100 border-slate-200 text-slate-700', icon: 'x-circle' },
-                { name: 'Sem Indicação', count: semIndicacao, color: 'bg-slate-100 border-slate-200 text-slate-700', icon: 'minus-circle' }
+                { name: '2. Sem Status', count: stats.semStatus, color: 'bg-slate-200 border-slate-300 text-slate-800', icon: 'help-circle' },
+                { name: '3. Fase de Exames', count: stats.exames, color: 'bg-amber-50 border-amber-200 text-amber-900', icon: 'file-clock' },
+                { name: '4. Aguardando Clínica', count: stats.aguardandoClinica, color: 'bg-rose-50 border-rose-200 text-rose-900', icon: 'alert-circle' },
+                { name: '5. Cirurgia Agendada', count: stats.agendada, color: 'bg-blue-50 border-blue-200 text-blue-900', icon: 'calendar-check' },
+                { name: '6. Cirurgia Realizada', count: stats.realizada, color: 'bg-emerald-50 border-emerald-200 text-emerald-900', icon: 'check-circle' },
+                { name: 'Desistiu', count: stats.desistiu, color: 'bg-slate-100 border-slate-200 text-slate-700', icon: 'x-circle' },
+                { name: 'Sem Indicação', count: stats.semIndicacao, color: 'bg-slate-100 border-slate-200 text-slate-700', icon: 'minus-circle' }
             ];
 
             container.innerHTML = stages.map(s => {
@@ -2791,10 +2832,11 @@
         }
 
         function renderCharts() {
-            // Status Chart (doughnut com legenda custom + total central)
+            // Status Chart (doughnut com legenda custom + total central) — usa o
+            // procedimento ATIVO (ver getActiveProcedureSlot), não sempre a aba 1.
             const statusCounts = {};
             filteredData.forEach(item => {
-                const st = getItemProp(item, STATUS_ALIASES) || 'Sem Status';
+                const st = getActiveProcedureSlot(item).statusRaw || 'Sem Status';
                 statusCounts[st] = (statusCounts[st] || 0) + 1;
             });
 
@@ -2922,7 +2964,7 @@
                 }
                 summary[cl].total++;
 
-                const group = statusGroup(classifyStatus(getItemProp(item, ['agendamento_cirg_status_clinica'])));
+                const group = statusGroup(getActiveProcedureSlot(item).code);
                 if (group === 'SEM_STATUS') summary[cl].semStatus++;
                 else if (group === 'EXAMES') summary[cl].exames++;
                 else if (group === 'AGUARDANDO_CLINICA') summary[cl].aguardando++;
@@ -2932,12 +2974,71 @@
                 else if (group === 'ENCERROU_SEM_INDICACAO') summary[cl].semIndicacao++;
             });
 
-            return Object.entries(summary).sort((a, b) => b[1].total - a[1].total);
+            // Não ordena aqui — a ordem de exibição/exportação é definida por
+            // sortClinicSummaryEntries(), que respeita a coluna clicada pelo usuário
+            // (ver clinicSummarySort / renderClinicSummaryTableHead).
+            return Object.entries(summary);
+        }
+
+        // Colunas do Relatório Consolidado, na ordem em que aparecem — usado tanto pra
+        // desenhar o cabeçalho clicável quanto pra ordenar. "name" é a chave especial
+        // pro nome da clínica (não vem de `counts`, vem da própria chave do entry).
+        const CLINIC_SUMMARY_COLUMNS = [
+            { key: 'name', label: 'Clínica Parceira', center: false, color: '' },
+            { key: 'total', label: 'Total Pacientes', center: true, color: '' },
+            { key: 'semStatus', label: 'Sem Status', center: true, color: 'text-slate-500' },
+            { key: 'exames', label: 'Exames Pendentes', center: true, color: 'text-amber-700 font-bold' },
+            { key: 'aguardando', label: 'Aguardando Clínica', center: true, color: 'text-rose-700 font-bold' },
+            { key: 'agendadas', label: 'Cirurgia Agendada', center: true, color: 'text-blue-700 font-bold' },
+            { key: 'realizadas', label: 'Cirurgia Realizada', center: true, color: 'text-emerald-700 font-bold' },
+            { key: 'desistiu', label: 'Desistiu', center: true, color: 'text-slate-500' },
+            { key: 'semIndicacao', label: 'Sem Indicação', center: true, color: 'text-slate-500' }
+        ];
+
+        // Ordenação padrão = maior volume total primeiro (comportamento original antes
+        // de virar clicável). Clicar num cabeçalho novo ordena decrescente (maior
+        // primeiro) pra números, e A-Z pra "Clínica Parceira"; clicar de novo inverte.
+        let clinicSummarySort = { key: 'total', dir: 'desc' };
+
+        function handleClinicSummarySort(key) {
+            if (clinicSummarySort.key === key) {
+                clinicSummarySort.dir = clinicSummarySort.dir === 'desc' ? 'asc' : 'desc';
+            } else {
+                clinicSummarySort = { key, dir: key === 'name' ? 'asc' : 'desc' };
+            }
+            renderClinicSummaryTable();
+        }
+
+        function sortClinicSummaryEntries(entries) {
+            const { key, dir } = clinicSummarySort;
+            const mult = dir === 'asc' ? 1 : -1;
+            return [...entries].sort((a, b) => {
+                const va = key === 'name' ? a[0].toLowerCase() : a[1][key];
+                const vb = key === 'name' ? b[0].toLowerCase() : b[1][key];
+                if (va < vb) return -1 * mult;
+                if (va > vb) return 1 * mult;
+                return 0;
+            });
+        }
+
+        function renderClinicSummaryTableHead() {
+            const row = document.getElementById('clinicTableHeadRow');
+            row.innerHTML = CLINIC_SUMMARY_COLUMNS.map(col => {
+                const isActive = clinicSummarySort.key === col.key;
+                const arrow = isActive ? (clinicSummarySort.dir === 'asc' ? '↑' : '↓') : '↕';
+                const arrowColor = isActive ? 'text-indigo-600' : 'text-slate-300';
+                return `
+                    <th class="p-3 ${col.center ? 'text-center' : ''} ${col.color} cursor-pointer select-none hover:bg-slate-200/70 transition" onclick="handleClinicSummarySort('${col.key}')" title="Ordenar por ${col.label}">
+                        <span class="inline-flex items-center gap-1 ${col.center ? 'justify-center' : ''}">${col.label}<span class="${arrowColor} text-[11px]">${arrow}</span></span>
+                    </th>
+                `;
+            }).join('');
         }
 
         function renderClinicSummaryTable() {
             const tbody = document.getElementById('clinicTableBody');
-            const sortedList = buildClinicSummary();
+            renderClinicSummaryTableHead();
+            const sortedList = sortClinicSummaryEntries(buildClinicSummary());
 
             tbody.innerHTML = sortedList.map(([clinicName, counts]) => `
                 <tr class="hover:bg-slate-50 transition">
@@ -2958,9 +3059,17 @@
         // não existe nome de coluna oficial único) — aceitamos os nomes crus mais comuns
         // vindos do Farol/Metabase. Formatação de telefone reaproveita npsFormatTelefone,
         // que é genérica (só formata dígitos BR, não depende de nada específico do NPS).
-        function getPatientTelefone(item) { return getItemProp(item, ['Telefones', 'Telefone', 'telefone', 'Celular', 'celular', 'Fone', 'WhatsApp']); }
+        // Bug corrigido em 2026-08-12: os nomes reais de coluna nas 2 exportações do
+        // Farol nunca bateram com a lista de candidatos, então telefone nunca aparecia.
+        // Formato "resumido" (CSV busca-*): 'Telefone 1' / 'Telefone 2' (não "Telefones").
+        // Formato "completo": Metabase exporta o header com o caminho do join, literal —
+        // 'clientes - clientes_id → clientes_tel_1' / '..._tel_2' (confirmado inspecionando
+        // o xlsx de teste). Mantidos os nomes genéricos como fallback pra outras variações.
+        function getPatientTelefone(item) { return getItemProp(item, ['Telefone 1', 'Telefone 2', 'clientes - clientes_id → clientes_tel_1', 'clientes - clientes_id → clientes_tel_2', 'Telefones', 'Telefone', 'telefone', 'Celular', 'celular', 'Fone', 'WhatsApp']); }
         // Nem sempre vem na exportação do Farol — a tabela mostra "quando disponível".
-        function getPatientNascimento(item) { return getItemProp(item, ['Data de Nascimento', 'Data Nascimento', 'data_nascimento', 'Nascimento', 'nascimento', 'Data Nasc']); }
+        // 'clientes - clientes_id → clientes_birthday' é o mesmo padrão de header do
+        // formato "completo" citado acima, pro campo de nascimento.
+        function getPatientNascimento(item) { return getItemProp(item, ['Data de Nascimento', 'Data Nascimento', 'data_nascimento', 'Nascimento', 'nascimento', 'Data Nasc', 'clientes - clientes_id → clientes_birthday']); }
 
         // Extraído para função própria para ser reaproveitado pelas exportações
         // (planilha/csv/pdf) sem duplicar a regra de busca.
@@ -2982,12 +3091,20 @@
         // Extraído pra ser reaproveitado pela lista de pacientes convertíveis da página de
         // Potencial de Ganho — mesma regra de cor de status/atraso nas duas telas.
         function buildStatusJourneyCell(item) {
-            // escapeHtml aqui (não em cada chamador) porque o valor volta pronto pra
-            // interpolação em innerHTML nas duas telas que usam esta função.
-            const statusStr = escapeHtml(getItemProp(item, STATUS_ALIASES) || 'Sem Status');
-            const obsStr = getItemProp(item, ['agendamento_obs', 'agendamento_cirg_obs', 'obs', 'observacao']);
-            const code = classifyStatus(statusStr);
+            // Procedimento ATIVO (ver getActiveProcedureSlot) — se a aba 1 já foi concluída
+            // mas existe uma 2ª/3ª cirurgia em andamento numa aba seguinte, é ela que deve
+            // aparecer aqui (status, cor do badge e data), não mais sempre a aba 1.
+            const activeSlot = getActiveProcedureSlot(item);
+            const code = activeSlot.code;
             const group = statusGroup(code);
+            // escapeHtml aqui (não em cada chamador) porque o valor volta pronto pra
+            // interpolação em innerHTML nas duas telas que usam esta função. Bug corrigido
+            // em 2026-08-12: antes reclassificava o TEXTO DE EXIBIÇÃO ("Sem Status", já com
+            // o fallback aplicado) em vez do `code` calculado a partir do campo bruto — pra
+            // um paciente com aba 1 vazia isso classificava como "OUTROS" em vez de
+            // "SEM_STATUS" (fallback string não bate com nenhum status real do Farol).
+            const statusStr = escapeHtml(activeSlot.statusRaw || 'Sem Status');
+            const obsStr = getItemProp(item, ['agendamento_obs', 'agendamento_cirg_obs', 'obs', 'observacao']);
 
             let badgeColor = 'bg-slate-100 text-slate-700 border-slate-200';
             if (group === 'EXAMES') badgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
@@ -2998,28 +3115,53 @@
             // Encerrou (desistiu ou sem indicação): vermelho claro, sempre — não depende de data.
             else if (group === 'ENCERROU_DESISTIU' || group === 'ENCERROU_SEM_INDICACAO') badgeColor = 'bg-red-50 text-red-500 border-red-200';
 
-            // Data do procedimento/retorno marcado (mesma aba do status mostrado ao lado).
-            const journeyDate = parseFlexibleDate(getItemProp(item, ['agendamento_cirg_data_clinica_r']));
+            // Data do procedimento/retorno marcado — mesma aba do status ativo mostrado ao lado.
+            const journeyDate = activeSlot.date;
             const journeyDateStr = journeyDate ? journeyDate.toLocaleDateString('pt-BR') : '-';
             let journeyDateColor = 'text-slate-600 font-medium';
             let overdueTag = '';
-            // getJourneyOverdueDays já cobre "pendente" também: mesmo sendo uma data de
-            // controle interno, se ela passou, o paciente ficou pra trás por algum motivo.
-            if (getJourneyOverdueDays(item) !== null) {
-                // Atrasada: sobrescreve a cor do status (inclusive o azul de "cirurgia
-                // agendada") pra laranja, sinalizando status desatualizado/alerta.
-                badgeColor = 'bg-orange-100 text-orange-800 border-orange-300';
-                journeyDateColor = 'text-orange-600 font-bold';
-                overdueTag = '<span class="ml-1 text-[9px] font-bold text-orange-600 whitespace-nowrap">(atrasado)</span>';
+            // dateStatusLabel é a mesma informação da tag, sem parênteses — usada só na
+            // exportação (coluna própria), pra não obrigar quem lê a planilha a interpretar
+            // parênteses dentro de uma célula de data. getJourneyDueDiffDays já cobre
+            // "pendente" também: mesmo sendo uma data de controle interno, se ela passou,
+            // o paciente ficou pra trás por algum motivo.
+            let dateStatusLabel = '';
+            const dueDiffDays = getJourneyDueDiffDays(item);
+            if (dueDiffDays !== null) {
+                if (dueDiffDays < 0) {
+                    // Atrasada: sobrescreve a cor do status (inclusive o azul de "cirurgia
+                    // agendada") pra vermelho — sinaliza status desatualizado/alerta, o
+                    // nível de atenção mais alto dos 3 estados.
+                    badgeColor = 'bg-red-100 text-red-700 border-red-300';
+                    journeyDateColor = 'text-red-600 font-bold';
+                    overdueTag = '<span class="ml-1 text-[9px] font-bold text-red-600 whitespace-nowrap">(atrasado)</span>';
+                    dateStatusLabel = 'Atrasado';
+                } else if (dueDiffDays === 0) {
+                    // Vence hoje: precisa de atualização ainda hoje, mas não é uma falha
+                    // registrada como o atraso — laranja (intermediário) em vez de vermelho.
+                    badgeColor = 'bg-orange-100 text-orange-800 border-orange-300';
+                    journeyDateColor = 'text-orange-600 font-bold';
+                    overdueTag = '<span class="ml-1 text-[9px] font-bold text-orange-600 whitespace-nowrap">(necessário atualização)</span>';
+                    dateStatusLabel = 'Necessário atualização';
+                } else {
+                    // Futura: dentro do prazo, só sinaliza que o caso está em andamento —
+                    // mantém a cor padrão do badge de status (ex.: azul de cirurgia agendada).
+                    journeyDateColor = 'text-sky-600 font-bold';
+                    overdueTag = '<span class="ml-1 text-[9px] font-bold text-sky-500 whitespace-nowrap">(em andamento)</span>';
+                    dateStatusLabel = 'Em andamento';
+                }
             }
-            // Futura: mantém a cor padrão do grupo (ex.: azul de cirurgia agendada) — nada a fazer aqui.
 
             // Regra de negócio: desistência sem motivo registrado precisa ficar visível
             const semMotivoTag = (group === 'ENCERROU_DESISTIU' && !obsStr)
                 ? '<span class="ml-1 text-[9px] font-bold text-rose-600 whitespace-nowrap">(sem motivo registrado)</span>'
                 : '';
 
-            return { statusStr, badgeColor, journeyDateStr, journeyDateColor, overdueTag, semMotivoTag };
+            // "group" volta junto pra quem precisa colorir a célula de status na exportação
+            // colorida (xlsx) sem ter que reclassificar o texto de exibição (ex.: o fallback
+            // "Sem Status" não pode ser jogado de volta em classifyStatus() — só o código
+            // original, calculado acima a partir do campo bruto, é confiável).
+            return { statusStr, badgeColor, journeyDateStr, journeyDateColor, overdueTag, semMotivoTag, dateStatusLabel, group };
         }
 
         // Linha <tr> da tabela de pacientes, reaproveitada pela Lista Detalhada de
@@ -3106,19 +3248,32 @@
             updatePaginationFooter('ganhoPatientPaginationInfo', 'ganhoPatientPrevPageBtn', 'ganhoPatientNextPageBtn', p, 'paciente(s)');
         }
 
-        function buildGanhoPatientExportRows() {
-            return getSearchedGanhoPatientData().map(item => ({
+        // Extraído em função por item pra ser reaproveitado tanto pela exportação plana
+        // (CSV/PDF, via buildGanhoPatientExportRows) quanto pela colorida (xlsx, que
+        // precisa iterar item a item pra colorir a célula de status/observação).
+        function buildGanhoPatientExportRow(item) {
+            const { dateStatusLabel } = buildStatusJourneyCell(item);
+            return {
                 'ID': getItemProp(item, ['clientes_id', 'id', 'ID']) || '-',
                 'Paciente': getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']) || 'Sem Nome',
                 'Telefone': npsFormatTelefone(getPatientTelefone(item)) || '-',
                 'Data da Consulta': getItemProp(item, ['agendamento_data', 'data', 'Data']) || '-',
                 'Cirurgia': getItemProp(item, SURGERY_ALIASES) || '-',
                 'Clínica Parceira': getItemProp(item, CLINIC_ALIASES) || '-',
-                'Status da Jornada': getItemProp(item, STATUS_ALIASES) || 'Sem Status',
+                // Procedimento ATIVO (ver getActiveProcedureSlot) — reflete a 2ª/3ª cirurgia
+                // quando ela existir, não mais sempre a aba 1.
+                'Status da Jornada': getActiveProcedureSlot(item).statusRaw || 'Sem Status',
+                // Mesma info da tag "(em andamento)/(necessário atualização)/(atrasado)"
+                // que aparece na tela, mas em coluna própria — sem parênteses — pra não
+                // quebrar linha dentro de uma célula de planilha.
+                'Observação da Data': dateStatusLabel || '-',
                 'Médico / Equipe': getItemProp(item, MEDICO_ALIASES) || '-'
-            }));
+            };
         }
-        function exportGanhoPatientsAsSpreadsheet() { exportAs('ganhoPatients', 'spreadsheet'); }
+        function buildGanhoPatientExportRows() {
+            return getSearchedGanhoPatientData().map(buildGanhoPatientExportRow);
+        }
+        function exportGanhoPatientsAsSpreadsheet() { exportPatientRowsAsColoredSpreadsheet(getSearchedGanhoPatientData(), buildGanhoPatientExportRow, 'Pacientes Convertiveis', 'Pacientes_Potencial_Ganho'); }
         function exportGanhoPatientsAsCSV() { exportAs('ganhoPatients', 'csv'); }
         function exportGanhoPatientsAsPdf() { exportAs('ganhoPatients', 'pdf'); }
 
@@ -4037,6 +4192,82 @@
             XLSX.writeFile(wb, `${filenameBase}_${todayStamp()}.xlsx`);
         }
 
+        // Cores de célula do .xlsx da Lista Detalhada de Pacientes / Lista de Pacientes
+        // Potenciais (Ganho) — pedido do usuário em 2026-08-12 pra bater com as MESMAS cores
+        // já usadas na tela (badge de status e "balão" de data). Reaproveita statusGroup()
+        // (via buildStatusJourneyCell) e o valor de "Observação da Data" — nunca uma régua
+        // de cor nova/duplicada. Só o .xlsx recebe cor: CSV é texto puro (sem metadado de
+        // célula) e o PDF de tabela real não foi colorido por ora.
+        const EXPORT_STATUS_FILL = {
+            SEM_STATUS: { bg: 'E2E8F0', fg: '334155' },
+            EXAMES: { bg: 'FEF3C7', fg: '92400E' },
+            AGUARDANDO_CLINICA: { bg: 'FFE4E6', fg: '9F1239' },
+            CIRURGIA_AGENDADA: { bg: 'DBEAFE', fg: '1E40AF' },
+            CIRURGIA_REALIZADA: { bg: 'D1FAE5', fg: '065F46' }, // "concluído"
+            ENCERROU_DESISTIU: { bg: 'FEE2E2', fg: 'B91C1C' },
+            ENCERROU_SEM_INDICACAO: { bg: 'FEE2E2', fg: 'B91C1C' },
+            OUTROS: { bg: 'E2E8F0', fg: '334155' }
+        };
+        const EXPORT_DATE_OBS_FILL = {
+            'Atrasado': { bg: 'FEE2E2', fg: 'B91C1C' },
+            'Necessário atualização': { bg: 'FFEDD5', fg: '9A3412' },
+            'Em andamento': { bg: 'E0F2FE', fg: '0369A1' }
+        };
+        const excelArgb = hex => 'FF' + hex;
+
+        // items = registros originais (não as linhas já achatadas) — precisa deles pra
+        // recalcular o `group` de status via buildStatusJourneyCell(), a mesma fonte única
+        // de verdade usada na tela; rowBuilder é buildPatientExportRow/buildGanhoPatientExportRow.
+        async function exportPatientRowsAsColoredSpreadsheet(items, rowBuilder, sheetName, filenameBase) {
+            closeExportMenus();
+            const rows = items.map(rowBuilder);
+            if (!hasRowsToExport(rows)) return;
+            try {
+                const wb = new ExcelJS.Workbook();
+                const ws = wb.addWorksheet(sheetName);
+                const headers = Object.keys(rows[0]);
+                const headerRow = ws.addRow(headers);
+                headerRow.eachCell(cell => {
+                    cell.font = { bold: true, color: { argb: excelArgb('FFFFFF') } };
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: excelArgb('4F46E5') } };
+                });
+                const statusColIdx = headers.indexOf('Status da Jornada') + 1;
+                const obsColIdx = headers.indexOf('Observação da Data') + 1;
+                items.forEach((item, i) => {
+                    const row = rows[i];
+                    const excelRow = ws.addRow(headers.map(h => row[h]));
+                    if (statusColIdx > 0) {
+                        const { group } = buildStatusJourneyCell(item);
+                        const fill = EXPORT_STATUS_FILL[group];
+                        if (fill) {
+                            const cell = excelRow.getCell(statusColIdx);
+                            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: excelArgb(fill.bg) } };
+                            cell.font = { bold: true, color: { argb: excelArgb(fill.fg) } };
+                        }
+                    }
+                    if (obsColIdx > 0) {
+                        const fill = EXPORT_DATE_OBS_FILL[row['Observação da Data']];
+                        if (fill) {
+                            const cell = excelRow.getCell(obsColIdx);
+                            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: excelArgb(fill.bg) } };
+                            cell.font = { bold: true, color: { argb: excelArgb(fill.fg) } };
+                        }
+                    }
+                });
+                ws.columns.forEach(col => { col.width = 20; });
+                const buffer = await wb.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `${filenameBase}_${todayStamp()}.xlsx`;
+                link.click();
+                URL.revokeObjectURL(link.href);
+            } catch (err) {
+                console.error(err);
+                alert('Não foi possível gerar a planilha colorida.\n\n' + err.message);
+            }
+        }
+
         // Mitigação de "CSV injection": um valor que começa com =, +, - ou @ é
         // interpretado como fórmula viva ao abrir um .csv no Excel/Sheets/LibreOffice,
         // já que CSV puro não tem metadado de tipo de célula (diferente do .xlsx, onde
@@ -4106,31 +4337,44 @@
         }
 
         // Lista Detalhada dos Pacientes
-        function buildPatientExportRows() {
-            return getSearchedPatientData().map(item => {
-                const nascDate = parseFlexibleDate(getPatientNascimento(item));
-                const journeyDate = parseFlexibleDate(getItemProp(item, ['agendamento_cirg_data_clinica_r']));
-                return {
-                    'ID': getItemProp(item, ['clientes_id', 'id', 'ID']) || '-',
-                    'Paciente': getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']) || 'Sem Nome',
-                    'Telefone': npsFormatTelefone(getPatientTelefone(item)) || '-',
-                    'Data de Nascimento': nascDate ? nascDate.toLocaleDateString('pt-BR') : '-',
-                    'Data da Consulta': getItemProp(item, ['agendamento_data', 'data', 'Data']) || '-',
-                    'Cirurgia': getItemProp(item, SURGERY_ALIASES) || '-',
-                    'Clínica Parceira': getItemProp(item, CLINIC_ALIASES) || '-',
-                    'Status da Jornada': getItemProp(item, STATUS_ALIASES) || 'Sem Status',
-                    'Data do Status': journeyDate ? journeyDate.toLocaleDateString('pt-BR') : '-',
-                    'Médico / Equipe': getItemProp(item, MEDICO_ALIASES) || '-'
-                };
-            });
+        // Extraído em função por item pra ser reaproveitado tanto pela exportação plana
+        // (CSV/PDF, via buildPatientExportRows) quanto pela colorida (xlsx, que precisa
+        // iterar item a item pra colorir a célula de status/observação).
+        function buildPatientExportRow(item) {
+            const nascDate = parseFlexibleDate(getPatientNascimento(item));
+            // Procedimento ATIVO (ver getActiveProcedureSlot) — reflete a 2ª/3ª cirurgia
+            // quando ela existir, não mais sempre a aba 1.
+            const activeSlot = getActiveProcedureSlot(item);
+            const journeyDate = activeSlot.date;
+            const { dateStatusLabel } = buildStatusJourneyCell(item);
+            return {
+                'ID': getItemProp(item, ['clientes_id', 'id', 'ID']) || '-',
+                'Paciente': getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']) || 'Sem Nome',
+                'Telefone': npsFormatTelefone(getPatientTelefone(item)) || '-',
+                'Data de Nascimento': nascDate ? nascDate.toLocaleDateString('pt-BR') : '-',
+                'Data da Consulta': getItemProp(item, ['agendamento_data', 'data', 'Data']) || '-',
+                'Cirurgia': getItemProp(item, SURGERY_ALIASES) || '-',
+                'Clínica Parceira': getItemProp(item, CLINIC_ALIASES) || '-',
+                'Status da Jornada': activeSlot.statusRaw || 'Sem Status',
+                'Data do Status': journeyDate ? journeyDate.toLocaleDateString('pt-BR') : '-',
+                // Mesma info da tag "(em andamento)/(necessário atualização)/(atrasado)"
+                // que aparece na tela, mas em coluna própria — sem parênteses — pra não
+                // quebrar linha dentro de uma célula de planilha (pedido do usuário).
+                'Observação da Data': dateStatusLabel || '-',
+                'Médico / Equipe': getItemProp(item, MEDICO_ALIASES) || '-'
+            };
         }
-        function exportPatientsAsSpreadsheet() { exportAs('patients', 'spreadsheet'); }
+        function buildPatientExportRows() {
+            return getSearchedPatientData().map(buildPatientExportRow);
+        }
+        function exportPatientsAsSpreadsheet() { exportPatientRowsAsColoredSpreadsheet(getSearchedPatientData(), buildPatientExportRow, 'Pacientes', 'Lista_Detalhada_Pacientes'); }
         function exportPatientsAsCSV() { exportAs('patients', 'csv'); }
         function exportPatientsAsPdf() { exportAs('patients', 'pdf'); }
 
-        // Relatório Consolidado para Envio à Gestão das Clínicas
+        // Relatório Consolidado para Envio à Gestão das Clínicas — segue a mesma ordenação
+        // que está na tela no momento da exportação (WYSIWYG, igual ao resto do painel).
         function buildClinicExportRows() {
-            return buildClinicSummary().map(([clinicName, c]) => ({
+            return sortClinicSummaryEntries(buildClinicSummary()).map(([clinicName, c]) => ({
                 'Clínica Parceira': clinicName,
                 'Total Pacientes': c.total,
                 'Sem Status': c.semStatus,
