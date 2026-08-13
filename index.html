@@ -1876,7 +1876,7 @@
                             <td class="p-3">
                                 <div class="flex items-center gap-1">
                                     <span class="text-slate-400 text-[11px]">R$</span>
-                                    <input type="number" min="0" step="0.01" inputmode="decimal"
+                                    <input type="text" inputmode="decimal"
                                         class="valor-base-input w-28 bg-slate-50 border border-slate-300 rounded-lg p-1.5 text-xs focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition"
                                         data-clinica="${escapeHtml(clinica)}" data-especialidade="${escapeHtml(especialidade)}"
                                         value="${valor !== null ? valor : ''}" placeholder="0,00">
@@ -1899,13 +1899,29 @@
             renderValorBaseTable();
         }
 
+        // Formato brasileiro: ponto é separador de milhar, vírgula é decimal — ex.:
+        // "4.800" ou "4.800,00" devem valer 4800, não 4.8 (era isso que parseFloat
+        // fazia direto, por ler "." como decimal ao estilo americano). Sem vírgula
+        // digitada, todo ponto é tratado como milhar (não faz sentido digitar
+        // centavos de valor de cirurgia sem vírgula); com vírgula, ela é que decide
+        // o decimal e qualquer ponto antes dela é removido.
+        function parseBRCurrencyInput(str) {
+            const trimmed = String(str ?? '').trim();
+            if (trimmed === '') return null;
+            const cleaned = trimmed.includes(',')
+                ? trimmed.replace(/\./g, '').replace(',', '.')
+                : trimmed.replace(/\./g, '');
+            const num = parseFloat(cleaned);
+            return isNaN(num) ? null : num;
+        }
+
         // Reativo — sem botão "Calcular", igual ao resto do painel: os cartões
         // atualizam sozinhos a cada valor digitado.
         function handleValorBaseInput(e) {
             if (!e.target.classList.contains('valor-base-input')) return;
             const clinica = e.target.dataset.clinica;
             const especialidade = e.target.dataset.especialidade;
-            const valor = e.target.value === '' ? null : parseFloat(e.target.value);
+            const valor = parseBRCurrencyInput(e.target.value);
             setValorBase(clinica, especialidade, valor);
             renderGanhoPotencialCards();
         }
@@ -2273,6 +2289,22 @@
 
             currentPage = 1;
             updateDashboard();
+            syncGanhoClinicFilter();
+        }
+
+        // Espelha o filtro de Clínica de Consultas para o de Potencial de Ganho — as duas
+        // páginas usam a mesma base (rawData), então sem isso o usuário tinha que filtrar a
+        // clínica de novo ali só pra editar a Configuração de Valor Base de uma clínica só.
+        // Especialidade fica de fora de propósito: o Ganho já tem sua própria pré-seleção
+        // de especialidades primárias (GANHO_DEFAULT_SPECIALTY_ORDER) e é comum querer
+        // configurar preço de outras especialidades ali sem depender do filtro de Consultas.
+        function syncGanhoClinicFilter() {
+            const st = multiSelectState['ganhoFilterClinic'];
+            if (!st) return;
+            st.selected = new Set(getMultiSelectValues('filterClinic'));
+            renderMultiSelectOptions('ganhoFilterClinic');
+            updateMultiSelectLabel('ganhoFilterClinic');
+            applyGanhoFilters();
         }
 
         function updateDashboard() {
