@@ -545,11 +545,9 @@
                             <th class="p-3">Data da Consulta</th>
                             <th class="p-3">Cirurgia</th>
                             <th class="p-3">Clínica Parceira</th>
-                            <th class="p-3">Status da Jornada</th>
-                            <th class="p-3">Data</th>
                             <th class="p-3">Médico / Equipe</th>
-                            <th class="p-3">1º Procedimento</th>
-                            <th class="p-3">2º Procedimento</th>
+                            <th class="p-3">Status da Jornada - 1º Proc.</th>
+                            <th class="p-3">Status da Jornada - 2º Proc.</th>
                         </tr>
                     </thead>
                     <tbody id="patientTableBody" class="divide-y divide-slate-100">
@@ -3308,33 +3306,45 @@
             const clinicStr = getItemProp(item, CLINIC_ALIASES);
             const docStr = getItemProp(item, MEDICO_ALIASES);
 
-            const { statusStr, badgeColor, journeyDateStr, journeyDateColor, overdueTag, semMotivoTag } = buildStatusJourneyCell(item);
-            const procedureHistoryHtml = showProcedureHistory
-                ? (() => {
-                    const { slot1Cell, slot2Cell } = buildProcedureHistoryCells(item);
-                    return renderProcedureHistoryTd(slot1Cell) + renderProcedureHistoryTd(slot2Cell);
-                })()
-                : '';
+            const identityTds = `
+                <td class="p-3">
+                    <div class="font-bold text-slate-900">${escapeHtml(nameStr)}</div>
+                    <div class="text-[10px] text-slate-400 font-semibold">ID: ${escapeHtml(idStr) || '-'}</div>
+                    ${telefoneStr ? `<div class="text-[10px] text-slate-500 font-medium">${escapeHtml(telefoneStr)}</div>` : ''}
+                    ${nascStr ? `<div class="text-[10px] text-slate-400 font-medium">Nasc.: ${nascStr}</div>` : ''}
+                </td>
+                <td class="p-3 text-slate-600 font-medium">${escapeHtml(dataStr) || '-'}</td>
+                <td class="p-3 font-semibold text-indigo-700">${escapeHtml(surgStr) || '-'}</td>
+                <td class="p-3 text-slate-700 text-[11px] font-medium">${escapeHtml(clinicStr) || '-'}</td>
+            `;
+            const medicoTd = `<td class="p-3 text-slate-600 text-[11px] font-medium">${escapeHtml(docStr) || '-'}</td>`;
 
-            return `
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="p-3">
-                        <div class="font-bold text-slate-900">${escapeHtml(nameStr)}</div>
-                        <div class="text-[10px] text-slate-400 font-semibold">ID: ${escapeHtml(idStr) || '-'}</div>
-                        ${telefoneStr ? `<div class="text-[10px] text-slate-500 font-medium">${escapeHtml(telefoneStr)}</div>` : ''}
-                        ${nascStr ? `<div class="text-[10px] text-slate-400 font-medium">Nasc.: ${nascStr}</div>` : ''}
-                    </td>
-                    <td class="p-3 text-slate-600 font-medium">${escapeHtml(dataStr) || '-'}</td>
-                    <td class="p-3 font-semibold text-indigo-700">${escapeHtml(surgStr) || '-'}</td>
-                    <td class="p-3 text-slate-700 text-[11px] font-medium">${escapeHtml(clinicStr) || '-'}</td>
+            // Pedido do usuário em 2026-08-18: com as colunas "1º/2º Procedimento" cobrindo
+            // as 2 abas separadamente, a antiga coluna única "Status da Jornada"/"Data" (aba
+            // ATIVA) fica redundante na Lista Detalhada — e o Médico entra ANTES dos status,
+            // não depois, senão ele quebra o bloco colorido de status no meio da planilha.
+            // Ganho (showProcedureHistory=false) continua com a ordem/colunas de sempre.
+            let statusTds;
+            if (showProcedureHistory) {
+                const { slot1Cell, slot2Cell } = buildProcedureHistoryCells(item);
+                statusTds = medicoTd + renderProcedureHistoryTd(slot1Cell) + renderProcedureHistoryTd(slot2Cell);
+            } else {
+                const { statusStr, badgeColor, journeyDateStr, journeyDateColor, overdueTag, semMotivoTag } = buildStatusJourneyCell(item);
+                statusTds = `
                     <td class="p-3">
                         <span class="badge-pill ${badgeColor}">
                             ${statusStr}
                         </span>${semMotivoTag}
                     </td>
                     <td class="p-3 ${journeyDateColor} text-[11px]">${journeyDateStr}${overdueTag}</td>
-                    <td class="p-3 text-slate-600 text-[11px] font-medium">${escapeHtml(docStr) || '-'}</td>
-                    ${procedureHistoryHtml}
+                    ${medicoTd}
+                `;
+            }
+
+            return `
+                <tr class="hover:bg-slate-50 transition">
+                    ${identityTds}
+                    ${statusTds}
                 </tr>
             `;
         }
@@ -4362,9 +4372,12 @@
         // outro rowBuilder (ex.: Ganho) essas 2 colunas não existem no `row`, então
         // `indexOf` devolve -1 e o par é ignorado, sem precisar de um branch por tela.
         const PATIENT_EXPORT_COLOR_PAIRS = [
+            // 'Status da Jornada'/'Observação da Data' (sem sufixo) só existem em
+            // buildGanhoPatientExportRow — a Lista Detalhada (buildPatientExportRow) trocou
+            // essa coluna única pelas 2 abaixo em 2026-08-18 (ver comentário lá).
             { statusCol: 'Status da Jornada', obsCol: 'Observação da Data', groupOf: item => buildStatusJourneyCell(item).group },
-            { statusCol: '1º Procedimento - Status', obsCol: '1º Procedimento - Observação da Data', groupOf: item => buildProcedureHistoryCells(item).slot1Cell.group },
-            { statusCol: '2º Procedimento - Status', obsCol: '2º Procedimento - Observação da Data', groupOf: item => { const c = buildProcedureHistoryCells(item).slot2Cell; return c ? c.group : null; } }
+            { statusCol: 'Status da Jornada - 1º Proc.', obsCol: 'Observação da Data - 1º Proc.', groupOf: item => buildProcedureHistoryCells(item).slot1Cell.group },
+            { statusCol: 'Status da Jornada - 2º Proc.', obsCol: 'Observação da Data - 2º Proc.', groupOf: item => { const c = buildProcedureHistoryCells(item).slot2Cell; return c ? c.group : null; } }
         ];
 
         // items = registros originais (não as linhas já achatadas) — precisa deles pra
@@ -4498,16 +4511,13 @@
         // iterar item a item pra colorir a célula de status/observação).
         function buildPatientExportRow(item) {
             const nascDate = parseFlexibleDate(getPatientNascimento(item));
-            // Procedimento ATIVO (ver getActiveProcedureSlot) — reflete a 2ª/3ª cirurgia
-            // quando ela existir, não mais sempre a aba 1.
-            const activeSlot = getActiveProcedureSlot(item);
-            const journeyDate = activeSlot.date;
-            const { dateStatusLabel } = buildStatusJourneyCell(item);
-            // "1º/2º Procedimento" (pedido do usuário em 2026-08-18) — ver
-            // buildProcedureHistoryCells: mostram a aba 1 e a aba 2 SEMPRE, mesmo quando a
-            // aba ativa acima já é uma cirurgia seguinte, pra planilha ser um detalhado de
-            // fato dos KPIs (nenhuma cirurgia "some" da exportação por ter sido superada por
-            // um 2º olho já agendado/realizado).
+            // "Status da Jornada - 1º/2º Proc." (pedido do usuário em 2026-08-18) — ver
+            // buildProcedureHistoryCells: mostram a aba 1 e a aba 2 SEMPRE, concluídas ou
+            // não, em vez de uma única coluna com só o procedimento ATIVO — a antiga coluna
+            // única "Status da Jornada" ficou redundante e foi removida daqui (continua
+            // existindo em buildStatusJourneyCell/buildGanhoPatientExportRow, usada pela
+            // Lista de Pacientes Potenciais do Ganho). Médico entra ANTES dessas colunas,
+            // não depois — senão ele quebra o bloco colorido de status no meio da planilha.
             const { slot1Cell, slot2Cell } = buildProcedureHistoryCells(item);
             return {
                 'ID': getItemProp(item, ['clientes_id', 'id', 'ID']) || '-',
@@ -4517,19 +4527,16 @@
                 'Data da Consulta': getItemProp(item, ['agendamento_data', 'data', 'Data']) || '-',
                 'Cirurgia': getItemProp(item, SURGERY_ALIASES) || '-',
                 'Clínica Parceira': getItemProp(item, CLINIC_ALIASES) || '-',
-                'Status da Jornada': activeSlot.statusRaw || 'Sem Status',
-                'Data do Status': journeyDate ? journeyDate.toLocaleDateString('pt-BR') : '-',
+                'Médico / Equipe': getItemProp(item, MEDICO_ALIASES) || '-',
+                'Status da Jornada - 1º Proc.': slot1Cell.statusRaw || 'Sem Status',
+                'Data do Status - 1º Proc.': slot1Cell.date ? slot1Cell.date.toLocaleDateString('pt-BR') : '-',
                 // Mesma info da tag "(em andamento)/(necessário atualização)/(atrasado)"
                 // que aparece na tela, mas em coluna própria — sem parênteses — pra não
                 // quebrar linha dentro de uma célula de planilha (pedido do usuário).
-                'Observação da Data': dateStatusLabel || '-',
-                'Médico / Equipe': getItemProp(item, MEDICO_ALIASES) || '-',
-                '1º Procedimento - Status': slot1Cell.statusRaw || 'Sem Status',
-                '1º Procedimento - Data': slot1Cell.date ? slot1Cell.date.toLocaleDateString('pt-BR') : '-',
-                '1º Procedimento - Observação da Data': slot1Cell.dateStatusLabel || '-',
-                '2º Procedimento - Status': slot2Cell ? slot2Cell.statusRaw : '-',
-                '2º Procedimento - Data': slot2Cell && slot2Cell.date ? slot2Cell.date.toLocaleDateString('pt-BR') : '-',
-                '2º Procedimento - Observação da Data': slot2Cell ? (slot2Cell.dateStatusLabel || '-') : '-'
+                'Observação da Data - 1º Proc.': slot1Cell.dateStatusLabel || '-',
+                'Status da Jornada - 2º Proc.': slot2Cell ? slot2Cell.statusRaw : '-',
+                'Data do Status - 2º Proc.': slot2Cell && slot2Cell.date ? slot2Cell.date.toLocaleDateString('pt-BR') : '-',
+                'Observação da Data - 2º Proc.': slot2Cell ? (slot2Cell.dateStatusLabel || '-') : '-'
             };
         }
         function buildPatientExportRows() {
