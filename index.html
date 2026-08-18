@@ -303,8 +303,9 @@
                 <div class="text-3xl font-extrabold text-emerald-600" id="kpiRealizadas">0</div>
                 <div class="text-[11px] text-emerald-700 font-semibold mt-2 flex items-center gap-1">
                     <i data-lucide="award" class="w-3.5 h-3.5"></i>
-                    Sucesso (1º ou 2º Olho)
+                    Sucesso (1º e 2º Olho contam separado)
                 </div>
+                <div class="text-[10px] text-emerald-600/80 font-medium mt-1" id="kpiRealizadasBase"></div>
             </div>
         </div>
 
@@ -317,9 +318,8 @@
                     </div>
                     <div>
                         <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                            Insights
+                            Insights - Ações prioritárias sugeridas com base nos dados atuais da jornada
                         </h3>
-                        <p class="text-xs text-slate-500">Ações prioritárias sugeridas com base nos dados atuais da jornada</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
@@ -548,6 +548,8 @@
                             <th class="p-3">Status da Jornada</th>
                             <th class="p-3">Data</th>
                             <th class="p-3">Médico / Equipe</th>
+                            <th class="p-3">1º Procedimento</th>
+                            <th class="p-3">2º Procedimento</th>
                         </tr>
                     </thead>
                     <tbody id="patientTableBody" class="divide-y divide-slate-100">
@@ -1357,12 +1359,13 @@
         // Dias até a data marcada do procedimento em andamento (negativo = já venceu,
         // 0 = vence hoje, positivo = ainda no prazo), ou null se o status não é um
         // gargalo com data ou não há data. Base de getJourneyOverdueDays (atraso) e da
-        // cor do "balão" de data na Lista de Pacientes (futuro/hoje/atrasado). Usa o
-        // "procedimento ativo" (ver getActiveProcedureSlot(), abaixo) — se a aba 1 já foi
-        // concluída mas existe uma 2ª/3ª cirurgia em andamento numa aba seguinte, é a data
-        // DELA que importa pra saber se esse próximo passo está atrasado.
-        function getJourneyDueDiffDays(item) {
-            const slot = getActiveProcedureSlot(item);
+        // cor do "balão" de data na Lista de Pacientes (futuro/hoje/atrasado). Por padrão
+        // usa o "procedimento ativo" (ver getActiveProcedureSlot(), abaixo) — se a aba 1 já
+        // foi concluída mas existe uma 2ª/3ª cirurgia em andamento numa aba seguinte, é a
+        // data DELA que importa pra saber se esse próximo passo está atrasado. O parâmetro
+        // `slot` opcional permite calcular pra uma aba FIXA (não a ativa) — usado pelas
+        // colunas "1º/2º Procedimento" da Lista Detalhada (ver buildProcedureHistoryCells).
+        function getJourneyDueDiffDays(item, slot = getActiveProcedureSlot(item)) {
             if (!GARGALO_GROUPS.includes(statusGroup(slot.code))) return null;
             if (!slot.date) return null;
             const today = new Date();
@@ -2333,6 +2336,9 @@
             document.getElementById('kpiAguardandoClinica').textContent = stats.aguardandoClinica.toLocaleString('pt-BR');
             document.getElementById('kpiAgendadas').textContent = stats.agendada.toLocaleString('pt-BR');
             document.getElementById('kpiRealizadas').textContent = stats.realizada.toLocaleString('pt-BR');
+            document.getElementById('kpiRealizadasBase').textContent = stats.realizada !== stats.realizadaPacientes
+                ? `Baseado em ${stats.realizadaPacientes.toLocaleString('pt-BR')} paciente(s) no filtro atual`
+                : '';
         }
 
         // ================================================================
@@ -2398,7 +2404,7 @@
         function buildGroupStats(data) {
             const stats = {
                 total: data.length, semStatus: 0, exames: 0,
-                aguardandoClinica: 0, agendada: 0, realizada: 0, desistiu: 0,
+                aguardandoClinica: 0, agendada: 0, realizada: 0, realizadaPacientes: 0, desistiu: 0,
                 semIndicacao: 0, olho2Pendente: 0, topGargalo: null, distinctClinics: 0,
                 // Gargalos: item ainda em andamento cuja data marcada já passou — granular por
                 // código pra alimentar a ordem de prioridade das recomendações.
@@ -2426,8 +2432,10 @@
             const clinicsSet = new Set();
 
             data.forEach(item => {
-                // Procedimento ATIVO (ver getActiveProcedureSlot) — não mais sempre a aba 1.
-                const code = getActiveProcedureSlot(item).code;
+                // Procedimento ATIVO (última aba preenchida) — alimenta os grupos "em
+                // andamento" (Exames/Aguardando Clínica/Agendada/Sem Status/Encerrou).
+                const slots = getProcedureSlots(item);
+                const code = slots[slots.length - 1].code;
                 const group = statusGroup(code);
                 const especialidade = getItemProp(item, SURGERY_ALIASES);
                 const clinic = getItemProp(item, CLINIC_ALIASES) || 'Não identificada';
@@ -2439,9 +2447,21 @@
                     stats.aguardandoClinica++;
                     clinicGargalos[clinic] = (clinicGargalos[clinic] || 0) + 1;
                 } else if (group === 'CIRURGIA_AGENDADA') stats.agendada++;
-                else if (group === 'CIRURGIA_REALIZADA') stats.realizada++;
                 else if (group === 'ENCERROU_DESISTIU') stats.desistiu++;
                 else if (group === 'ENCERROU_SEM_INDICACAO') stats.semIndicacao++;
+                // "Realizada" NÃO entra nesse if/else — pedido do usuário em 2026-08-18:
+                // toda cirurgia já feita é uma conversão válida, mesmo que o paciente já
+                // tenha avançado pra uma 2ª cirurgia em andamento (nesse caso ele soma
+                // tanto em "Realizada" quanto no gargalo da 2ª, ex.: Agendada — os grupos
+                // deixam de ser mutuamente exclusivos de propósito). Cada olho operado
+                // conta separadamente (1º e 2º olho = 2), por isso a soma pode passar do
+                // total de pacientes — é a mesma régua usada na Taxa de Conversão (pode
+                // passar de 100%, métrica de benchmark interno confirmada com o usuário).
+                const realizouSlots = slots.filter(sl => sl.code === 'CIRURGIA_REALIZOU_1' || sl.code === 'CIRURGIA_REALIZOU_2');
+                if (realizouSlots.length > 0) {
+                    stats.realizada += realizouSlots.length;
+                    stats.realizadaPacientes++;
+                }
 
                 const overdueDays = getJourneyOverdueDays(item);
                 if (overdueDays !== null && stats.overdue.hasOwnProperty(code)) {
@@ -2462,6 +2482,8 @@
             stats.topGargalo = Object.entries(clinicGargalos).sort((a, b) => b[1] - a[1])[0] || null;
             stats.distinctClinics = clinicsSet.size;
             // Taxa de conversão cirúrgica sobre quem compareceu (= base do filtro atual).
+            // Conta cada cirurgia (1º e 2º olho separados), então pode passar de 100% —
+            // aceito de propósito: é a mesma régua de benchmark interno da empresa.
             stats.conversionRate = stats.total ? Math.round((stats.realizada / stats.total) * 100) : null;
             return stats;
         }
@@ -2520,6 +2542,9 @@
                             </div>
                         `).join('')}
                     </div>
+                    ${stats.realizada !== stats.realizadaPacientes ? `
+                        <p class="text-[10px] text-slate-500 italic">"Realizada" soma cada cirurgia (1º e 2º olho contam separadamente) — baseado em ${stats.realizadaPacientes} paciente(s) distinto(s) no filtro atual. Por isso um mesmo paciente pode somar tanto em "Realizada" quanto em outra coluna (ex.: já operou o 1º olho e está com o 2º agendado).</p>
+                    ` : ''}
                 </div>
             `;
         }
@@ -2996,14 +3021,20 @@
                 }
                 summary[cl].total++;
 
-                const group = statusGroup(getActiveProcedureSlot(item).code);
+                const slots = getProcedureSlots(item);
+                const group = statusGroup(slots[slots.length - 1].code);
                 if (group === 'SEM_STATUS') summary[cl].semStatus++;
                 else if (group === 'EXAMES') summary[cl].exames++;
                 else if (group === 'AGUARDANDO_CLINICA') summary[cl].aguardando++;
                 else if (group === 'CIRURGIA_AGENDADA') summary[cl].agendadas++;
-                else if (group === 'CIRURGIA_REALIZADA') summary[cl].realizadas++;
                 else if (group === 'ENCERROU_DESISTIU') summary[cl].desistiu++;
                 else if (group === 'ENCERROU_SEM_INDICACAO') summary[cl].semIndicacao++;
+                // "Realizadas" soma cada cirurgia (1º e 2º olho contam separado), igual ao
+                // resto do painel (ver buildGroupStats) — não é mais mutuamente exclusivo
+                // com as outras colunas: um paciente que já operou e está com a próxima
+                // cirurgia em andamento soma nas duas.
+                const realizouSlots = slots.filter(sl => sl.code === 'CIRURGIA_REALIZOU_1' || sl.code === 'CIRURGIA_REALIZOU_2');
+                summary[cl].realizadas += realizouSlots.length;
             });
 
             // Não ordena aqui — a ordem de exibição/exportação é definida por
@@ -3120,22 +3151,21 @@
             return filteredData.filter(item => patientMatchesSearch(item, search));
         }
 
-        // Extraído pra ser reaproveitado pela lista de pacientes convertíveis da página de
-        // Potencial de Ganho — mesma regra de cor de status/atraso nas duas telas.
-        function buildStatusJourneyCell(item) {
-            // Procedimento ATIVO (ver getActiveProcedureSlot) — se a aba 1 já foi concluída
-            // mas existe uma 2ª/3ª cirurgia em andamento numa aba seguinte, é ela que deve
-            // aparecer aqui (status, cor do badge e data), não mais sempre a aba 1.
-            const activeSlot = getActiveProcedureSlot(item);
-            const code = activeSlot.code;
+        // Monta a "célula" de status+data (badge, cor, tags de atraso/observação) pra
+        // QUALQUER aba de procedimento — reaproveitada tanto pelo "Status da Jornada" (aba
+        // ATIVA, ver buildStatusJourneyCell abaixo) quanto pelas colunas "1º/2º
+        // Procedimento" da Lista Detalhada (aba FIXA, ver buildProcedureHistoryCells) —
+        // mesma régua de cor/tag nas duas, nunca duplicada.
+        function buildProcedureSlotCell(item, slot) {
+            const code = slot.code;
             const group = statusGroup(code);
             // escapeHtml aqui (não em cada chamador) porque o valor volta pronto pra
-            // interpolação em innerHTML nas duas telas que usam esta função. Bug corrigido
-            // em 2026-08-12: antes reclassificava o TEXTO DE EXIBIÇÃO ("Sem Status", já com
-            // o fallback aplicado) em vez do `code` calculado a partir do campo bruto — pra
-            // um paciente com aba 1 vazia isso classificava como "OUTROS" em vez de
+            // interpolação em innerHTML nas telas que usam esta função. Bug corrigido em
+            // 2026-08-12: antes reclassificava o TEXTO DE EXIBIÇÃO ("Sem Status", já com o
+            // fallback aplicado) em vez do `code` calculado a partir do campo bruto — pra um
+            // paciente com aba 1 vazia isso classificava como "OUTROS" em vez de
             // "SEM_STATUS" (fallback string não bate com nenhum status real do Farol).
-            const statusStr = escapeHtml(activeSlot.statusRaw || 'Sem Status');
+            const statusStr = escapeHtml(slot.statusRaw || 'Sem Status');
             const obsStr = getItemProp(item, ['agendamento_obs', 'agendamento_cirg_obs', 'obs', 'observacao']);
 
             let badgeColor = 'bg-slate-100 text-slate-700 border-slate-200';
@@ -3147,8 +3177,8 @@
             // Encerrou (desistiu ou sem indicação): vermelho claro, sempre — não depende de data.
             else if (group === 'ENCERROU_DESISTIU' || group === 'ENCERROU_SEM_INDICACAO') badgeColor = 'bg-red-50 text-red-500 border-red-200';
 
-            // Data do procedimento/retorno marcado — mesma aba do status ativo mostrado ao lado.
-            const journeyDate = activeSlot.date;
+            // Data do procedimento/retorno marcado — mesma aba do status mostrado ao lado.
+            const journeyDate = slot.date;
             const journeyDateStr = journeyDate ? journeyDate.toLocaleDateString('pt-BR') : '-';
             let journeyDateColor = 'text-slate-600 font-medium';
             let overdueTag = '';
@@ -3158,7 +3188,7 @@
             // "pendente" também: mesmo sendo uma data de controle interno, se ela passou,
             // o paciente ficou pra trás por algum motivo.
             let dateStatusLabel = '';
-            const dueDiffDays = getJourneyDueDiffDays(item);
+            const dueDiffDays = getJourneyDueDiffDays(item, slot);
             if (dueDiffDays !== null) {
                 if (dueDiffDays < 0) {
                     // Atrasada: sobrescreve a cor do status (inclusive o azul de "cirurgia
@@ -3193,13 +3223,81 @@
             // colorida (xlsx) sem ter que reclassificar o texto de exibição (ex.: o fallback
             // "Sem Status" não pode ser jogado de volta em classifyStatus() — só o código
             // original, calculado acima a partir do campo bruto, é confiável).
-            return { statusStr, badgeColor, journeyDateStr, journeyDateColor, overdueTag, semMotivoTag, dateStatusLabel, group };
+            return { statusStr, badgeColor, journeyDateStr, journeyDateColor, overdueTag, semMotivoTag, dateStatusLabel, group, statusRaw: slot.statusRaw, date: slot.date };
+        }
+
+        // Extraído pra ser reaproveitado pela lista de pacientes convertíveis da página de
+        // Potencial de Ganho — mesma regra de cor de status/atraso nas duas telas. Sempre a
+        // aba ATIVA (ver getActiveProcedureSlot) — se a aba 1 já foi concluída mas existe
+        // uma 2ª/3ª cirurgia em andamento numa aba seguinte, é ela que aparece aqui.
+        function buildStatusJourneyCell(item) {
+            return buildProcedureSlotCell(item, getActiveProcedureSlot(item));
+        }
+
+        // Cor/tag da "Potencial 2º olho" nas colunas "2º Procedimento" — mesmo texto e
+        // grupo de cor (xlsx) usados no render e na exportação, pra não duplicar a string.
+        const SECOND_EYE_POTENTIAL_CELL = {
+            statusStr: 'Potencial 2º olho (ainda não agendado)',
+            statusRaw: 'Potencial 2º olho (ainda não agendado)',
+            badgeColor: 'bg-violet-100 text-violet-800 border-violet-300',
+            journeyDateStr: '-', journeyDateColor: 'text-slate-400 font-medium',
+            overdueTag: '', semMotivoTag: '', dateStatusLabel: 'Potencial',
+            group: 'SEGUNDO_OLHO_POTENCIAL', date: null
+        };
+
+        // "1º Procedimento" e "2º Procedimento" da Lista Detalhada de Pacientes — pedido do
+        // usuário em 2026-08-18: "Status da Jornada" mostra só a aba ATIVA (a que precisa
+        // de ação agora), então um paciente que já operou o 1º olho e está com o 2º agendado
+        // só aparecia pela aba 2 — a cirurgia do 1º olho "desaparecia" da lista, mesmo já
+        // contando separado nos KPIs (ver buildGroupStats, 2026-08-18). Aqui as abas 1 e 2
+        // ficam SEMPRE visíveis, concluídas ou não, pra planilha ser um detalhado de fato
+        // dos KPIs. Quando a aba 2 nem existe ainda mas o paciente é candidato a 2º olho
+        // (ver needsSecondEyeFollowUp — só Catarata, aba 1 = REALIZOU 1º OLHO, nenhuma outra
+        // aba preenchida), mostra o marcador "Potencial" — mesmo paciente contado no KPI
+        // "Operou 1º olho: X pac. sem registro do 2º" dos Insights, agora evidenciado linha
+        // a linha aqui também. `slot2Cell` null = não existe 2ª aba e não é candidato (a
+        // grande maioria dos pacientes, que só têm 1 procedimento).
+        function buildProcedureHistoryCells(item) {
+            const slots = getProcedureSlots(item);
+            const slot1 = slots[0];
+            const slot2 = slots.length > 1 ? slots[1] : null;
+            const slot1Cell = buildProcedureSlotCell(item, slot1);
+
+            let slot2Cell = null;
+            if (slot2) {
+                slot2Cell = buildProcedureSlotCell(item, slot2);
+            } else {
+                const especialidade = getItemProp(item, SURGERY_ALIASES);
+                if (needsSecondEyeFollowUp(item, especialidade)) slot2Cell = SECOND_EYE_POTENTIAL_CELL;
+            }
+            return { slot1Cell, slot2Cell };
         }
 
         // Linha <tr> da tabela de pacientes, reaproveitada pela Lista Detalhada de
         // Pacientes (Consultas) e pela Lista de Pacientes Potenciais (Ganho) — mesmas
         // colunas nas duas telas, então qualquer ajuste vale pras duas de uma vez.
-        function buildPatientRowHtml(item) {
+        // "Célula" de badge+data compartilhada pelas colunas "1º/2º Procedimento" — mesma
+        // marcação da coluna "Status da Jornada" acima. `cell` null (2ª aba não existe e o
+        // paciente não é candidato a 2º olho — a maioria) mostra um traço neutro.
+        function renderProcedureHistoryTd(cell) {
+            if (!cell) return '<td class="p-3 text-slate-300 text-center">—</td>';
+            return `
+                <td class="p-3">
+                    <span class="badge-pill ${cell.badgeColor}">
+                        ${cell.statusStr}
+                    </span>${cell.semMotivoTag}
+                    <div class="${cell.journeyDateColor} text-[11px] mt-1">${cell.journeyDateStr}${cell.overdueTag}</div>
+                </td>
+            `;
+        }
+
+        // showProcedureHistory adiciona as colunas "1º/2º Procedimento" (ver
+        // buildProcedureHistoryCells) — pedido do usuário em 2026-08-18 só pra Lista
+        // Detalhada de Pacientes (Consultas). Opt-in (default false) pra NÃO afetar a Lista
+        // de Pacientes Potenciais (Ganho), que reaproveita esta mesma função: lá todo
+        // paciente é "convertível" por definição (aba 1 nunca é REALIZOU), então essas 2
+        // colunas ficariam sempre vazias — mudaria o layout de uma tela sem ganho nenhum.
+        function buildPatientRowHtml(item, { showProcedureHistory = false } = {}) {
             const nameStr = getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']) || 'Sem Nome';
             const idStr = getItemProp(item, ['clientes_id', 'id', 'ID']);
             const telefoneStr = npsFormatTelefone(getPatientTelefone(item));
@@ -3211,6 +3309,12 @@
             const docStr = getItemProp(item, MEDICO_ALIASES);
 
             const { statusStr, badgeColor, journeyDateStr, journeyDateColor, overdueTag, semMotivoTag } = buildStatusJourneyCell(item);
+            const procedureHistoryHtml = showProcedureHistory
+                ? (() => {
+                    const { slot1Cell, slot2Cell } = buildProcedureHistoryCells(item);
+                    return renderProcedureHistoryTd(slot1Cell) + renderProcedureHistoryTd(slot2Cell);
+                })()
+                : '';
 
             return `
                 <tr class="hover:bg-slate-50 transition">
@@ -3230,6 +3334,7 @@
                     </td>
                     <td class="p-3 ${journeyDateColor} text-[11px]">${journeyDateStr}${overdueTag}</td>
                     <td class="p-3 text-slate-600 text-[11px] font-medium">${escapeHtml(docStr) || '-'}</td>
+                    ${procedureHistoryHtml}
                 </tr>
             `;
         }
@@ -3239,7 +3344,7 @@
             const p = paginate(getSearchedPatientData(), currentPage, pageSize, exportAll);
             currentPage = p.page;
 
-            tbody.innerHTML = p.pageData.map(buildPatientRowHtml).join('');
+            tbody.innerHTML = p.pageData.map(item => buildPatientRowHtml(item, { showProcedureHistory: true })).join('');
 
             document.getElementById('patientPrintCount').textContent = `Relatório com ${p.totalRecords} paciente(s) — filtro atual aplicado no momento da exportação.`;
 
@@ -4238,14 +4343,29 @@
             CIRURGIA_REALIZADA: { bg: 'D1FAE5', fg: '065F46' }, // "concluído"
             ENCERROU_DESISTIU: { bg: 'FEE2E2', fg: 'B91C1C' },
             ENCERROU_SEM_INDICACAO: { bg: 'FEE2E2', fg: 'B91C1C' },
-            OUTROS: { bg: 'E2E8F0', fg: '334155' }
+            OUTROS: { bg: 'E2E8F0', fg: '334155' },
+            // "Potencial 2º olho" nas colunas "2º Procedimento" (ver SECOND_EYE_POTENTIAL_CELL)
+            // — violeta, pra ficar visualmente distinto de todo status real do Farol.
+            SEGUNDO_OLHO_POTENCIAL: { bg: 'EDE9FE', fg: '5B21B6' }
         };
         const EXPORT_DATE_OBS_FILL = {
             'Atrasado': { bg: 'FEE2E2', fg: 'B91C1C' },
             'Necessário atualização': { bg: 'FFEDD5', fg: '9A3412' },
-            'Em andamento': { bg: 'E0F2FE', fg: '0369A1' }
+            'Em andamento': { bg: 'E0F2FE', fg: '0369A1' },
+            'Potencial': { bg: 'EDE9FE', fg: '5B21B6' }
         };
         const excelArgb = hex => 'FF' + hex;
+
+        // Pares (coluna de status → coluna de observação) coloridos com a mesma régua da
+        // tela. "Status da Jornada" é a aba ATIVA de todo `rowBuilder`; "1º/2º Procedimento"
+        // só existem na Lista Detalhada de Pacientes (ver buildProcedureHistoryCells) — pra
+        // outro rowBuilder (ex.: Ganho) essas 2 colunas não existem no `row`, então
+        // `indexOf` devolve -1 e o par é ignorado, sem precisar de um branch por tela.
+        const PATIENT_EXPORT_COLOR_PAIRS = [
+            { statusCol: 'Status da Jornada', obsCol: 'Observação da Data', groupOf: item => buildStatusJourneyCell(item).group },
+            { statusCol: '1º Procedimento - Status', obsCol: '1º Procedimento - Observação da Data', groupOf: item => buildProcedureHistoryCells(item).slot1Cell.group },
+            { statusCol: '2º Procedimento - Status', obsCol: '2º Procedimento - Observação da Data', groupOf: item => { const c = buildProcedureHistoryCells(item).slot2Cell; return c ? c.group : null; } }
+        ];
 
         // items = registros originais (não as linhas já achatadas) — precisa deles pra
         // recalcular o `group` de status via buildStatusJourneyCell(), a mesma fonte única
@@ -4263,28 +4383,32 @@
                     cell.font = { bold: true, color: { argb: excelArgb('FFFFFF') } };
                     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: excelArgb('4F46E5') } };
                 });
-                const statusColIdx = headers.indexOf('Status da Jornada') + 1;
-                const obsColIdx = headers.indexOf('Observação da Data') + 1;
+                const colorPairs = PATIENT_EXPORT_COLOR_PAIRS.map(p => ({
+                    ...p,
+                    statusColIdx: headers.indexOf(p.statusCol) + 1,
+                    obsColIdx: headers.indexOf(p.obsCol) + 1
+                }));
                 items.forEach((item, i) => {
                     const row = rows[i];
                     const excelRow = ws.addRow(headers.map(h => row[h]));
-                    if (statusColIdx > 0) {
-                        const { group } = buildStatusJourneyCell(item);
-                        const fill = EXPORT_STATUS_FILL[group];
-                        if (fill) {
-                            const cell = excelRow.getCell(statusColIdx);
-                            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: excelArgb(fill.bg) } };
-                            cell.font = { bold: true, color: { argb: excelArgb(fill.fg) } };
+                    colorPairs.forEach(({ statusColIdx, obsColIdx, obsCol, groupOf }) => {
+                        if (statusColIdx > 0) {
+                            const fill = EXPORT_STATUS_FILL[groupOf(item)];
+                            if (fill) {
+                                const cell = excelRow.getCell(statusColIdx);
+                                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: excelArgb(fill.bg) } };
+                                cell.font = { bold: true, color: { argb: excelArgb(fill.fg) } };
+                            }
                         }
-                    }
-                    if (obsColIdx > 0) {
-                        const fill = EXPORT_DATE_OBS_FILL[row['Observação da Data']];
-                        if (fill) {
-                            const cell = excelRow.getCell(obsColIdx);
-                            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: excelArgb(fill.bg) } };
-                            cell.font = { bold: true, color: { argb: excelArgb(fill.fg) } };
+                        if (obsColIdx > 0) {
+                            const fill = EXPORT_DATE_OBS_FILL[row[obsCol]];
+                            if (fill) {
+                                const cell = excelRow.getCell(obsColIdx);
+                                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: excelArgb(fill.bg) } };
+                                cell.font = { bold: true, color: { argb: excelArgb(fill.fg) } };
+                            }
                         }
-                    }
+                    });
                 });
                 ws.columns.forEach(col => { col.width = 20; });
                 const buffer = await wb.xlsx.writeBuffer();
@@ -4379,6 +4503,12 @@
             const activeSlot = getActiveProcedureSlot(item);
             const journeyDate = activeSlot.date;
             const { dateStatusLabel } = buildStatusJourneyCell(item);
+            // "1º/2º Procedimento" (pedido do usuário em 2026-08-18) — ver
+            // buildProcedureHistoryCells: mostram a aba 1 e a aba 2 SEMPRE, mesmo quando a
+            // aba ativa acima já é uma cirurgia seguinte, pra planilha ser um detalhado de
+            // fato dos KPIs (nenhuma cirurgia "some" da exportação por ter sido superada por
+            // um 2º olho já agendado/realizado).
+            const { slot1Cell, slot2Cell } = buildProcedureHistoryCells(item);
             return {
                 'ID': getItemProp(item, ['clientes_id', 'id', 'ID']) || '-',
                 'Paciente': getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']) || 'Sem Nome',
@@ -4393,7 +4523,13 @@
                 // que aparece na tela, mas em coluna própria — sem parênteses — pra não
                 // quebrar linha dentro de uma célula de planilha (pedido do usuário).
                 'Observação da Data': dateStatusLabel || '-',
-                'Médico / Equipe': getItemProp(item, MEDICO_ALIASES) || '-'
+                'Médico / Equipe': getItemProp(item, MEDICO_ALIASES) || '-',
+                '1º Procedimento - Status': slot1Cell.statusRaw || 'Sem Status',
+                '1º Procedimento - Data': slot1Cell.date ? slot1Cell.date.toLocaleDateString('pt-BR') : '-',
+                '1º Procedimento - Observação da Data': slot1Cell.dateStatusLabel || '-',
+                '2º Procedimento - Status': slot2Cell ? slot2Cell.statusRaw : '-',
+                '2º Procedimento - Data': slot2Cell && slot2Cell.date ? slot2Cell.date.toLocaleDateString('pt-BR') : '-',
+                '2º Procedimento - Observação da Data': slot2Cell ? (slot2Cell.dateStatusLabel || '-') : '-'
             };
         }
         function buildPatientExportRows() {
