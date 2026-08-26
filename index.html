@@ -73,8 +73,8 @@
         }
         .badge-pill {
             display: inline-block;
-            padding: 0.25rem 0.625rem;
-            font-size: 10px;
+            padding: 0.3rem 0.75rem;
+            font-size: 0.8125rem;
             font-weight: 700;
             border-radius: 9999px;
             border-width: 1px;
@@ -146,12 +146,12 @@
                  que continuava aparecendo na página de NPS e dava a entender que
                  servia para carregar o NPS ali. Agora cada página mostra o botão da
                  SUA planilha (Faturamento usa a mesma base de Consultas). -->
-            <label id="uploadConsultas" class="cursor-pointer px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition shadow-md shadow-indigo-600/20">
+            <label id="uploadConsultas" class="cursor-pointer px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg flex items-center gap-1.5 transition shadow-md shadow-indigo-600/20">
                 <i data-lucide="file-up" class="w-3.5 h-3.5"></i>
                 Carregar Planilha de Consultas (.xlsx/.csv)
                 <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" class="hidden">
             </label>
-            <label id="uploadNps" class="hidden cursor-pointer px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition shadow-md shadow-teal-600/20">
+            <label id="uploadNps" class="hidden cursor-pointer px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-lg flex items-center gap-1.5 transition shadow-md shadow-teal-600/20">
                 <i data-lucide="file-up" class="w-3.5 h-3.5"></i>
                 Carregar Planilha de NPS (.xlsx/.csv)
                 <input type="file" id="npsFileInput" accept=".xlsx, .xls, .csv" class="hidden">
@@ -162,7 +162,7 @@
                  "Exportar como..." em planilha/CSV/PDF de tabela. -->
             <button id="exportReportBtn" onclick="exportReport()"
                 title="Gera o PDF com os cards de indicadores, insights e gráficos da página. As listas detalhadas não entram — use o botão 'Exportar como...' de cada lista."
-                class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
                 <i data-lucide="printer" class="w-3.5 h-3.5"></i>
                 <span id="exportBtnLabel">Imprimir Painel de Consultas</span>
             </button>
@@ -174,19 +174,19 @@
 
         <!-- Navegação por Página / Seção (fixa ao rolar, fica sempre visível) -->
         <div id="tabNavBar" class="sticky z-40 bg-slate-50/95 backdrop-blur-sm flex items-center gap-1.5 py-1 no-print" style="top: var(--header-h, 0px);">
-            <button id="navTabConsultas" onclick="switchTab('consultas')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+            <button id="navTabConsultas" onclick="switchTab('consultas')" class="px-3 py-1.5 rounded-lg text-sm font-bold transition flex items-center gap-1.5">
                 <i data-lucide="stethoscope" class="w-3.5 h-3.5"></i>
                 Consultas
             </button>
-            <button id="navTabGanho" onclick="switchTab('ganho')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+            <button id="navTabGanho" onclick="switchTab('ganho')" class="px-3 py-1.5 rounded-lg text-sm font-bold transition flex items-center gap-1.5">
                 <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>
                 Potencial de Ganho
             </button>
-            <button id="navTabFaturamento" onclick="switchTab('faturamento')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+            <button id="navTabFaturamento" onclick="switchTab('faturamento')" class="px-3 py-1.5 rounded-lg text-sm font-bold transition flex items-center gap-1.5">
                 <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
                 Faturamento
             </button>
-            <button id="navTabNps" onclick="switchTab('nps')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+            <button id="navTabNps" onclick="switchTab('nps')" class="px-3 py-1.5 rounded-lg text-sm font-bold transition flex items-center gap-1.5">
                 <i data-lucide="heart-handshake" class="w-3.5 h-3.5"></i>
                 NPS
             </button>
@@ -200,46 +200,46 @@
         <!-- Top Bar Info & Filters (fixa logo abaixo da navegação de páginas) -->
         <div class="white-card rounded-2xl p-3 space-y-2 sticky z-30" style="top: calc(var(--header-h, 0px) + var(--tabnav-h, 0px));">
             <div class="flex flex-wrap items-center justify-between gap-2">
-                <h2 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                     <i data-lucide="filter" class="w-3.5 h-3.5 text-indigo-600"></i>
                     Filtros
                 </h2>
-                <div class="flex items-center gap-1.5 text-[11px] text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-medium">
+                <div class="flex items-center gap-1.5 text-sm text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-medium">
                     <i data-lucide="database" class="w-3 h-3 text-indigo-600"></i>
                     <span id="dataCountLabel">Carregando dados...</span>
                 </div>
             </div>
 
-            <p class="hidden text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5" id="unknownStatusWarning"></p>
+            <p class="hidden text-sm font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5" id="unknownStatusWarning"></p>
 
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                 <!-- Filtro Clínica (seleção múltipla) -->
                 <div>
-                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Clínica</label>
+                    <label class="block text-sm font-semibold text-slate-700 mb-0.5">Clínica</label>
                     <div class="multi-select relative" id="filterClinic" data-placeholder="Todas as Clínicas" data-accent="indigo" data-onchange="applyFilters"></div>
                 </div>
 
                 <!-- Filtro Especialidade / Cirurgia (seleção múltipla) -->
                 <div>
-                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Especialidade</label>
+                    <label class="block text-sm font-semibold text-slate-700 mb-0.5">Especialidade</label>
                     <div class="multi-select relative" id="filterSurgery" data-placeholder="Todas as Especialidades" data-accent="indigo" data-onchange="applyFilters"></div>
                 </div>
 
                 <!-- Filtro Status da Jornada -->
                 <div>
-                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Status da Jornada</label>
-                    <select id="filterStatus" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-1.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
+                    <label class="block text-sm font-semibold text-slate-700 mb-0.5">Status da Jornada</label>
+                    <select id="filterStatus" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
                         <option value="">Todos</option>
                     </select>
                 </div>
 
                 <!-- Filtro Período (Data da Consulta) -->
                 <div class="col-span-2 sm:col-span-1">
-                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Período (Consulta)</label>
+                    <label class="block text-sm font-semibold text-slate-700 mb-0.5">Período (Consulta)</label>
                     <div class="flex items-center gap-1">
-                        <input type="date" id="filterDateStart" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-[11px] rounded-lg p-1.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
-                        <span class="text-slate-400 text-[10px]">até</span>
-                        <input type="date" id="filterDateEnd" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-[11px] rounded-lg p-1.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
+                        <input type="date" id="filterDateStart" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
+                        <span class="text-slate-600 text-sm shrink-0">até</span>
+                        <input type="date" id="filterDateEnd" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
                     </div>
                 </div>
             </div>
@@ -249,9 +249,9 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
             <!-- Total Compareceram -->
             <div class="white-card rounded-2xl p-5 relative overflow-hidden group">
-                <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Total Atendidos</div>
+                <div class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-1">Total Atendidos</div>
                 <div class="text-3xl font-extrabold text-slate-900" id="kpiTotal">0</div>
-                <div class="text-[11px] text-indigo-600 font-semibold mt-2 flex items-center gap-1">
+                <div class="text-sm text-indigo-600 font-semibold mt-2 flex items-center gap-1">
                     <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
                     Pacientes em Acompanhamento
                 </div>
@@ -259,9 +259,9 @@
 
             <!-- Sem Status / Aguardando Retorno (pior caso: não sabemos o status atual) -->
             <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-slate-300 bg-slate-100/60">
-                <div class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Sem Status / Aguard. Retorno</div>
+                <div class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-1">Sem Status / Aguard. Retorno</div>
                 <div class="text-3xl font-extrabold text-slate-700" id="kpiSemStatus">0</div>
-                <div class="text-[11px] text-slate-500 font-semibold mt-2 flex items-center gap-1">
+                <div class="text-sm text-slate-700 font-semibold mt-2 flex items-center gap-1">
                     <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
                     Não sabemos o status atual
                 </div>
@@ -269,9 +269,9 @@
 
             <!-- Exames Pendentes -->
             <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-amber-200 bg-amber-50/30">
-                <div class="text-xs font-bold text-amber-800 uppercase tracking-wider mb-1">Fase de Exames</div>
+                <div class="text-sm font-bold text-amber-800 uppercase tracking-wider mb-1">Fase de Exames</div>
                 <div class="text-3xl font-extrabold text-amber-600" id="kpiExams">0</div>
-                <div class="text-[11px] text-amber-700 font-semibold mt-2 flex items-center gap-1">
+                <div class="text-sm text-amber-700 font-semibold mt-2 flex items-center gap-1">
                     <i data-lucide="clock" class="w-3.5 h-3.5"></i>
                     Exames Pendentes / Agendados
                 </div>
@@ -279,9 +279,9 @@
 
             <!-- Gargalo: Aguardando Clínica Agendar -->
             <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-rose-200 bg-rose-50/30">
-                <div class="text-xs font-bold text-rose-800 uppercase tracking-wider mb-1">Gargalo de Agendamento</div>
+                <div class="text-sm font-bold text-rose-800 uppercase tracking-wider mb-1">Gargalo de Agendamento</div>
                 <div class="text-3xl font-extrabold text-rose-600" id="kpiAguardandoClinica">0</div>
-                <div class="text-[11px] text-rose-700 font-semibold mt-2 flex items-center gap-1">
+                <div class="text-sm text-rose-700 font-semibold mt-2 flex items-center gap-1">
                     <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
                     Aguardando Clínica Agendar
                 </div>
@@ -289,9 +289,9 @@
 
             <!-- Cirurgias Agendadas -->
             <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-blue-200 bg-blue-50/30">
-                <div class="text-xs font-bold text-blue-800 uppercase tracking-wider mb-1">Cirurgia Agendada</div>
+                <div class="text-sm font-bold text-blue-800 uppercase tracking-wider mb-1">Cirurgia Agendada</div>
                 <div class="text-3xl font-extrabold text-blue-600" id="kpiAgendadas">0</div>
-                <div class="text-[11px] text-blue-700 font-semibold mt-2 flex items-center gap-1">
+                <div class="text-sm text-blue-700 font-semibold mt-2 flex items-center gap-1">
                     <i data-lucide="calendar-check" class="w-3.5 h-3.5"></i>
                     Data Cirúrgica Confirmada
                 </div>
@@ -299,13 +299,13 @@
 
             <!-- Cirurgia Realizada -->
             <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-emerald-200 bg-emerald-50/30">
-                <div class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-1">Cirurgia Realizada</div>
+                <div class="text-sm font-bold text-emerald-800 uppercase tracking-wider mb-1">Cirurgia Realizada</div>
                 <div class="text-3xl font-extrabold text-emerald-600" id="kpiRealizadas">0</div>
-                <div class="text-[11px] text-emerald-700 font-semibold mt-2 flex items-center gap-1">
+                <div class="text-sm text-emerald-700 font-semibold mt-2 flex items-center gap-1">
                     <i data-lucide="award" class="w-3.5 h-3.5"></i>
                     Sucesso (1º e 2º Olho contam separado)
                 </div>
-                <div class="text-[10px] text-emerald-600/80 font-medium mt-1" id="kpiRealizadasBase"></div>
+                <div class="text-sm text-emerald-600/80 font-medium mt-1" id="kpiRealizadasBase"></div>
             </div>
         </div>
 
@@ -324,21 +324,21 @@
                 </div>
                 <div class="flex items-center gap-3">
                     <div class="relative no-print">
-                        <button onclick="toggleExportMenu(event, 'menuInsights')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                        <button onclick="toggleExportMenu(event, 'menuInsights')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-sm font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
                             <i data-lucide="download" class="w-3.5 h-3.5"></i>
                             Exportar como...
                             <i data-lucide="chevron-down" class="w-3 h-3"></i>
                         </button>
                         <div id="menuInsights" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
-                            <button onclick="exportSectionAsPdf('cardInsights','Insights_Jornada_Cirurgica')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                            <button onclick="exportSectionAsPdf('cardInsights','Insights_Jornada_Cirurgica')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
                                 <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
                             </button>
-                            <button onclick="exportSectionAsJpeg('cardInsights','Insights_Jornada_Cirurgica')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                            <button onclick="exportSectionAsJpeg('cardInsights','Insights_Jornada_Cirurgica')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
                                 <i data-lucide="image" class="w-3.5 h-3.5 text-indigo-500"></i> Exportar como JPEG
                             </button>
                         </div>
                     </div>
-                    <span class="text-xs text-slate-400 font-medium no-print">Recomendações Práticas</span>
+                    <span class="text-sm text-slate-600 font-medium no-print">Recomendações Práticas</span>
                 </div>
             </div>
 
@@ -360,19 +360,19 @@
                         <i data-lucide="git-commit" class="w-5 h-5 text-indigo-600"></i>
                         Funil e Distribuição de Status da Jornada
                     </h3>
-                    <p class="text-xs text-slate-500">Fluxo dos pacientes por etapa e a mesma distribuição em % por status</p>
+                    <p class="text-sm text-slate-700">Fluxo dos pacientes por etapa (cada card abaixo) e a distribuição por status do procedimento mais recente de cada paciente (gráfico). Atenção: "Cirurgia Realizada" no funil conta cada olho/cirurgia operado — pode ser maior que a soma das fatias "Realizou" do gráfico, que contam 1 vez por paciente.</p>
                 </div>
                 <div class="relative no-print">
-                    <button onclick="toggleExportMenu(event, 'menuFunilStatus')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                    <button onclick="toggleExportMenu(event, 'menuFunilStatus')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-sm font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
                         Exportar como...
                         <i data-lucide="chevron-down" class="w-3 h-3"></i>
                     </button>
                     <div id="menuFunilStatus" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
-                        <button onclick="exportSectionAsPdf('cardFunilStatus','Funil_e_Distribuicao_Status')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                        <button onclick="exportSectionAsPdf('cardFunilStatus','Funil_e_Distribuicao_Status')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
                             <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
                         </button>
-                        <button onclick="exportSectionAsJpeg('cardFunilStatus','Funil_e_Distribuicao_Status')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                        <button onclick="exportSectionAsJpeg('cardFunilStatus','Funil_e_Distribuicao_Status')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
                             <i data-lucide="image" class="w-3.5 h-3.5 text-indigo-500"></i> Exportar como JPEG
                         </button>
                     </div>
@@ -388,7 +388,7 @@
                     <canvas id="chartStatus"></canvas>
                     <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                         <span class="text-4xl font-extrabold text-slate-900" id="statusDonutTotal">0</span>
-                        <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mt-1">Pacientes</span>
+                        <span class="text-sm font-semibold text-slate-600 uppercase tracking-wider mt-1">Pacientes</span>
                     </div>
                 </div>
                 <div class="w-full flex-1 space-y-2.5" id="statusLegendContainer">
@@ -405,16 +405,16 @@
                     Distribuição por Tipo de Cirurgia / Especialidade
                 </h3>
                 <div class="relative no-print">
-                    <button onclick="toggleExportMenu(event, 'menuSurgeryDist')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                    <button onclick="toggleExportMenu(event, 'menuSurgeryDist')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-sm font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
                         Exportar como...
                         <i data-lucide="chevron-down" class="w-3 h-3"></i>
                     </button>
                     <div id="menuSurgeryDist" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
-                        <button onclick="exportSectionAsPdf('cardSurgeryDist','Distribuicao_Tipo_Cirurgia')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                        <button onclick="exportSectionAsPdf('cardSurgeryDist','Distribuicao_Tipo_Cirurgia')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
                             <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
                         </button>
-                        <button onclick="exportSectionAsJpeg('cardSurgeryDist','Distribuicao_Tipo_Cirurgia')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                        <button onclick="exportSectionAsJpeg('cardSurgeryDist','Distribuicao_Tipo_Cirurgia')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
                             <i data-lucide="image" class="w-3.5 h-3.5 text-indigo-500"></i> Exportar como JPEG
                         </button>
                     </div>
@@ -433,19 +433,19 @@
                         <i data-lucide="building-2" class="w-5 h-5 text-indigo-600"></i>
                         Acompanhamento por Clínica Parceira (Top Unidades)
                     </h3>
-                    <p class="text-xs text-slate-500">Comparativo do volume de pacientes em cada parceiro</p>
+                    <p class="text-sm text-slate-700">Comparativo do volume de pacientes em cada parceiro</p>
                 </div>
                 <div class="relative no-print">
-                    <button onclick="toggleExportMenu(event, 'menuClinicPerf')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                    <button onclick="toggleExportMenu(event, 'menuClinicPerf')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-sm font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
                         Exportar como...
                         <i data-lucide="chevron-down" class="w-3 h-3"></i>
                     </button>
                     <div id="menuClinicPerf" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
-                        <button onclick="exportSectionAsPdf('cardClinicPerf','Performance_Clinica_Parceira')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                        <button onclick="exportSectionAsPdf('cardClinicPerf','Performance_Clinica_Parceira')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
                             <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
                         </button>
-                        <button onclick="exportSectionAsJpeg('cardClinicPerf','Performance_Clinica_Parceira')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                        <button onclick="exportSectionAsJpeg('cardClinicPerf','Performance_Clinica_Parceira')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
                             <i data-lucide="image" class="w-3.5 h-3.5 text-indigo-500"></i> Exportar como JPEG
                         </button>
                     </div>
@@ -464,22 +464,22 @@
                         <i data-lucide="clipboard-list" class="w-5 h-5 text-indigo-600"></i>
                         Relatório Consolidado para Envio à Gestão das Clínicas
                     </h3>
-                    <p class="text-xs text-slate-500">Resumo de pendências e conversões para reuniões de alinhamento com diretores</p>
+                    <p class="text-sm text-slate-700">Resumo de pendências e conversões para reuniões de alinhamento com diretores</p>
                 </div>
                 <div class="relative no-print">
-                    <button onclick="toggleExportMenu(event, 'menuClinicSummary')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold rounded-lg flex items-center gap-1.5 transition shadow-sm">
+                    <button onclick="toggleExportMenu(event, 'menuClinicSummary')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg flex items-center gap-1.5 transition shadow-sm">
                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
                         Exportar como...
                         <i data-lucide="chevron-down" class="w-3 h-3"></i>
                     </button>
                     <div id="menuClinicSummary" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
-                        <button onclick="exportClinicSummaryAsSpreadsheet()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                        <button onclick="exportClinicSummaryAsSpreadsheet()" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
                             <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i> Exportar como Planilha
                         </button>
-                        <button onclick="exportClinicSummaryAsCSV()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
-                            <i data-lucide="file-type" class="w-3.5 h-3.5 text-slate-500"></i> Exportar como CSV
+                        <button onclick="exportClinicSummaryAsCSV()" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                            <i data-lucide="file-type" class="w-3.5 h-3.5 text-slate-700"></i> Exportar como CSV
                         </button>
-                        <button onclick="exportClinicSummaryAsPdf()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                        <button onclick="exportClinicSummaryAsPdf()" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
                             <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
                         </button>
                     </div>
@@ -487,8 +487,8 @@
             </div>
 
             <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left text-xs text-slate-700">
-                    <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200">
+                <table class="w-full text-left text-sm text-slate-700">
+                    <thead class="bg-slate-100 text-slate-600 uppercase text-sm tracking-wider border-b border-slate-200">
                         <tr id="clinicTableHeadRow">
                             <!-- Populated via JS (renderClinicSummaryTableHead) -->
                         </tr>
@@ -508,28 +508,29 @@
                         <i data-lucide="search" class="w-5 h-5 text-indigo-600"></i>
                         Lista Detalhada dos Pacientes
                     </h3>
-                    <p class="text-xs text-slate-500">Consulte informações individuais, médicos e observações clínicas</p>
+                    <p class="text-sm text-slate-700">Consulte informações individuais, médicos e observações clínicas</p>
+                    <p class="text-sm text-slate-600 mt-1">Ordenada por prioridade de conversão — do caso mais quente (aguardando a clínica agendar, atrasados primeiro) ao mais frio. A planilha e o PDF saem nesta mesma ordem.</p>
                 </div>
                 <div class="flex items-center gap-2 no-print">
                     <div class="relative w-full sm:w-72">
                         <input type="text" id="tableSearch" placeholder="Buscar paciente, médico ou obs..."
-                            class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl pl-9 pr-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none">
-                        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                            class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl pl-9 pr-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-600 absolute left-3 top-2.5"></i>
                     </div>
                     <div class="relative">
-                        <button onclick="toggleExportMenu(event, 'menuPatientList')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold rounded-lg flex items-center gap-1.5 transition shadow-sm whitespace-nowrap">
+                        <button onclick="toggleExportMenu(event, 'menuPatientList')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg flex items-center gap-1.5 transition shadow-sm whitespace-nowrap">
                             <i data-lucide="download" class="w-3.5 h-3.5"></i>
                             Exportar como...
                             <i data-lucide="chevron-down" class="w-3 h-3"></i>
                         </button>
                         <div id="menuPatientList" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
-                            <button onclick="exportPatientsAsSpreadsheet()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                            <button onclick="exportPatientsAsSpreadsheet()" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
                                 <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i> Exportar como Planilha
                             </button>
-                            <button onclick="exportPatientsAsCSV()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
-                                <i data-lucide="file-type" class="w-3.5 h-3.5 text-slate-500"></i> Exportar como CSV
+                            <button onclick="exportPatientsAsCSV()" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                                <i data-lucide="file-type" class="w-3.5 h-3.5 text-slate-700"></i> Exportar como CSV
                             </button>
-                            <button onclick="exportPatientsAsPdf()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                            <button onclick="exportPatientsAsPdf()" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
                                 <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
                             </button>
                         </div>
@@ -538,8 +539,8 @@
             </div>
 
             <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left text-xs text-slate-700">
-                    <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200">
+                <table class="w-full text-left text-sm text-slate-700">
+                    <thead class="bg-slate-100 text-slate-600 uppercase text-sm tracking-wider border-b border-slate-200">
                         <tr>
                             <th class="p-3">ID / Paciente</th>
                             <th class="p-3">Data da Consulta</th>
@@ -556,14 +557,14 @@
                 </table>
             </div>
 
-            <div class="flex items-center justify-between pt-2 text-xs text-slate-500 font-medium no-print">
+            <div class="flex items-center justify-between pt-2 text-sm text-slate-700 font-medium no-print">
                 <span id="paginationInfo">Mostrando 0 de 0 pacientes</span>
                 <div class="flex gap-2">
                     <button id="prevPageBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 disabled:opacity-40 border border-slate-200">Anterior</button>
                     <button id="nextPageBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 disabled:opacity-40 border border-slate-200">Próximo</button>
                 </div>
             </div>
-            <p class="hidden print:block text-[11px] text-slate-500 font-medium pt-2" id="patientPrintCount"></p>
+            <p class="hidden print:block text-sm text-slate-700 font-medium pt-2" id="patientPrintCount"></p>
         </div>
 
         </div>
@@ -581,7 +582,7 @@
                 </div>
                 <div>
                     <h2 class="text-lg font-bold text-slate-900 tracking-tight">Relatório de NPS por Clínica</h2>
-                    <p class="text-xs text-slate-500">Base própria (planilha de avaliações) — use para montar o relatório de satisfação enviado à clínica no mesmo período do relatório de consultas</p>
+                    <p class="text-sm text-slate-700">Base própria (planilha de avaliações) — use para montar o relatório de satisfação enviado à clínica no mesmo período do relatório de consultas</p>
                 </div>
             </div>
         </div>
@@ -589,14 +590,14 @@
         <!-- NPS: Upload & Filtros (fixa logo abaixo da navegação de páginas) -->
         <div class="white-card rounded-2xl p-3 space-y-2 border-teal-200 sticky z-30" style="top: calc(var(--header-h, 0px) + var(--tabnav-h, 0px));">
             <div class="flex flex-wrap items-center justify-between gap-2">
-                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                     <i data-lucide="filter" class="w-3.5 h-3.5 text-teal-600"></i>
                     Filtros de NPS
                 </h3>
                 <!-- O upload de NPS agora fica no topo da página (botão contextual do
                      header), para existir um único lugar de carregar cada planilha. -->
                 <div class="flex items-center gap-2 no-print">
-                    <div class="flex items-center gap-1.5 text-[11px] text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-medium">
+                    <div class="flex items-center gap-1.5 text-sm text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-medium">
                         <i data-lucide="database" class="w-3 h-3 text-teal-600"></i>
                         <span id="npsDataCountLabel">Nenhuma planilha de NPS carregada</span>
                     </div>
@@ -605,19 +606,19 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <div>
-                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Clínica</label>
+                    <label class="block text-sm font-semibold text-slate-700 mb-0.5">Clínica</label>
                     <div class="multi-select relative" id="npsFilterClinic" data-placeholder="Todas as Clínicas" data-accent="teal" data-onchange="npsApplyFilters"></div>
                 </div>
                 <div>
-                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Período (Cirurgia)</label>
+                    <label class="block text-sm font-semibold text-slate-700 mb-0.5">Período (Cirurgia)</label>
                     <div class="flex items-center gap-1">
-                        <input type="date" id="npsDateStart" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-[11px] rounded-lg p-1.5 focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition">
-                        <span class="text-slate-400 text-[10px]">até</span>
-                        <input type="date" id="npsDateEnd" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-[11px] rounded-lg p-1.5 focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition">
+                        <input type="date" id="npsDateStart" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition">
+                        <span class="text-slate-600 text-sm shrink-0">até</span>
+                        <input type="date" id="npsDateEnd" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Especialidade</label>
+                    <label class="block text-sm font-semibold text-slate-700 mb-0.5">Especialidade</label>
                     <div class="multi-select relative" id="npsFilterSurgery" data-placeholder="Todas as Especialidades" data-accent="teal" data-onchange="npsApplyFilters"></div>
                 </div>
             </div>
@@ -626,47 +627,47 @@
         <!-- NPS: KPI Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <div class="white-card rounded-2xl p-5 relative overflow-hidden group">
-                <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Avaliações no Período</div>
+                <div class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-1">Avaliações no Período</div>
                 <div class="text-3xl font-extrabold text-slate-900" id="npsKpiTotal">0</div>
-                <div class="text-[11px] text-teal-600 font-semibold mt-2 flex items-center gap-1">
+                <div class="text-sm text-teal-600 font-semibold mt-2 flex items-center gap-1">
                     <i data-lucide="clipboard-check" class="w-3.5 h-3.5"></i>
                     Respostas de Pacientes
                 </div>
             </div>
             <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-emerald-200 bg-emerald-50/30">
-                <div class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-1">Promotores (Nota 9-10)</div>
+                <div class="text-sm font-bold text-emerald-800 uppercase tracking-wider mb-1">Promotores (Nota 9-10)</div>
                 <div class="text-3xl font-extrabold text-emerald-600" id="npsKpiPromoters">0%</div>
-                <div class="text-[11px] text-emerald-700 font-semibold mt-2 flex items-center gap-1">
+                <div class="text-sm text-emerald-700 font-semibold mt-2 flex items-center gap-1">
                     <i data-lucide="thumbs-up" class="w-3.5 h-3.5"></i>
                     Pacientes muito satisfeitos
                 </div>
             </div>
             <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-amber-200 bg-amber-50/30">
-                <div class="text-xs font-bold text-amber-800 uppercase tracking-wider mb-1">Neutros (Nota 7-8)</div>
+                <div class="text-sm font-bold text-amber-800 uppercase tracking-wider mb-1">Neutros (Nota 7-8)</div>
                 <div class="text-3xl font-extrabold text-amber-600" id="npsKpiPassives">0%</div>
-                <div class="text-[11px] text-amber-700 font-semibold mt-2 flex items-center gap-1">
+                <div class="text-sm text-amber-700 font-semibold mt-2 flex items-center gap-1">
                     <i data-lucide="minus-circle" class="w-3.5 h-3.5"></i>
                     Satisfação intermediária
                 </div>
             </div>
             <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-rose-200 bg-rose-50/30">
-                <div class="text-xs font-bold text-rose-800 uppercase tracking-wider mb-1">Detratores (Nota 0-6)</div>
+                <div class="text-sm font-bold text-rose-800 uppercase tracking-wider mb-1">Detratores (Nota 0-6)</div>
                 <div class="text-3xl font-extrabold text-rose-600" id="npsKpiDetractors">0%</div>
-                <div class="text-[11px] text-rose-700 font-semibold mt-2 flex items-center gap-1">
+                <div class="text-sm text-rose-700 font-semibold mt-2 flex items-center gap-1">
                     <i data-lucide="thumbs-down" class="w-3.5 h-3.5"></i>
                     Pacientes insatisfeitos
                 </div>
             </div>
             <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-slate-300 bg-slate-100/60">
-                <div class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Nota Ausente</div>
+                <div class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-1">Nota Ausente</div>
                 <div class="text-3xl font-extrabold text-slate-700" id="npsKpiNotaAusente">0</div>
-                <div class="text-[11px] text-slate-500 font-semibold mt-2 flex items-center gap-1">
+                <div class="text-sm text-slate-700 font-semibold mt-2 flex items-center gap-1">
                     <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
                     Com avaliação, sem nota
                 </div>
             </div>
         </div>
-        <p class="text-[11px] text-slate-400 font-medium -mt-2">Promotores/Neutros/Detratores são calculados apenas sobre as avaliações com nota preenchida (não entram no cálculo os registros "Nota Ausente").</p>
+        <p class="text-sm text-slate-600 font-medium -mt-2">Promotores/Neutros/Detratores são calculados apenas sobre as avaliações com nota preenchida (não entram no cálculo os registros "Nota Ausente").</p>
 
         <!-- NPS: Gauge Geral + Ranking por Clínica -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -677,16 +678,16 @@
                         NPS Geral (Data da Cirurgia)
                     </h3>
                     <div class="relative no-print shrink-0">
-                        <button onclick="toggleExportMenu(event, 'menuNpsGauge')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                        <button onclick="toggleExportMenu(event, 'menuNpsGauge')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-sm font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
                             <i data-lucide="download" class="w-3.5 h-3.5"></i>
                             Exportar como...
                             <i data-lucide="chevron-down" class="w-3 h-3"></i>
                         </button>
                         <div id="menuNpsGauge" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
-                            <button onclick="exportSectionAsPdf('cardNpsGauge','NPS_Geral')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                            <button onclick="exportSectionAsPdf('cardNpsGauge','NPS_Geral')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
                                 <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
                             </button>
-                            <button onclick="exportSectionAsJpeg('cardNpsGauge','NPS_Geral')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                            <button onclick="exportSectionAsJpeg('cardNpsGauge','NPS_Geral')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
                                 <i data-lucide="image" class="w-3.5 h-3.5 text-teal-600"></i> Exportar como JPEG
                             </button>
                         </div>
@@ -702,19 +703,19 @@
                             <i data-lucide="building-2" class="w-5 h-5 text-teal-600"></i>
                             NPS por Clínica Parceira
                         </h3>
-                        <p class="text-xs text-slate-500">Ranking de satisfação — não confundir com a distribuição de status acima</p>
+                        <p class="text-sm text-slate-700">Ranking de satisfação — não confundir com a distribuição de status acima</p>
                     </div>
                     <div class="relative no-print shrink-0">
-                        <button onclick="toggleExportMenu(event, 'menuNpsClinics')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                        <button onclick="toggleExportMenu(event, 'menuNpsClinics')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-sm font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
                             <i data-lucide="download" class="w-3.5 h-3.5"></i>
                             Exportar como...
                             <i data-lucide="chevron-down" class="w-3 h-3"></i>
                         </button>
                         <div id="menuNpsClinics" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
-                            <button onclick="exportSectionAsPdf('cardNpsClinics','NPS_por_Clinica')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                            <button onclick="exportSectionAsPdf('cardNpsClinics','NPS_por_Clinica')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
                                 <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
                             </button>
-                            <button onclick="exportSectionAsJpeg('cardNpsClinics','NPS_por_Clinica')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                            <button onclick="exportSectionAsJpeg('cardNpsClinics','NPS_por_Clinica')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
                                 <i data-lucide="image" class="w-3.5 h-3.5 text-teal-600"></i> Exportar como JPEG
                             </button>
                         </div>
@@ -734,16 +735,16 @@
                     Avaliação por Categoria (% "Gostei")
                 </h3>
                 <div class="relative no-print shrink-0">
-                    <button onclick="toggleExportMenu(event, 'menuNpsCategories')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                    <button onclick="toggleExportMenu(event, 'menuNpsCategories')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-sm font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
                         Exportar como...
                         <i data-lucide="chevron-down" class="w-3 h-3"></i>
                     </button>
                     <div id="menuNpsCategories" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
-                        <button onclick="exportSectionAsPdf('cardNpsCategories','NPS_Avaliacao_por_Categoria')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                        <button onclick="exportSectionAsPdf('cardNpsCategories','NPS_Avaliacao_por_Categoria')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
                             <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
                         </button>
-                        <button onclick="exportSectionAsJpeg('cardNpsCategories','NPS_Avaliacao_por_Categoria')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                        <button onclick="exportSectionAsJpeg('cardNpsCategories','NPS_Avaliacao_por_Categoria')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
                             <i data-lucide="image" class="w-3.5 h-3.5 text-teal-600"></i> Exportar como JPEG
                         </button>
                     </div>
@@ -763,26 +764,26 @@
                     </div>
                     <div>
                         <h3 class="text-base font-bold text-slate-900">Destaques que Precisam de Atenção</h3>
-                        <p class="text-xs text-slate-500">Detratores (nota até 6) e respostas com sinais de insatisfação, identificados por um filtro de palavras-chave — base para os futuros insights de IA desta página</p>
+                        <p class="text-sm text-slate-700">Detratores (nota até 6) e respostas com sinais de insatisfação, identificados por um filtro de palavras-chave — base para os futuros insights de IA desta página</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
                     <div class="relative no-print shrink-0">
-                        <button onclick="toggleExportMenu(event, 'menuNpsDestaques')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                        <button onclick="toggleExportMenu(event, 'menuNpsDestaques')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-sm font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
                             <i data-lucide="download" class="w-3.5 h-3.5"></i>
                             Exportar como...
                             <i data-lucide="chevron-down" class="w-3 h-3"></i>
                         </button>
                         <div id="menuNpsDestaques" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
-                            <button onclick="exportSectionAsPdf('cardNpsDestaques','NPS_Destaques_Atencao')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                            <button onclick="exportSectionAsPdf('cardNpsDestaques','NPS_Destaques_Atencao')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
                                 <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
                             </button>
-                            <button onclick="exportSectionAsJpeg('cardNpsDestaques','NPS_Destaques_Atencao')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                            <button onclick="exportSectionAsJpeg('cardNpsDestaques','NPS_Destaques_Atencao')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
                                 <i data-lucide="image" class="w-3.5 h-3.5 text-teal-600"></i> Exportar como JPEG
                             </button>
                         </div>
                     </div>
-                    <span class="text-xs text-slate-400 font-medium" id="npsDestaquesCountLabel">0 destaque(s)</span>
+                    <span class="text-sm text-slate-600 font-medium" id="npsDestaquesCountLabel">0 destaque(s)</span>
                 </div>
             </div>
             <!-- `export-expand` = na exportação em imagem esta caixa precisa crescer
@@ -801,30 +802,30 @@
                         <i data-lucide="file-text" class="w-5 h-5 text-teal-600"></i>
                         Avaliações Detalhadas (Base para Envio à Clínica)
                     </h3>
-                    <p class="text-xs text-slate-500">Filtre por clínica e período acima para gerar o relatório de NPS individual daquela unidade</p>
+                    <p class="text-sm text-slate-700">Filtre por clínica e período acima para gerar o relatório de NPS individual daquela unidade</p>
                 </div>
                 <div class="relative no-print shrink-0">
-                    <button onclick="toggleExportMenu(event, 'menuNpsTable')" class="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-bold rounded-lg flex items-center gap-1.5 transition shadow-sm whitespace-nowrap">
+                    <button onclick="toggleExportMenu(event, 'menuNpsTable')" class="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-lg flex items-center gap-1.5 transition shadow-sm whitespace-nowrap">
                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
                         Exportar como...
                         <i data-lucide="chevron-down" class="w-3 h-3"></i>
                     </button>
                     <div id="menuNpsTable" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
-                        <button onclick="exportNpsAsSpreadsheet()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                        <button onclick="exportNpsAsSpreadsheet()" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
                             <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i> Exportar como Planilha
                         </button>
-                        <button onclick="exportNpsAsCSV()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
-                            <i data-lucide="file-type" class="w-3.5 h-3.5 text-slate-500"></i> Exportar como CSV
+                        <button onclick="exportNpsAsCSV()" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                            <i data-lucide="file-type" class="w-3.5 h-3.5 text-slate-700"></i> Exportar como CSV
                         </button>
-                        <button onclick="exportNpsAsPdf()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                        <button onclick="exportNpsAsPdf()" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
                             <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
                         </button>
                     </div>
                 </div>
             </div>
             <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left text-xs text-slate-700">
-                    <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200">
+                <table class="w-full text-left text-sm text-slate-700">
+                    <thead class="bg-slate-100 text-slate-600 uppercase text-sm tracking-wider border-b border-slate-200">
                         <tr>
                             <th class="p-3">Paciente</th>
                             <th class="p-3">Telefone</th>
@@ -841,14 +842,14 @@
                 </table>
             </div>
 
-            <div class="flex items-center justify-between pt-2 text-xs text-slate-500 font-medium no-print">
+            <div class="flex items-center justify-between pt-2 text-sm text-slate-700 font-medium no-print">
                 <span id="npsPaginationInfo">Mostrando 0 de 0 avaliações</span>
                 <div class="flex gap-2">
                     <button id="npsPrevPageBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 disabled:opacity-40 border border-slate-200">Anterior</button>
                     <button id="npsNextPageBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 disabled:opacity-40 border border-slate-200">Próximo</button>
                 </div>
             </div>
-            <p class="hidden print:block text-[11px] text-slate-500 font-medium pt-2" id="npsPrintCount"></p>
+            <p class="hidden print:block text-sm text-slate-700 font-medium pt-2" id="npsPrintCount"></p>
         </div>
 
         </div>
@@ -868,7 +869,7 @@
                     </div>
                     <div>
                         <h2 class="text-lg font-bold text-slate-900 tracking-tight">Pendências de Faturamento</h2>
-                        <p class="text-xs text-slate-500">Cirurgias já realizadas cujo campo de trava (lock) ainda está vazio — ou seja, ainda não foram reportadas/pagas no relatório financeiro mensal da clínica</p>
+                        <p class="text-sm text-slate-700">Cirurgias já realizadas cujo campo de trava (lock) ainda está vazio — ou seja, ainda não foram reportadas/pagas no relatório financeiro mensal da clínica</p>
                     </div>
                 </div>
             </div>
@@ -876,12 +877,12 @@
             <!-- Faturamento: Filtros (fixos logo abaixo da navegação de páginas) -->
             <div class="white-card rounded-2xl p-3 space-y-2 border-amber-200 sticky z-30" style="top: calc(var(--header-h, 0px) + var(--tabnav-h, 0px));">
                 <div class="flex flex-wrap items-center justify-between gap-2">
-                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                         <i data-lucide="filter" class="w-3.5 h-3.5 text-amber-600"></i>
                         Filtros de Pendências
                     </h3>
                     <div class="flex items-center gap-2 no-print">
-                        <div class="flex items-center gap-1.5 text-[11px] text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-medium">
+                        <div class="flex items-center gap-1.5 text-sm text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-medium">
                             <i data-lucide="database" class="w-3 h-3 text-amber-600"></i>
                             <span id="faturamentoCountLabel">0 pendência(s) no filtro</span>
                         </div>
@@ -890,19 +891,19 @@
 
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <div>
-                        <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Clínica</label>
+                        <label class="block text-sm font-semibold text-slate-700 mb-0.5">Clínica</label>
                         <div class="multi-select relative" id="faturamentoFilterClinic" data-placeholder="Todas as Clínicas" data-accent="amber" data-onchange="applyFaturamentoFilters"></div>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Especialidade</label>
+                        <label class="block text-sm font-semibold text-slate-700 mb-0.5">Especialidade</label>
                         <div class="multi-select relative" id="faturamentoFilterSurgery" data-placeholder="Todas as Especialidades" data-accent="amber" data-onchange="applyFaturamentoFilters"></div>
                     </div>
                     <div class="col-span-2 sm:col-span-2">
-                        <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Período (Cirurgia Realizada)</label>
+                        <label class="block text-sm font-semibold text-slate-700 mb-0.5">Período (Cirurgia Realizada)</label>
                         <div class="flex items-center gap-1">
-                            <input type="date" id="faturamentoDateStart" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-[11px] rounded-lg p-1.5 focus:ring-2 focus:ring-amber-500 focus:bg-white outline-none transition">
-                            <span class="text-slate-400 text-[10px]">até</span>
-                            <input type="date" id="faturamentoDateEnd" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-[11px] rounded-lg p-1.5 focus:ring-2 focus:ring-amber-500 focus:bg-white outline-none transition">
+                            <input type="date" id="faturamentoDateStart" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-amber-500 focus:bg-white outline-none transition">
+                            <span class="text-slate-600 text-sm shrink-0">até</span>
+                            <input type="date" id="faturamentoDateEnd" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-amber-500 focus:bg-white outline-none transition">
                         </div>
                     </div>
                 </div>
@@ -916,30 +917,30 @@
                             <i data-lucide="clipboard-list" class="w-5 h-5 text-amber-600"></i>
                             Cirurgias Realizadas e Ainda Não Reportadas/Pagas
                         </h3>
-                        <p class="text-xs text-slate-500">Cada linha é um procedimento (1º ou 2º olho) com status "realizou" cuja aba correspondente ainda não tem o campo de trava preenchido</p>
+                        <p class="text-sm text-slate-700">Cada linha é um procedimento (1º ou 2º olho) com status "realizou" cuja aba correspondente ainda não tem o campo de trava preenchido</p>
                     </div>
                     <div class="relative no-print shrink-0">
-                        <button onclick="toggleExportMenu(event, 'menuFaturamento')" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold rounded-lg flex items-center gap-1.5 transition shadow-sm whitespace-nowrap">
+                        <button onclick="toggleExportMenu(event, 'menuFaturamento')" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold rounded-lg flex items-center gap-1.5 transition shadow-sm whitespace-nowrap">
                             <i data-lucide="download" class="w-3.5 h-3.5"></i>
                             Exportar como...
                             <i data-lucide="chevron-down" class="w-3 h-3"></i>
                         </button>
                         <div id="menuFaturamento" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
-                            <button onclick="exportFaturamentoAsSpreadsheet()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                            <button onclick="exportFaturamentoAsSpreadsheet()" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
                                 <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i> Exportar como Planilha
                             </button>
-                            <button onclick="exportFaturamentoAsCSV()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
-                                <i data-lucide="file-type" class="w-3.5 h-3.5 text-slate-500"></i> Exportar como CSV
+                            <button onclick="exportFaturamentoAsCSV()" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                                <i data-lucide="file-type" class="w-3.5 h-3.5 text-slate-700"></i> Exportar como CSV
                             </button>
-                            <button onclick="exportFaturamentoAsPdf()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                            <button onclick="exportFaturamentoAsPdf()" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
                                 <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
                             </button>
                         </div>
                     </div>
                 </div>
                 <div class="overflow-x-auto custom-scrollbar">
-                    <table class="w-full text-left text-xs text-slate-700">
-                        <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200">
+                    <table class="w-full text-left text-sm text-slate-700">
+                        <thead class="bg-slate-100 text-slate-600 uppercase text-sm tracking-wider border-b border-slate-200">
                             <tr>
                                 <th class="p-3">ID</th>
                                 <th class="p-3">Paciente</th>
@@ -956,14 +957,14 @@
                     </table>
                 </div>
 
-                <div class="flex items-center justify-between pt-2 text-xs text-slate-500 font-medium no-print">
+                <div class="flex items-center justify-between pt-2 text-sm text-slate-700 font-medium no-print">
                     <span id="faturamentoPaginationInfo">Mostrando 0 de 0 pendências</span>
                     <div class="flex gap-2">
                         <button id="faturamentoPrevPageBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 disabled:opacity-40 border border-slate-200">Anterior</button>
                         <button id="faturamentoNextPageBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 disabled:opacity-40 border border-slate-200">Próximo</button>
                     </div>
                 </div>
-                <p class="hidden print:block text-[11px] text-slate-500 font-medium pt-2" id="faturamentoPrintCount"></p>
+                <p class="hidden print:block text-sm text-slate-700 font-medium pt-2" id="faturamentoPrintCount"></p>
             </div>
 
         </div>
@@ -977,12 +978,12 @@
         <!-- Ganho Potencial: Filtros (fixos logo abaixo da navegação de páginas) -->
         <div class="white-card rounded-2xl p-3 space-y-2 border-emerald-200 sticky z-30" style="top: calc(var(--header-h, 0px) + var(--tabnav-h, 0px));">
             <div class="flex flex-wrap items-center justify-between gap-2">
-                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                     <i data-lucide="filter" class="w-3.5 h-3.5 text-emerald-600"></i>
                     Filtros de Potencial de Ganho
                 </h3>
                 <div class="flex items-center gap-2 no-print">
-                    <div class="flex items-center gap-1.5 text-[11px] text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-medium">
+                    <div class="flex items-center gap-1.5 text-sm text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-medium">
                         <i data-lucide="database" class="w-3 h-3 text-emerald-600"></i>
                         <span id="ganhoCountLabel">0 paciente(s) no filtro</span>
                     </div>
@@ -991,25 +992,25 @@
 
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <div>
-                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Clínica</label>
+                    <label class="block text-sm font-semibold text-slate-700 mb-0.5">Clínica</label>
                     <div class="multi-select relative" id="ganhoFilterClinic" data-placeholder="Todas as Clínicas" data-accent="emerald" data-onchange="applyGanhoFilters"></div>
                 </div>
                 <div>
-                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Especialidade</label>
+                    <label class="block text-sm font-semibold text-slate-700 mb-0.5">Especialidade</label>
                     <div class="multi-select relative" id="ganhoFilterSurgery" data-placeholder="Todas as Especialidades" data-accent="emerald" data-onchange="applyGanhoFilters"></div>
                 </div>
                 <div>
-                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Status da Jornada</label>
-                    <select id="ganhoFilterStatus" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-1.5 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition">
+                    <label class="block text-sm font-semibold text-slate-700 mb-0.5">Status da Jornada</label>
+                    <select id="ganhoFilterStatus" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition">
                         <option value="">Todos</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Período (Consulta)</label>
+                    <label class="block text-sm font-semibold text-slate-700 mb-0.5">Período (Consulta)</label>
                     <div class="flex items-center gap-1">
-                        <input type="date" id="ganhoDateStart" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-[11px] rounded-lg p-1.5 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition">
-                        <span class="text-slate-400 text-[10px]">até</span>
-                        <input type="date" id="ganhoDateEnd" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-[11px] rounded-lg p-1.5 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition">
+                        <input type="date" id="ganhoDateStart" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition">
+                        <span class="text-slate-600 text-sm shrink-0">até</span>
+                        <input type="date" id="ganhoDateEnd" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition">
                     </div>
                 </div>
             </div>
@@ -1024,20 +1025,20 @@
                     </div>
                     <div>
                         <h3 class="text-base font-bold text-slate-900">Potencial de Ganho Cirúrgico</h3>
-                        <p class="text-xs text-slate-500">Pacientes que ainda podem converter em cirurgia, multiplicados pelo valor base configurado abaixo</p>
+                        <p class="text-sm text-slate-700">Pacientes que ainda podem converter em cirurgia, multiplicados pelo valor base configurado abaixo</p>
                     </div>
                 </div>
                 <div class="relative no-print">
-                    <button onclick="toggleExportMenu(event, 'menuGanhoCards')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-[11px] font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                    <button onclick="toggleExportMenu(event, 'menuGanhoCards')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-sm font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
                         Exportar como...
                         <i data-lucide="chevron-down" class="w-3 h-3"></i>
                     </button>
                     <div id="menuGanhoCards" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
-                        <button onclick="exportSectionAsPdf('cardGanhoCards','Potencial_Ganho_Cirurgico')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                        <button onclick="exportSectionAsPdf('cardGanhoCards','Potencial_Ganho_Cirurgico')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
                             <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
                         </button>
-                        <button onclick="exportSectionAsJpeg('cardGanhoCards','Potencial_Ganho_Cirurgico')" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                        <button onclick="exportSectionAsJpeg('cardGanhoCards','Potencial_Ganho_Cirurgico')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
                             <i data-lucide="image" class="w-3.5 h-3.5 text-indigo-500"></i> Exportar como JPEG
                         </button>
                     </div>
@@ -1058,28 +1059,28 @@
                         <i data-lucide="search" class="w-5 h-5 text-emerald-600"></i>
                         Pacientes Potenciais para Operar
                     </h3>
-                    <p class="text-xs text-slate-500">Pacientes convertíveis do filtro atual — ainda não realizaram a cirurgia e não estão sem indicação</p>
+                    <p class="text-sm text-slate-700">Pacientes convertíveis do filtro atual — ainda não realizaram a cirurgia e não estão sem indicação</p>
                 </div>
                 <div class="flex items-center gap-2 no-print">
                     <div class="relative w-full sm:w-72">
                         <input type="text" id="ganhoPatientSearch" placeholder="Buscar paciente, médico ou obs..."
-                            class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl pl-9 pr-4 py-2 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none">
-                        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                            class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl pl-9 pr-4 py-2 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-600 absolute left-3 top-2.5"></i>
                     </div>
                     <div class="relative">
-                        <button onclick="toggleExportMenu(event, 'menuGanhoPatientList')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg flex items-center gap-1.5 transition shadow-sm whitespace-nowrap">
+                        <button onclick="toggleExportMenu(event, 'menuGanhoPatientList')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg flex items-center gap-1.5 transition shadow-sm whitespace-nowrap">
                             <i data-lucide="download" class="w-3.5 h-3.5"></i>
                             Exportar como...
                             <i data-lucide="chevron-down" class="w-3 h-3"></i>
                         </button>
                         <div id="menuGanhoPatientList" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
-                            <button onclick="exportGanhoPatientsAsSpreadsheet()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                            <button onclick="exportGanhoPatientsAsSpreadsheet()" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
                                 <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i> Exportar como Planilha
                             </button>
-                            <button onclick="exportGanhoPatientsAsCSV()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
-                                <i data-lucide="file-type" class="w-3.5 h-3.5 text-slate-500"></i> Exportar como CSV
+                            <button onclick="exportGanhoPatientsAsCSV()" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                                <i data-lucide="file-type" class="w-3.5 h-3.5 text-slate-700"></i> Exportar como CSV
                             </button>
-                            <button onclick="exportGanhoPatientsAsPdf()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                            <button onclick="exportGanhoPatientsAsPdf()" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
                                 <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
                             </button>
                         </div>
@@ -1088,8 +1089,8 @@
             </div>
 
             <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left text-xs text-slate-700">
-                    <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200">
+                <table class="w-full text-left text-sm text-slate-700">
+                    <thead class="bg-slate-100 text-slate-600 uppercase text-sm tracking-wider border-b border-slate-200">
                         <tr>
                             <th class="p-3">ID / Paciente</th>
                             <th class="p-3">Data da Consulta</th>
@@ -1106,14 +1107,14 @@
                 </table>
             </div>
 
-            <div class="flex items-center justify-between pt-2 text-xs text-slate-500 font-medium no-print">
+            <div class="flex items-center justify-between pt-2 text-sm text-slate-700 font-medium no-print">
                 <span id="ganhoPatientPaginationInfo">Mostrando 0 de 0 pacientes</span>
                 <div class="flex gap-2">
                     <button id="ganhoPatientPrevPageBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 disabled:opacity-40 border border-slate-200">Anterior</button>
                     <button id="ganhoPatientNextPageBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 disabled:opacity-40 border border-slate-200">Próximo</button>
                 </div>
             </div>
-            <p class="hidden print:block text-[11px] text-slate-500 font-medium pt-2" id="ganhoPatientPrintCount"></p>
+            <p class="hidden print:block text-sm text-slate-700 font-medium pt-2" id="ganhoPatientPrintCount"></p>
         </div>
 
         <!-- Ganho Potencial: Configuração de Valor Base (tabela — fica fora do Imprimir Painel) -->
@@ -1124,30 +1125,30 @@
                         <i data-lucide="settings" class="w-5 h-5 text-emerald-600"></i>
                         Configuração de Valor Base
                     </h3>
-                    <p class="text-xs text-slate-500">Valor da cirurgia por clínica e especialidade (cada clínica pode cobrar um valor diferente) — salvo neste navegador</p>
+                    <p class="text-sm text-slate-700">Valor da cirurgia por clínica e especialidade (cada clínica pode cobrar um valor diferente) — salvo neste navegador</p>
                 </div>
                 <div class="relative no-print shrink-0">
-                    <button onclick="toggleExportMenu(event, 'menuValorBase')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg flex items-center gap-1.5 transition shadow-sm whitespace-nowrap">
+                    <button onclick="toggleExportMenu(event, 'menuValorBase')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg flex items-center gap-1.5 transition shadow-sm whitespace-nowrap">
                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
                         Exportar como...
                         <i data-lucide="chevron-down" class="w-3 h-3"></i>
                     </button>
                     <div id="menuValorBase" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
-                        <button onclick="exportValorBaseAsSpreadsheet()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                        <button onclick="exportValorBaseAsSpreadsheet()" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
                             <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i> Exportar como Planilha
                         </button>
-                        <button onclick="exportValorBaseAsCSV()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
-                            <i data-lucide="file-type" class="w-3.5 h-3.5 text-slate-500"></i> Exportar como CSV
+                        <button onclick="exportValorBaseAsCSV()" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                            <i data-lucide="file-type" class="w-3.5 h-3.5 text-slate-700"></i> Exportar como CSV
                         </button>
-                        <button onclick="exportValorBaseAsPdf()" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                        <button onclick="exportValorBaseAsPdf()" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
                             <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
                         </button>
                     </div>
                 </div>
             </div>
             <div class="overflow-x-auto custom-scrollbar max-h-[420px] overflow-y-auto export-expand">
-                <table class="w-full text-left text-xs text-slate-700">
-                    <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200 sticky top-0">
+                <table class="w-full text-left text-sm text-slate-700">
+                    <thead class="bg-slate-100 text-slate-600 uppercase text-sm tracking-wider border-b border-slate-200 sticky top-0">
                         <tr>
                             <th class="p-3">Clínica</th>
                             <th class="p-3">Valor Base (R$)</th>
@@ -1568,17 +1569,17 @@
 
             tbody.innerHTML = pageData.map(rec => `
                 <tr class="hover:bg-slate-50 transition">
-                    <td class="p-3 text-slate-500 text-[11px] font-semibold whitespace-nowrap">${escapeHtml(rec.id) || '-'}</td>
+                    <td class="p-3 text-slate-700 text-sm font-semibold whitespace-nowrap">${escapeHtml(rec.id) || '-'}</td>
                     <td class="p-3 font-bold text-slate-900">${escapeHtml(rec.paciente)}</td>
-                    <td class="p-3 text-slate-700 text-[11px] font-medium">${escapeHtml(rec.clinica)}</td>
-                    <td class="p-3 text-slate-700 text-[11px] font-medium">${escapeHtml(rec.especialidade)}</td>
+                    <td class="p-3 text-slate-700 text-sm font-medium">${escapeHtml(rec.clinica)}</td>
+                    <td class="p-3 text-slate-700 text-sm font-medium">${escapeHtml(rec.especialidade)}</td>
                     <td class="p-3">
                         <span class="badge-pill bg-amber-100 text-amber-800 border-amber-300">${rec.procedimento}</span>
                     </td>
                     <td class="p-3 text-slate-600 font-medium">${rec.data ? rec.data.toLocaleDateString('pt-BR') : '-'}</td>
-                    <td class="p-3 text-slate-600 text-[11px] font-medium">${escapeHtml(rec.medico)}</td>
+                    <td class="p-3 text-slate-600 text-sm font-medium">${escapeHtml(rec.medico)}</td>
                 </tr>
-            `).join('') || '<tr><td colspan="7" class="p-4 text-center text-slate-400">Nenhuma pendência de faturamento encontrada no filtro atual.</td></tr>';
+            `).join('') || '<tr><td colspan="7" class="p-4 text-center text-slate-600">Nenhuma pendência de faturamento encontrada no filtro atual.</td></tr>';
 
             document.getElementById('faturamentoPrintCount').textContent = `Relatório com ${p.totalRecords} pendência(s) — filtro atual aplicado no momento da exportação.`;
 
@@ -1754,12 +1755,12 @@
         function renderGanhoResumoCard(totalConvertiveis, totalGanho, totalSemPreco) {
             return `
                 <div class="col-span-full p-4 rounded-xl border border-emerald-300 bg-emerald-50 space-y-2">
-                    <div class="flex items-center gap-2 text-xs font-bold text-emerald-800">
+                    <div class="flex items-center gap-2 text-sm font-bold text-emerald-800">
                         <i data-lucide="circle-dollar-sign" class="w-4 h-4"></i>
                         GANHO POTENCIAL TOTAL — TODAS AS ESPECIALIDADES NO FILTRO ATUAL
                     </div>
                     <div class="text-3xl font-extrabold text-emerald-700">${formatBRL(totalGanho)}</div>
-                    <p class="text-[11px] text-slate-500 font-medium">${totalConvertiveis} paciente(s) convertível(is) no filtro atual${totalSemPreco > 0 ? ` — ${totalSemPreco} ainda sem valor base configurado` : ''}.</p>
+                    <p class="text-sm text-slate-700 font-medium">${totalConvertiveis} paciente(s) convertível(is) no filtro atual${totalSemPreco > 0 ? ` — ${totalSemPreco} ainda sem valor base configurado` : ''}.</p>
                 </div>
             `;
         }
@@ -1772,18 +1773,18 @@
             return `
                 <div class="p-4 rounded-xl border border-${accent}-200 bg-${accent}-50/40 flex flex-col justify-between space-y-2">
                     <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2 text-xs font-bold text-${accent}-800">
+                        <div class="flex items-center gap-2 text-sm font-bold text-${accent}-800">
                             <i data-lucide="stethoscope" class="w-4 h-4"></i>
                             ${escapeHtml(especialidade.toUpperCase())}
                         </div>
-                        ${smallSample ? `<span class="text-[9px] font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full whitespace-nowrap">AMOSTRA PEQUENA</span>` : ''}
+                        ${smallSample ? `<span class="text-sm font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full whitespace-nowrap">AMOSTRA PEQUENA</span>` : ''}
                     </div>
                     <div class="text-sm text-slate-700 space-y-1">
                         <p>Total de Pacientes: <strong>${st.total}</strong></p>
                         <p>Total de Cirurgias Realizadas: <strong>${st.realizada}</strong></p>
                         <p>Pacientes Convertíveis: <strong>${st.convertiveis}</strong></p>
                         <p>Valor Médio da Cirurgia: <strong>${formatBRL(valorMedio)}</strong></p>
-                        ${st.semPreco > 0 ? `<p class="text-amber-700 text-xs">${st.semPreco} paciente(s) sem valor base configurado (não somados ao ganho abaixo).</p>` : ''}
+                        ${st.semPreco > 0 ? `<p class="text-amber-700 text-sm">${st.semPreco} paciente(s) sem valor base configurado (não somados ao ganho abaixo).</p>` : ''}
                     </div>
                     <div class="pt-2 border-t border-${accent}-200/60">
                         <p class="text-sm font-extrabold text-${accent}-800">GANHO POTENCIAL: ${formatBRL(st.ganhoPotencial)}</p>
@@ -1812,7 +1813,7 @@
 
             let html = renderGanhoResumoCard(totalConvertiveis, totalGanho, totalSemPreco);
             html += entries.map(([especialidade, st], idx) => renderGanhoEspecialidadeCard(especialidade, st, idx)).join('');
-            container.innerHTML = html || '<p class="col-span-full text-xs text-slate-400 text-center py-4">Nenhum paciente no filtro atual.</p>';
+            container.innerHTML = html || '<p class="col-span-full text-sm text-slate-600 text-center py-4">Nenhum paciente no filtro atual.</p>';
             lucide.createIcons();
         }
 
@@ -1851,7 +1852,7 @@
             const especialidades = sortedEspecialidades(combos);
 
             if (especialidades.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="2" class="p-4 text-center text-slate-400">Nenhum paciente no filtro atual.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="2" class="p-4 text-center text-slate-600">Nenhum paciente no filtro atual.</td></tr>';
                 return;
             }
 
@@ -1861,10 +1862,10 @@
                 const header = `
                     <tr class="bg-slate-100 hover:bg-slate-200 cursor-pointer transition" data-toggle-especialidade="${escapeHtml(especialidade)}">
                         <td colspan="2" class="p-2">
-                            <div class="flex items-center gap-1.5 font-bold text-slate-800 text-[11px] uppercase tracking-wide">
+                            <div class="flex items-center gap-1.5 font-bold text-slate-800 text-sm uppercase tracking-wide">
                                 <i data-lucide="chevron-${isOpen ? 'down' : 'right'}" class="w-3.5 h-3.5"></i>
                                 ${escapeHtml(especialidade)}
-                                <span class="text-slate-400 font-normal normal-case">(${clinicas.length} clínica${clinicas.length !== 1 ? 's' : ''})</span>
+                                <span class="text-slate-600 font-normal normal-case">(${clinicas.length} clínica${clinicas.length !== 1 ? 's' : ''})</span>
                             </div>
                         </td>
                     </tr>
@@ -1873,12 +1874,12 @@
                     const valor = getValorBase(clinica, especialidade);
                     return `
                         <tr class="hover:bg-slate-50 transition">
-                            <td class="p-3 text-slate-700 text-[11px] font-medium">${escapeHtml(clinica)}</td>
+                            <td class="p-3 text-slate-700 text-sm font-medium">${escapeHtml(clinica)}</td>
                             <td class="p-3">
                                 <div class="flex items-center gap-1">
-                                    <span class="text-slate-400 text-[11px]">R$</span>
+                                    <span class="text-slate-600 text-sm">R$</span>
                                     <input type="text" inputmode="decimal"
-                                        class="valor-base-input w-28 bg-slate-50 border border-slate-300 rounded-lg p-1.5 text-xs focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition"
+                                        class="valor-base-input w-28 bg-slate-50 border border-slate-300 rounded-lg p-1.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition"
                                         data-clinica="${escapeHtml(clinica)}" data-especialidade="${escapeHtml(especialidade)}"
                                         value="${valor !== null ? valor : ''}" placeholder="0,00">
                                 </div>
@@ -1986,20 +1987,20 @@
                 };
 
                 root.innerHTML = `
-                    <button type="button" class="ms-toggle w-full flex items-center justify-between gap-1 bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-1.5 text-left hover:bg-white focus:ring-2 ${accent.ring} outline-none transition">
+                    <button type="button" class="ms-toggle w-full flex items-center justify-between gap-1 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 text-left hover:bg-white focus:ring-2 ${accent.ring} outline-none transition">
                         <span class="ms-label truncate">${escapeHtml(placeholder)}</span>
-                        <i data-lucide="chevron-down" class="w-3 h-3 shrink-0 text-slate-400"></i>
+                        <i data-lucide="chevron-down" class="w-3 h-3 shrink-0 text-slate-600"></i>
                     </button>
                     <div class="ms-panel hidden absolute left-0 right-0 mt-1 min-w-[220px] bg-white rounded-xl shadow-xl border border-slate-200 z-50">
                         <div class="p-1.5 border-b border-slate-100 space-y-1.5">
-                            <input type="text" class="ms-search w-full bg-slate-50 border border-slate-200 text-slate-700 text-[11px] rounded-md px-2 py-1 focus:ring-2 ${accent.ring} focus:bg-white outline-none" placeholder="Buscar...">
+                            <input type="text" class="ms-search w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-md px-2 py-1 focus:ring-2 ${accent.ring} focus:bg-white outline-none" placeholder="Buscar...">
                             <div class="flex items-center gap-1">
-                                <button type="button" class="ms-all flex-1 px-2 py-1 text-[10px] font-bold rounded-md bg-slate-100 hover:bg-slate-200 border border-slate-200 ${accent.text} transition">Selecionar todas</button>
-                                <button type="button" class="ms-clear flex-1 px-2 py-1 text-[10px] font-bold rounded-md bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 transition">Limpar</button>
+                                <button type="button" class="ms-all flex-1 px-2 py-1 text-sm font-bold rounded-md bg-slate-100 hover:bg-slate-200 border border-slate-200 ${accent.text} transition">Selecionar todas</button>
+                                <button type="button" class="ms-clear flex-1 px-2 py-1 text-sm font-bold rounded-md bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 transition">Limpar</button>
                             </div>
                         </div>
                         <div class="ms-options max-h-52 overflow-y-auto custom-scrollbar p-1"></div>
-                        <p class="ms-empty hidden px-2.5 py-2 text-[11px] text-slate-400 font-medium"></p>
+                        <p class="ms-empty hidden px-2.5 py-2 text-sm text-slate-600 font-medium"></p>
                     </div>
                 `;
 
@@ -2063,7 +2064,7 @@
             root.querySelector('.ms-options').innerHTML = visible.map(({ value, idx }) => `
                 <label class="flex items-start gap-2 px-2 py-1 rounded-md hover:bg-slate-50 cursor-pointer">
                     <input type="checkbox" data-idx="${idx}" class="ms-cb mt-0.5 w-3.5 h-3.5 shrink-0 rounded border-slate-300 ${st.accent.check}" ${st.selected.has(value) ? 'checked' : ''}>
-                    <span class="text-[11px] font-medium text-slate-700 leading-snug">${escapeHtml(value)}</span>
+                    <span class="text-sm font-medium text-slate-700 leading-snug">${escapeHtml(value)}</span>
                 </label>
             `).join('');
 
@@ -2081,7 +2082,7 @@
 
             if (n === 0) {
                 label.textContent = st.placeholder;
-                label.className = 'ms-label truncate text-slate-500';
+                label.className = 'ms-label truncate text-slate-700';
             } else if (n === 1) {
                 label.textContent = Array.from(st.selected)[0];
                 label.className = 'ms-label truncate font-semibold text-slate-800';
@@ -2399,6 +2400,121 @@
             return found ? TIER_ORDER[SPECIALTY_RULES[found].tier] : 3;
         }
 
+        // ================================================================
+        // ORDEM "PLUG AND PLAY" — do lead mais quente pro mais frio (2026-08-26)
+        // ----------------------------------------------------------------
+        // Pedido do usuário: o responsável da clínica abre a Lista Detalhada dos Pacientes
+        // (na tela e no arquivo baixado) e percorre de cima pra baixo, resolvendo primeiro
+        // o que converte mais rápido e deixando os casos demorados pro fim. A régua tem 3
+        // camadas, nesta ordem de precedência (confirmada com o usuário em 2026-08-26):
+        //   1) STATUS do procedimento ATIVO (ver getActiveProcedureSlot) — a lista de 1 a 8
+        //      abaixo. Manda em tudo: a lista fica organizada pela AÇÃO a tomar.
+        //   2) ATRASADO antes de EM ANDAMENTO dentro do mesmo status (regra explícita do
+        //      usuário para os grupos 1 a 4).
+        //   3) ESPECIALIDADE, como desempate — primárias > secundárias > terciárias, e com
+        //      ordem definida DENTRO de cada nível (ver SPECIALTY_PRIORITY_ORDER).
+        // Repare que os grupos 5/6 ("já operou") ficam ABAIXO de "sem status": quem já
+        // operou converteu; o que sobra ali é acompanhamento, não uma cirurgia a fechar.
+        // ================================================================
+
+        // Grupos 1 a 4 e 7/8 saem direto do código de status. Os grupos 5 e 6 não têm código
+        // próprio (os dois são "CIRURGIA_REALIZOU_*") — quem os separa é a regra do 2º olho,
+        // em getConversionPriorityRank() logo abaixo.
+        const CONVERSION_PRIORITY_RANK = {
+            AGUARDANDO_CLINICA_AGENDAR: 1,          // indicação dada, só falta a clínica marcar
+            CIRURGIA_AGENDOU: 2,                    // já marcada — clínica confirma ou reagenda
+            EXAMES_OFT_AGENDADOS: 3,
+            EXAMES_OFT_PENDENTE: 3,
+            EXAMES_CLINICO_AGENDADOS: 3,
+            EXAMES_CLINICO_PENDENTE: 3,
+            EXAMES_REALIZOU_PENDENTE_RETORNO: 3,
+            // "Aguardando retorno" e "sem status" dividem o MESMO rank (ajuste do usuário em
+            // 2026-08-26, depois de a 1ª versão tê-los separado em 4 e 5): com ou sem data,
+            // os dois são igualmente detratores da conversão — não se sabe onde o paciente
+            // está e ninguém avançou o caso. Aqui eles empatam e caem no desempate por
+            // especialidade, em vez de "aguardando retorno" ganhar de "sem status".
+            AGUARDANDO_RETORNO: 4,
+            VAZIO: 4,
+            ENCERROU_DESISTIU: 7,                   // reversível, mas o mais frio dos ativos
+            ENCERROU_SEM_INDICACAO: 8               // motivo clínico real — sem conversão
+        };
+        const CONVERSION_RANK_SEGUNDO_OLHO = 5;     // catarata que operou o 1º olho e nem acionou o 2º
+        const CONVERSION_RANK_JA_OPEROU = 6;        // demais casos já operados (nada em aberto a cobrar)
+        const CONVERSION_RANK_DESCONHECIDO = 9;     // status fora da lista oficial do Farol — vai pro fim
+
+        // Ordem completa de especialidade. O NÍVEL (primária/secundária/terciária) já existe
+        // em SPECIALTY_RULES, mas a ordem DENTRO do nível é uma régua nova e NÃO bate com a
+        // ordem de declaração daquele objeto (ex.: pterígio vem antes de calázio, estrabismo
+        // antes de glaucoma), por isso precisa ser explícita aqui em vez de derivada dele.
+        // Especialidade fora da lista ("outras") vai por último, dentro das terciárias.
+        const SPECIALTY_PRIORITY_ORDER = [
+            'CATARATA', 'REFRATIVA', 'BLEFAROPLASTIA', 'RETINA',
+            'CAPSULOTOMIA', 'PTERIGIO', 'CALAZIO', 'CONSULTA OFTALMOLOGICA',
+            'ESTRABISMO', 'GLAUCOMA', 'CERATOCONE', 'CORNEA'
+        ];
+        function getSpecialtyPriorityOrder(especialidade) {
+            const key = normalizeSpecialtyKey(especialidade);
+            const idx = SPECIALTY_PRIORITY_ORDER.findIndex(k => key.includes(k));
+            return idx === -1 ? SPECIALTY_PRIORITY_ORDER.length : idx;
+        }
+
+        // Camada 1 da régua: em qual dos 9 grupos o paciente cai.
+        function getConversionPriorityRank(item) {
+            const slot = getActiveProcedureSlot(item);
+            const direct = CONVERSION_PRIORITY_RANK[slot.code];
+            if (direct) return direct;
+            if (slot.code === 'CIRURGIA_REALIZOU_1' || slot.code === 'CIRURGIA_REALIZOU_2') {
+                // Só chega aqui quem já operou o procedimento ATIVO. Se a 2ª aba estivesse em
+                // andamento ela seria a ativa e o paciente teria caído nos grupos 1 a 4 acima
+                // (decisão do usuário em 2026-08-26: um 2º olho atrasado é lead quente e sobe
+                // pro topo, não desce pro grupo 6).
+                const especialidade = getItemProp(item, SURGERY_ALIASES);
+                return needsSecondEyeFollowUp(item, especialidade)
+                    ? CONVERSION_RANK_SEGUNDO_OLHO
+                    : CONVERSION_RANK_JA_OPEROU;
+            }
+            return CONVERSION_RANK_DESCONHECIDO;
+        }
+
+        // Camada 2: atrasado (0) antes de vence hoje (1), depois em andamento (2) e por último
+        // quem não tem data de gargalo (3) — status resolvido ou sem prazo a cobrar.
+        function getConversionDueBucket(diff) {
+            if (diff === null) return 3;
+            if (diff < 0) return 0;
+            if (diff === 0) return 1;
+            return 2;
+        }
+
+        // Ordena do lead mais quente pro mais frio. Devolve um array NOVO (não mexe na base
+        // filtrada). Usada pela Lista Detalhada de Pacientes — tela e exportação juntas,
+        // WYSIWYG como o resto do painel.
+        function sortByConversionPriority(items) {
+            return items
+                .map(item => {
+                    const diff = getJourneyDueDiffDays(item);
+                    return {
+                        item,
+                        rank: getConversionPriorityRank(item),
+                        bucket: getConversionDueBucket(diff),
+                        // Dentro do mesmo balde: mais atrasado primeiro (diff mais negativo) e,
+                        // entre os futuros, o que vence antes. `diff` crescente resolve os dois.
+                        diff: diff === null ? Number.POSITIVE_INFINITY : diff,
+                        especialidade: getSpecialtyPriorityOrder(getItemProp(item, SURGERY_ALIASES)),
+                        nome: getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente'])
+                    };
+                })
+                .sort((a, b) =>
+                    a.rank - b.rank
+                    || a.bucket - b.bucket
+                    || a.especialidade - b.especialidade
+                    || a.diff - b.diff
+                    // Nome só pra ordem ser estável/previsível entre dois pacientes idênticos
+                    // na régua — não é critério de prioridade.
+                    || a.nome.localeCompare(b.nome, 'pt-BR')
+                )
+                .map(entry => entry.item);
+        }
+
         function buildGroupStats(data) {
             const stats = {
                 total: data.length, semStatus: 0, exames: 0,
@@ -2528,7 +2644,7 @@
             ];
             return `
                 <div class="p-4 rounded-xl border border-slate-300 bg-slate-50 space-y-3">
-                    <div class="flex items-center gap-2 text-xs font-bold text-slate-800">
+                    <div class="flex items-center gap-2 text-sm font-bold text-slate-800">
                         <i data-lucide="globe" class="w-4 h-4"></i>
                         RESUMO GERAL — TODAS AS ESPECIALIDADES (${stats.total} pacientes no filtro atual)
                     </div>
@@ -2536,12 +2652,12 @@
                         ${cells.map(([label, val, color]) => `
                             <div>
                                 <div class="text-lg font-extrabold text-${color}-700">${val}</div>
-                                <div class="text-[10px] text-slate-500 font-semibold">${label} (${pct(val)}%)</div>
+                                <div class="text-sm text-slate-700 font-semibold">${label} (${pct(val)}%)</div>
                             </div>
                         `).join('')}
                     </div>
                     ${stats.realizada !== stats.realizadaPacientes ? `
-                        <p class="text-[10px] text-slate-500 italic">"Realizada" soma cada cirurgia (1º e 2º olho contam separadamente) — baseado em ${stats.realizadaPacientes} paciente(s) distinto(s) no filtro atual. Por isso um mesmo paciente pode somar tanto em "Realizada" quanto em outra coluna (ex.: já operou o 1º olho e está com o 2º agendado).</p>
+                        <p class="text-sm text-slate-700 italic">"Realizada" soma cada cirurgia (1º e 2º olho contam separadamente) — baseado em ${stats.realizadaPacientes} paciente(s) distinto(s) no filtro atual. Por isso um mesmo paciente pode somar tanto em "Realizada" quanto em outra coluna (ex.: já operou o 1º olho e está com o 2º agendado).</p>
                     ` : ''}
                 </div>
             `;
@@ -2708,7 +2824,7 @@
             // literal "Aguardando agendamento de cirurgia" (não só "Agendamento") por pedido
             // do usuário — deixa claro que não é a consulta, é a cirurgia que está pendente
             // de marcação; junto com "cirurgia vencida" são os itens mais quentes do funil.
-            const pillClass = 'inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-800';
+            const pillClass = 'inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-2.5 py-1 text-sm font-semibold text-slate-800';
             // Semáforo de urgência pedido pelo usuário em 2026-08-12: verde = dentro do
             // prazo/não vencido, amarelo = vencido há menos de 5 dias, vermelho vivo =
             // vencido há 5+ dias — pra clínica bater o olho e saber o que é prioridade.
@@ -2756,20 +2872,20 @@
                                 ${sp.label.toUpperCase()}
                             </div>
                             <span class="text-sm font-bold text-slate-700">${stats.total} pac.</span>
-                            ${smallSample ? `<span class="inline-flex items-center rounded-full bg-slate-200 px-2.5 py-1 text-xs font-bold text-slate-700 whitespace-nowrap">AMOSTRA PEQUENA</span>` : ''}
-                            ${!expanded && hotCount > 0 ? `<span class="inline-flex items-center gap-1 rounded-full bg-rose-100 border border-rose-300 px-2.5 py-1 text-xs font-bold text-rose-800 whitespace-nowrap">🚨 ${hotCount} pronto${hotCount > 1 ? 's' : ''} p/ fechar</span>` : ''}
+                            ${smallSample ? `<span class="inline-flex items-center rounded-full bg-slate-200 px-2.5 py-1 text-sm font-bold text-slate-700 whitespace-nowrap">AMOSTRA PEQUENA</span>` : ''}
+                            ${!expanded && hotCount > 0 ? `<span class="inline-flex items-center gap-1 rounded-full bg-rose-100 border border-rose-300 px-2.5 py-1 text-sm font-bold text-rose-800 whitespace-nowrap">🚨 ${hotCount} pronto${hotCount > 1 ? 's' : ''} p/ fechar</span>` : ''}
                         </div>
                         <i data-lucide="chevron-down" class="w-5 h-5 text-${sp.accent}-700 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}"></i>
                     </button>
                     ${expanded ? `
                         <div class="px-4 pb-4 space-y-3 border-t border-${sp.accent}-200/60">
-                            ${smallSample ? '<p class="text-xs text-slate-600 italic pt-3">Amostra pequena — percentuais podem não ser representativos.</p>' : ''}
+                            ${smallSample ? '<p class="text-sm text-slate-600 italic pt-3">Amostra pequena — percentuais podem não ser representativos.</p>' : ''}
                             ${bannerHtml ? `<div class="pt-3">${bannerHtml}</div>` : ''}
 
                             ${pills.length > 0 ? `<div class="flex flex-wrap gap-2 pt-1">${pills.join('')}</div>` : ''}
 
                             <div class="pt-2 border-t border-${sp.accent}-200/60">
-                                <div class="text-xs font-extrabold text-slate-700 uppercase tracking-wide mb-2">Plano de Ação Imediato</div>
+                                <div class="text-sm font-extrabold text-slate-700 uppercase tracking-wide mb-2">Plano de Ação Imediato</div>
                                 ${recomendacoes.length === 0 ? `
                                     <p class="text-sm text-emerald-800 font-semibold flex items-center gap-1.5">
                                         <i data-lucide="check-circle-2" class="w-4 h-4"></i>
@@ -2784,7 +2900,7 @@
                                             <span class="text-base leading-none shrink-0" title="${r.priority}">${priorityMeta.emoji}</span>
                                             <div class="flex-1 min-w-0">
                                                 <div class="flex items-center gap-1.5 flex-wrap">
-                                                    <span class="px-2 py-0.5 rounded-full text-xs font-bold ${respMeta.badge} whitespace-nowrap">${respMeta.tag}</span>
+                                                    <span class="px-2 py-0.5 rounded-full text-sm font-bold ${respMeta.badge} whitespace-nowrap">${respMeta.tag}</span>
                                                     <span class="text-sm font-bold text-slate-900">${r.headline}</span>
                                                 </div>
                                                 <p class="text-sm text-slate-900 font-medium mt-0.5 leading-snug">↳ ${r.detail}</p>
@@ -2795,7 +2911,7 @@
                             </div>
 
                             ${(stats.conversionRate !== null || medianResult) ? `
-                                <div class="pt-2 border-t border-${sp.accent}-200/60 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600 font-semibold">
+                                <div class="pt-2 border-t border-${sp.accent}-200/60 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 font-semibold">
                                     ${stats.conversionRate !== null ? `<span>Conversão: <strong class="${conversionBelowTarget ? 'text-rose-700' : 'text-emerald-700'}">${stats.conversionRate}%</strong> ${conversionBelowTarget ? '(abaixo do esperado)' : '(dentro do esperado)'}</span>` : ''}
                                     ${medianResult ? `<span>Mediana 1ª cirurgia: <strong class="text-${slaInfo.color}-700">${medianResult.median}d</strong> (${slaInfo.label})</span>` : ''}
                                 </div>
@@ -2810,14 +2926,14 @@
             const result = computeMedianDaysToFirstSurgery(data);
             return `
                 <div class="p-4 rounded-xl border border-violet-200 bg-violet-50/50 space-y-2">
-                    <div class="flex items-center gap-2 text-xs font-bold text-violet-800">
+                    <div class="flex items-center gap-2 text-sm font-bold text-violet-800">
                         <i data-lucide="hourglass" class="w-4 h-4"></i>
                         MEDIANA GERAL: CONSULTA → 1ª CIRURGIA (TODAS AS ESPECIALIDADES)
                     </div>
                     ${result
                         ? `<div class="text-2xl font-extrabold text-violet-700">${result.median} dia(s)</div>
-                           <p class="text-[11px] text-slate-500 font-medium">Baseado em ${result.count} paciente(s) com cirurgia realizada e datas completas no filtro atual.</p>`
-                        : `<p class="text-xs text-slate-400">Sem dados suficientes (datas de consulta/cirurgia) no filtro atual.</p>`
+                           <p class="text-sm text-slate-700 font-medium">Baseado em ${result.count} paciente(s) com cirurgia realizada e datas completas no filtro atual.</p>`
+                        : `<p class="text-sm text-slate-600">Sem dados suficientes (datas de consulta/cirurgia) no filtro atual.</p>`
                     }
                 </div>
             `;
@@ -2863,7 +2979,7 @@
                 { name: '3. Fase de Exames', count: stats.exames, color: 'bg-amber-50 border-amber-200 text-amber-900', icon: 'file-clock' },
                 { name: '4. Aguardando Clínica', count: stats.aguardandoClinica, color: 'bg-rose-50 border-rose-200 text-rose-900', icon: 'alert-circle' },
                 { name: '5. Cirurgia Agendada', count: stats.agendada, color: 'bg-blue-50 border-blue-200 text-blue-900', icon: 'calendar-check' },
-                { name: '6. Cirurgia Realizada', count: stats.realizada, color: 'bg-emerald-50 border-emerald-200 text-emerald-900', icon: 'check-circle' },
+                { name: '6. Cirurgia Realizada', count: stats.realizada, color: 'bg-emerald-50 border-emerald-200 text-emerald-900', icon: 'check-circle', note: 'Conta cada olho/cirurgia, não cada paciente' },
                 { name: 'Desistiu', count: stats.desistiu, color: 'bg-slate-100 border-slate-200 text-slate-700', icon: 'x-circle' },
                 { name: 'Sem Indicação', count: stats.semIndicacao, color: 'bg-slate-100 border-slate-200 text-slate-700', icon: 'minus-circle' }
             ];
@@ -2872,12 +2988,13 @@
                 const pct = Math.round((s.count / total) * 100);
                 return `
                     <div class="p-3.5 rounded-xl border ${s.color} flex flex-col justify-between shadow-xs">
-                        <div class="flex items-center justify-between text-xs font-semibold mb-2">
+                        <div class="flex items-center justify-between text-sm font-semibold mb-2">
                             <span>${s.name}</span>
                         </div>
                         <div>
                             <div class="text-2xl font-extrabold text-slate-900">${s.count}</div>
-                            <div class="text-[10px] font-semibold opacity-75 mt-0.5">${pct}% do total</div>
+                            <div class="text-sm font-semibold mt-0.5">${pct}% do total</div>
+                            ${s.note ? `<div class="text-sm font-semibold mt-1 text-slate-700">${s.note}</div>` : ''}
                         </div>
                     </div>
                 `;
@@ -2930,15 +3047,15 @@
                 return `
                     <div class="flex items-center gap-3">
                         <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${color}"></span>
-                        <span class="text-xs font-semibold text-slate-700 flex-1 truncate" title="${escapeHtml(label)}">${escapeHtml(label)}</span>
-                        <span class="text-xs font-bold text-slate-900 w-10 text-right">${count}</span>
+                        <span class="text-sm font-semibold text-slate-700 flex-1 truncate" title="${escapeHtml(label)}">${escapeHtml(label)}</span>
+                        <span class="text-sm font-bold text-slate-900 w-12 text-right whitespace-nowrap">${count}</span>
                         <div class="w-24 h-1.5 rounded-full bg-slate-100 overflow-hidden shrink-0">
                             <div class="h-full rounded-full" style="width:${pct}%; background:${color}"></div>
                         </div>
-                        <span class="text-[11px] font-semibold text-slate-400 w-9 text-right">${pct}%</span>
+                        <span class="text-sm font-semibold text-slate-600 w-12 text-right whitespace-nowrap">${pct}%</span>
                     </div>
                 `;
-            }).join('') || '<p class="text-xs text-slate-400">Nenhum dado para exibir.</p>';
+            }).join('') || '<p class="text-sm text-slate-600">Nenhum dado para exibir.</p>';
 
             // Surgeries Chart
             const surgCounts = {};
@@ -3047,13 +3164,13 @@
         const CLINIC_SUMMARY_COLUMNS = [
             { key: 'name', label: 'Clínica Parceira', center: false, color: '' },
             { key: 'total', label: 'Total Pacientes', center: true, color: '' },
-            { key: 'semStatus', label: 'Sem Status', center: true, color: 'text-slate-500' },
+            { key: 'semStatus', label: 'Sem Status', center: true, color: 'text-slate-700' },
             { key: 'exames', label: 'Exames Pendentes', center: true, color: 'text-amber-700 font-bold' },
             { key: 'aguardando', label: 'Aguardando Clínica', center: true, color: 'text-rose-700 font-bold' },
             { key: 'agendadas', label: 'Cirurgia Agendada', center: true, color: 'text-blue-700 font-bold' },
             { key: 'realizadas', label: 'Cirurgia Realizada', center: true, color: 'text-emerald-700 font-bold' },
-            { key: 'desistiu', label: 'Desistiu', center: true, color: 'text-slate-500' },
-            { key: 'semIndicacao', label: 'Sem Indicação', center: true, color: 'text-slate-500' }
+            { key: 'desistiu', label: 'Desistiu', center: true, color: 'text-slate-700' },
+            { key: 'semIndicacao', label: 'Sem Indicação', center: true, color: 'text-slate-700' }
         ];
 
         // Ordenação padrão = maior volume total primeiro (comportamento original antes
@@ -3090,7 +3207,7 @@
                 const arrowColor = isActive ? 'text-indigo-600' : 'text-slate-300';
                 return `
                     <th class="p-3 ${col.center ? 'text-center' : ''} ${col.color} cursor-pointer select-none hover:bg-slate-200/70 transition" onclick="handleClinicSummarySort('${col.key}')" title="Ordenar por ${col.label}">
-                        <span class="inline-flex items-center gap-1 ${col.center ? 'justify-center' : ''}">${col.label}<span class="${arrowColor} text-[11px]">${arrow}</span></span>
+                        <span class="inline-flex items-center gap-1 ${col.center ? 'justify-center' : ''}">${col.label}<span class="${arrowColor} text-sm">${arrow}</span></span>
                     </th>
                 `;
             }).join('');
@@ -3105,13 +3222,13 @@
                 <tr class="hover:bg-slate-50 transition">
                     <td class="p-3 font-semibold text-slate-900">${escapeHtml(clinicName)}</td>
                     <td class="p-3 text-center font-bold text-slate-800">${counts.total}</td>
-                    <td class="p-3 text-center text-slate-500">${counts.semStatus}</td>
+                    <td class="p-3 text-center text-slate-700">${counts.semStatus}</td>
                     <td class="p-3 text-center text-amber-700 font-bold">${counts.exames}</td>
                     <td class="p-3 text-center text-rose-700 font-bold">${counts.aguardando}</td>
                     <td class="p-3 text-center text-blue-700 font-bold">${counts.agendadas}</td>
                     <td class="p-3 text-center text-emerald-700 font-bold">${counts.realizadas}</td>
-                    <td class="p-3 text-center text-slate-500">${counts.desistiu}</td>
-                    <td class="p-3 text-center text-slate-500">${counts.semIndicacao}</td>
+                    <td class="p-3 text-center text-slate-700">${counts.desistiu}</td>
+                    <td class="p-3 text-center text-slate-700">${counts.semIndicacao}</td>
                 </tr>
             `).join('');
         }
@@ -3144,9 +3261,14 @@
             return name.includes(search) || id.includes(search) || doc.includes(search) || obs.includes(search);
         }
 
+        // Fonte única da Lista Detalhada dos Pacientes: alimenta a tela (renderPatientTable)
+        // e as 3 exportações (xlsx colorido, CSV, PDF). A ordenação "plug and play" mora aqui
+        // justamente por isso — um lugar só garante que tela e arquivo saem na MESMA ordem
+        // (WYSIWYG, como o resto do painel). A Lista de Pacientes Potenciais do Ganho NÃO
+        // passa por aqui (usa ganhoFilteredData), então continua na ordem da planilha.
         function getSearchedPatientData() {
             const search = document.getElementById('tableSearch').value.toLowerCase();
-            return filteredData.filter(item => patientMatchesSearch(item, search));
+            return sortByConversionPriority(filteredData.filter(item => patientMatchesSearch(item, search)));
         }
 
         // Monta a "célula" de status+data (badge, cor, tags de atraso/observação) pra
@@ -3194,27 +3316,27 @@
                     // nível de atenção mais alto dos 3 estados.
                     badgeColor = 'bg-red-100 text-red-700 border-red-300';
                     journeyDateColor = 'text-red-600 font-bold';
-                    overdueTag = '<span class="ml-1 text-[9px] font-bold text-red-600 whitespace-nowrap">(atrasado)</span>';
+                    overdueTag = '<span class="ml-1 text-sm font-bold text-red-600 whitespace-nowrap">(atrasado)</span>';
                     dateStatusLabel = 'Atrasado';
                 } else if (dueDiffDays === 0) {
                     // Vence hoje: precisa de atualização ainda hoje, mas não é uma falha
                     // registrada como o atraso — laranja (intermediário) em vez de vermelho.
                     badgeColor = 'bg-orange-100 text-orange-800 border-orange-300';
                     journeyDateColor = 'text-orange-600 font-bold';
-                    overdueTag = '<span class="ml-1 text-[9px] font-bold text-orange-600 whitespace-nowrap">(necessário atualização)</span>';
+                    overdueTag = '<span class="ml-1 text-sm font-bold text-orange-600 whitespace-nowrap">(necessário atualização)</span>';
                     dateStatusLabel = 'Necessário atualização';
                 } else {
                     // Futura: dentro do prazo, só sinaliza que o caso está em andamento —
                     // mantém a cor padrão do badge de status (ex.: azul de cirurgia agendada).
                     journeyDateColor = 'text-sky-600 font-bold';
-                    overdueTag = '<span class="ml-1 text-[9px] font-bold text-sky-500 whitespace-nowrap">(em andamento)</span>';
+                    overdueTag = '<span class="ml-1 text-sm font-bold text-sky-500 whitespace-nowrap">(em andamento)</span>';
                     dateStatusLabel = 'Em andamento';
                 }
             }
 
             // Regra de negócio: desistência sem motivo registrado precisa ficar visível
             const semMotivoTag = (group === 'ENCERROU_DESISTIU' && !obsStr)
-                ? '<span class="ml-1 text-[9px] font-bold text-rose-600 whitespace-nowrap">(sem motivo registrado)</span>'
+                ? '<span class="ml-1 text-sm font-bold text-rose-600 whitespace-nowrap">(sem motivo registrado)</span>'
                 : '';
 
             // "group" volta junto pra quem precisa colorir a célula de status na exportação
@@ -3238,7 +3360,7 @@
             statusStr: 'Potencial 2º olho (ainda não agendado)',
             statusRaw: 'Potencial 2º olho (ainda não agendado)',
             badgeColor: 'bg-violet-100 text-violet-800 border-violet-300',
-            journeyDateStr: '-', journeyDateColor: 'text-slate-400 font-medium',
+            journeyDateStr: '-', journeyDateColor: 'text-slate-600 font-medium',
             overdueTag: '', semMotivoTag: '', dateStatusLabel: 'Potencial',
             group: 'SEGUNDO_OLHO_POTENCIAL', date: null
         };
@@ -3284,7 +3406,7 @@
                     <span class="badge-pill ${cell.badgeColor}">
                         ${cell.statusStr}
                     </span>${cell.semMotivoTag}
-                    <div class="${cell.journeyDateColor} text-[11px] mt-1">${cell.journeyDateStr}${cell.overdueTag}</div>
+                    <div class="${cell.journeyDateColor} text-sm mt-1">${cell.journeyDateStr}${cell.overdueTag}</div>
                 </td>
             `;
         }
@@ -3309,15 +3431,15 @@
             const identityTds = `
                 <td class="p-3">
                     <div class="font-bold text-slate-900">${escapeHtml(nameStr)}</div>
-                    <div class="text-[10px] text-slate-400 font-semibold">ID: ${escapeHtml(idStr) || '-'}</div>
-                    ${telefoneStr ? `<div class="text-[10px] text-slate-500 font-medium">${escapeHtml(telefoneStr)}</div>` : ''}
-                    ${nascStr ? `<div class="text-[10px] text-slate-400 font-medium">Nasc.: ${nascStr}</div>` : ''}
+                    <div class="text-sm text-slate-600 font-semibold">ID: ${escapeHtml(idStr) || '-'}</div>
+                    ${telefoneStr ? `<div class="text-sm text-slate-700 font-medium">${escapeHtml(telefoneStr)}</div>` : ''}
+                    ${nascStr ? `<div class="text-sm text-slate-600 font-medium">Nasc.: ${nascStr}</div>` : ''}
                 </td>
                 <td class="p-3 text-slate-600 font-medium">${escapeHtml(dataStr) || '-'}</td>
                 <td class="p-3 font-semibold text-indigo-700">${escapeHtml(surgStr) || '-'}</td>
-                <td class="p-3 text-slate-700 text-[11px] font-medium">${escapeHtml(clinicStr) || '-'}</td>
+                <td class="p-3 text-slate-700 text-sm font-medium">${escapeHtml(clinicStr) || '-'}</td>
             `;
-            const medicoTd = `<td class="p-3 text-slate-600 text-[11px] font-medium">${escapeHtml(docStr) || '-'}</td>`;
+            const medicoTd = `<td class="p-3 text-slate-600 text-sm font-medium">${escapeHtml(docStr) || '-'}</td>`;
 
             // Pedido do usuário em 2026-08-18: com as colunas "1º/2º Procedimento" cobrindo
             // as 2 abas separadamente, a antiga coluna única "Status da Jornada"/"Data" (aba
@@ -3336,7 +3458,7 @@
                             ${statusStr}
                         </span>${semMotivoTag}
                     </td>
-                    <td class="p-3 ${journeyDateColor} text-[11px]">${journeyDateStr}${overdueTag}</td>
+                    <td class="p-3 ${journeyDateColor} text-sm">${journeyDateStr}${overdueTag}</td>
                     ${medicoTd}
                 `;
             }
@@ -3387,7 +3509,7 @@
             const p = paginate(getSearchedGanhoPatientData(), ganhoPatientCurrentPage, pageSize, exportAll);
             ganhoPatientCurrentPage = p.page;
 
-            tbody.innerHTML = p.pageData.map(buildPatientRowHtml).join('') || '<tr><td colspan="7" class="p-4 text-center text-slate-400">Nenhum paciente convertível no filtro atual.</td></tr>';
+            tbody.innerHTML = p.pageData.map(buildPatientRowHtml).join('') || '<tr><td colspan="7" class="p-4 text-center text-slate-600">Nenhum paciente convertível no filtro atual.</td></tr>';
 
             document.getElementById('ganhoPatientPrintCount').textContent = `Relatório com ${p.totalRecords} paciente(s) convertível(is) — filtro atual aplicado no momento da exportação.`;
 
@@ -3850,7 +3972,7 @@
                 const color = pct >= 90 ? 'emerald' : pct >= 70 ? 'amber' : 'rose';
                 return `
                     <div class="p-4 rounded-xl border border-${color}-200 bg-${color}-50/40 space-y-2">
-                        <div class="flex items-center gap-2 text-xs font-bold text-${color}-800">
+                        <div class="flex items-center gap-2 text-sm font-bold text-${color}-800">
                             <i data-lucide="${cat.icon}" class="w-3.5 h-3.5"></i>
                             ${cat.label}
                         </div>
@@ -3858,7 +3980,7 @@
                         <div class="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
                             <div class="h-full rounded-full bg-${color}-500" style="width:${pct}%"></div>
                         </div>
-                        <p class="text-[10px] text-slate-500 font-medium">Marcaram "Gostei"</p>
+                        <p class="text-sm text-slate-700 font-medium">Marcaram "Gostei"</p>
                     </div>
                 `;
             }).join('');
@@ -3942,7 +4064,7 @@
             document.getElementById('npsDestaquesCountLabel').textContent = `${highlights.length} destaque(s)`;
 
             if (highlights.length === 0) {
-                container.innerHTML = '<p class="text-xs text-slate-400 text-center py-6">Nenhum destaque negativo encontrado no filtro atual.</p>';
+                container.innerHTML = '<p class="text-sm text-slate-600 text-center py-6">Nenhum destaque negativo encontrado no filtro atual.</p>';
                 return;
             }
 
@@ -3957,10 +4079,10 @@
 
                 const tags = [];
                 if (h.isDetrator) {
-                    tags.push(`<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300 whitespace-nowrap">DETRATOR (nota ${h.nota})</span>`);
+                    tags.push(`<span class="px-2 py-0.5 rounded-full text-sm font-bold bg-rose-100 text-rose-800 border border-rose-300 whitespace-nowrap">DETRATOR (nota ${h.nota})</span>`);
                 }
                 h.keywords.forEach(kw => {
-                    tags.push(`<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 whitespace-nowrap">"${escapeHtml(kw)}"</span>`);
+                    tags.push(`<span class="px-2 py-0.5 rounded-full text-sm font-bold bg-amber-100 text-amber-800 border border-amber-300 whitespace-nowrap">"${escapeHtml(kw)}"</span>`);
                 });
 
                 // O comentário é o que dá contexto para acionar o paciente, então recebe
@@ -3969,34 +4091,34 @@
                 // paciente marcou como "não gostei" — é o detalhe acionável disponível.
                 const blocoComentario = comentario
                     ? `<div class="mt-2 pt-2 border-t border-rose-200/70">
-                           <p class="text-[10px] font-bold text-rose-700 uppercase tracking-wider mb-1 flex items-center gap-1">
+                           <p class="text-sm font-bold text-rose-700 uppercase tracking-wider mb-1 flex items-center gap-1">
                                <i data-lucide="message-square-quote" class="w-3 h-3"></i> Comentário do paciente
                            </p>
-                           <p class="text-xs text-slate-800 italic leading-relaxed">"${escapeHtml(comentario)}"</p>
+                           <p class="text-sm text-slate-800 italic leading-relaxed">"${escapeHtml(comentario)}"</p>
                        </div>`
                     : (negativas.length
                         ? `<div class="mt-2 pt-2 border-t border-rose-200/70">
-                               <p class="text-[11px] text-slate-600">
+                               <p class="text-sm text-slate-600">
                                    <span class="font-bold text-rose-700">Não gostou de:</span> ${escapeHtml(negativas.join(' · '))}
                                </p>
-                               <p class="text-[10px] text-slate-400 mt-0.5">Esta planilha não traz campo de comentário — detalhe vindo das avaliações por categoria.</p>
+                               <p class="text-sm text-slate-600 mt-0.5">Esta planilha não traz campo de comentário — detalhe vindo das avaliações por categoria.</p>
                            </div>`
                         : '');
 
                 return `
                     <div class="p-3 rounded-xl border border-rose-200 bg-rose-50/40">
                         <div class="flex flex-wrap items-start justify-between gap-2">
-                            <div class="text-xs">
+                            <div class="text-sm">
                                 <span class="font-bold text-slate-900">${escapeHtml(nome)}</span>
-                                ${telefone ? `<span class="ml-2 inline-flex items-center gap-1 text-[11px] font-semibold text-slate-700 bg-white px-2 py-0.5 rounded-md border border-slate-200 whitespace-nowrap"><i data-lucide="phone" class="w-3 h-3 text-rose-600"></i>${escapeHtml(telefone)}</span>` : ''}
-                                <div class="text-slate-500 mt-1">${escapeHtml(clinica || 'Sem Clínica')}${medico ? ' · ' + escapeHtml(medico) : ''}</div>
+                                ${telefone ? `<span class="ml-2 inline-flex items-center gap-1 text-sm font-semibold text-slate-700 bg-white px-2 py-0.5 rounded-md border border-slate-200 whitespace-nowrap"><i data-lucide="phone" class="w-3 h-3 text-rose-600"></i>${escapeHtml(telefone)}</span>` : ''}
+                                <div class="text-slate-700 mt-1">${escapeHtml(clinica || 'Sem Clínica')}${medico ? ' · ' + escapeHtml(medico) : ''}</div>
                             </div>
                             <div class="flex flex-wrap gap-1.5">${tags.join('')}</div>
                         </div>
                         ${blocoComentario}
                     </div>
                 `;
-            }).join('') + (highlights.length > MAX_DESTAQUES ? `<p class="text-[11px] text-slate-400 text-center pt-2">Mostrando ${MAX_DESTAQUES} de ${highlights.length} destaques.</p>` : '');
+            }).join('') + (highlights.length > MAX_DESTAQUES ? `<p class="text-sm text-slate-600 text-center pt-2">Mostrando ${MAX_DESTAQUES} de ${highlights.length} destaques.</p>` : '');
 
             // Os ícones novos (telefone/comentário) só aparecem depois disto
             lucide.createIcons();
@@ -4027,9 +4149,9 @@
                 return `
                     <tr class="hover:bg-slate-50 transition">
                         <td class="p-3 font-bold text-slate-900">${escapeHtml(nome)}</td>
-                        <td class="p-3 text-slate-700 text-[11px] font-medium whitespace-nowrap">${escapeHtml(telefone) || '-'}</td>
-                        <td class="p-3 text-slate-700 text-[11px] font-medium">${escapeHtml(clinica) || '-'}</td>
-                        <td class="p-3 text-slate-600 text-[11px] font-medium">${escapeHtml(medico) || '-'}</td>
+                        <td class="p-3 text-slate-700 text-sm font-medium whitespace-nowrap">${escapeHtml(telefone) || '-'}</td>
+                        <td class="p-3 text-slate-700 text-sm font-medium">${escapeHtml(clinica) || '-'}</td>
+                        <td class="p-3 text-slate-600 text-sm font-medium">${escapeHtml(medico) || '-'}</td>
                         <td class="p-3 text-center">
                             <span class="badge-pill ${notaColor}">${nota !== null ? nota : '-'}</span>
                         </td>
@@ -4037,7 +4159,7 @@
                         <td class="p-3 text-slate-600 font-medium">${dAval ? dAval.toLocaleDateString('pt-BR') : '-'}</td>
                     </tr>
                 `;
-            }).join('') || '<tr><td colspan="7" class="p-4 text-center text-slate-400">Carregue a planilha de NPS para visualizar as avaliações.</td></tr>';
+            }).join('') || '<tr><td colspan="7" class="p-4 text-center text-slate-600">Carregue a planilha de NPS para visualizar as avaliações.</td></tr>';
 
             document.getElementById('npsPrintCount').textContent = `Relatório com ${p.totalRecords} avaliação(ões) — filtro atual aplicado no momento da exportação.`;
 
@@ -4058,7 +4180,7 @@
         };
 
         function updateTabNav() {
-            const base = 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2';
+            const base = 'px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2';
             document.getElementById('navTabConsultas').className = `${base} ${activeTab === 'consultas' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
             document.getElementById('navTabNps').className = `${base} ${activeTab === 'nps' ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
             document.getElementById('navTabFaturamento').className = `${base} ${activeTab === 'faturamento' ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
