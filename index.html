@@ -245,68 +245,78 @@
             </div>
         </div>
 
-        <!-- Metric KPI Cards Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+        <!-- Metric KPI Cards Grid
+             Estrutura fixa dos 6 cards (não quebrar): flex-col + título com altura
+             mínima de 2 linhas + legenda com `mt-auto`. É isso que mantém os SEIS
+             números na mesma linha do olho, independentemente de o título ou a
+             legenda ocuparem 1 ou 2 linhas. Premissa/ressalva NUNCA entra dentro do
+             card (empurra o número e desalinha a fileira) — vai no rodapé abaixo. -->
+        <div class="space-y-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 lg:grid-rows-[auto_auto_auto]">
             <!-- Total Compareceram -->
-            <div class="white-card rounded-2xl p-5 relative overflow-hidden group">
-                <div class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-1">Total Atendidos</div>
+            <div class="white-card rounded-2xl p-5 relative overflow-hidden group flex flex-col lg:grid lg:grid-rows-[subgrid] lg:row-span-3">
+                <div class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-1 min-h-[2.5rem]">Total Atendidos</div>
                 <div class="text-3xl font-extrabold text-slate-900" id="kpiTotal">0</div>
-                <div class="text-sm text-indigo-600 font-semibold mt-2 flex items-center gap-1">
-                    <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+                <div class="text-sm text-indigo-600 font-semibold mt-auto pt-2 flex items-center gap-1">
+                    <i data-lucide="check-circle-2" class="w-3.5 h-3.5 shrink-0"></i>
                     Pacientes em Acompanhamento
                 </div>
             </div>
 
             <!-- Sem Status / Aguardando Retorno (pior caso: não sabemos o status atual) -->
-            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-slate-300 bg-slate-100/60">
-                <div class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-1">Sem Status / Aguard. Retorno</div>
+            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-slate-300 bg-slate-100/60 flex flex-col lg:grid lg:grid-rows-[subgrid] lg:row-span-3">
+                <div class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-1 min-h-[2.5rem]">Sem Status / Aguard. Retorno</div>
                 <div class="text-3xl font-extrabold text-slate-700" id="kpiSemStatus">0</div>
-                <div class="text-sm text-slate-700 font-semibold mt-2 flex items-center gap-1">
-                    <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
+                <div class="text-sm text-slate-700 font-semibold mt-auto pt-2 flex items-center gap-1">
+                    <i data-lucide="help-circle" class="w-3.5 h-3.5 shrink-0"></i>
                     Não sabemos o status atual
                 </div>
             </div>
 
             <!-- Exames Pendentes -->
-            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-amber-200 bg-amber-50/30">
-                <div class="text-sm font-bold text-amber-800 uppercase tracking-wider mb-1">Fase de Exames</div>
+            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-amber-200 bg-amber-50/30 flex flex-col lg:grid lg:grid-rows-[subgrid] lg:row-span-3">
+                <div class="text-sm font-bold text-amber-800 uppercase tracking-wider mb-1 min-h-[2.5rem]">Fase de Exames</div>
                 <div class="text-3xl font-extrabold text-amber-600" id="kpiExams">0</div>
-                <div class="text-sm text-amber-700 font-semibold mt-2 flex items-center gap-1">
-                    <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                <div class="text-sm text-amber-700 font-semibold mt-auto pt-2 flex items-center gap-1">
+                    <i data-lucide="clock" class="w-3.5 h-3.5 shrink-0"></i>
                     Exames Pendentes / Agendados
                 </div>
             </div>
 
             <!-- Gargalo: Aguardando Clínica Agendar -->
-            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-rose-200 bg-rose-50/30">
-                <div class="text-sm font-bold text-rose-800 uppercase tracking-wider mb-1">Gargalo de Agendamento</div>
+            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-rose-200 bg-rose-50/30 flex flex-col lg:grid lg:grid-rows-[subgrid] lg:row-span-3">
+                <div class="text-sm font-bold text-rose-800 uppercase tracking-wider mb-1 min-h-[2.5rem]">Gargalo de Agendamento</div>
                 <div class="text-3xl font-extrabold text-rose-600" id="kpiAguardandoClinica">0</div>
-                <div class="text-sm text-rose-700 font-semibold mt-2 flex items-center gap-1">
-                    <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
+                <div class="text-sm text-rose-700 font-semibold mt-auto pt-2 flex items-center gap-1">
+                    <i data-lucide="alert-circle" class="w-3.5 h-3.5 shrink-0"></i>
                     Aguardando Clínica Agendar
                 </div>
             </div>
 
             <!-- Cirurgias Agendadas -->
-            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-blue-200 bg-blue-50/30">
-                <div class="text-sm font-bold text-blue-800 uppercase tracking-wider mb-1">Cirurgia Agendada</div>
+            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-blue-200 bg-blue-50/30 flex flex-col lg:grid lg:grid-rows-[subgrid] lg:row-span-3">
+                <div class="text-sm font-bold text-blue-800 uppercase tracking-wider mb-1 min-h-[2.5rem]">Cirurgia Agendada</div>
                 <div class="text-3xl font-extrabold text-blue-600" id="kpiAgendadas">0</div>
-                <div class="text-sm text-blue-700 font-semibold mt-2 flex items-center gap-1">
-                    <i data-lucide="calendar-check" class="w-3.5 h-3.5"></i>
+                <div class="text-sm text-blue-700 font-semibold mt-auto pt-2 flex items-center gap-1">
+                    <i data-lucide="calendar-check" class="w-3.5 h-3.5 shrink-0"></i>
                     Data Cirúrgica Confirmada
                 </div>
             </div>
 
             <!-- Cirurgia Realizada -->
-            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-emerald-200 bg-emerald-50/30">
-                <div class="text-sm font-bold text-emerald-800 uppercase tracking-wider mb-1">Cirurgia Realizada</div>
+            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-emerald-200 bg-emerald-50/30 flex flex-col lg:grid lg:grid-rows-[subgrid] lg:row-span-3">
+                <div class="text-sm font-bold text-emerald-800 uppercase tracking-wider mb-1 min-h-[2.5rem]">Cirurgia Realizada</div>
                 <div class="text-3xl font-extrabold text-emerald-600" id="kpiRealizadas">0</div>
-                <div class="text-sm text-emerald-700 font-semibold mt-2 flex items-center gap-1">
-                    <i data-lucide="award" class="w-3.5 h-3.5"></i>
-                    Sucesso (1º e 2º Olho contam separado)
+                <div class="text-sm text-emerald-700 font-semibold mt-auto pt-2 flex items-center gap-1">
+                    <i data-lucide="award" class="w-3.5 h-3.5 shrink-0"></i>
+                    Cirurgias Concluídas
                 </div>
-                <div class="text-sm text-emerald-600/80 font-medium mt-1" id="kpiRealizadasBase"></div>
             </div>
+        </div>
+
+        <!-- Rodapé de premissas da fileira de KPIs. Fica AQUI, fora dos cards, para
+             não empurrar o número de nenhum deles (era o que desalinhava a fileira). -->
+        <p class="text-sm text-slate-600 px-1" id="kpiRealizadasBase"></p>
         </div>
 
         <!-- SEÇÃO DE INSIGHTS ESTRATÉGICOS DA IA -->
@@ -1381,6 +1391,11 @@
         // O Farol acompanha até 5 procedimentos dentro da mesma consulta (abas 1 a 5).
         // "lock" = campo de trava: quando preenchido, a cirurgia daquela aba já foi
         // reportada no relatório financeiro mensal da clínica e o FEE já foi pago.
+        // As 5 abas fixas são as que os layouts antigos têm em coluna. O layout
+        // "1 linha = 1 procedimento" não tem esse teto — lá o limite é quantas
+        // linhas o paciente tem —, então ensureProcedureSlotCapacity() pode
+        // acrescentar abas 6, 7... em tempo de importação. Por isso nada aqui
+        // pode assumir que este array tem exatamente 5 itens.
         const PROCEDURE_SLOTS = [
             { date: ['agendamento_cirg_data_clinica_r'], status: ['agendamento_cirg_status_clinica'], obs: ['agendamento_cirg_obs'], lock: ['agendamento_cirg_data_clinica_lock'] },
             { date: ['agendamento_cirg_data_clinica_2', 'agendamento_cirg_data_clinica_r_2'], status: ['agendamento_cirg_status_clinica_2'], obs: ['agendamento_cirg_obs_2'], lock: ['agendamento_cirg_data_clinica_lock_2'] },
@@ -2335,9 +2350,12 @@
             document.getElementById('kpiAguardandoClinica').textContent = stats.aguardandoClinica.toLocaleString('pt-BR');
             document.getElementById('kpiAgendadas').textContent = stats.agendada.toLocaleString('pt-BR');
             document.getElementById('kpiRealizadas').textContent = stats.realizada.toLocaleString('pt-BR');
+            // A ressalva de "Cirurgia Realizada" mora no rodapé da fileira, não dentro
+            // do card — dentro dele, a linha extra empurrava o número e desalinhava
+            // esse card em relação aos outros cinco.
             document.getElementById('kpiRealizadasBase').textContent = stats.realizada !== stats.realizadaPacientes
-                ? `Baseado em ${stats.realizadaPacientes.toLocaleString('pt-BR')} paciente(s) no filtro atual`
-                : '';
+                ? `Cirurgia Realizada conta cada olho/cirurgia operado, não cada paciente: ${stats.realizada.toLocaleString('pt-BR')} cirurgias de ${stats.realizadaPacientes.toLocaleString('pt-BR')} paciente(s) no filtro atual.`
+                : 'Cirurgia Realizada conta cada olho/cirurgia operado, não cada paciente.';
         }
 
         // ================================================================
@@ -2979,7 +2997,11 @@
                 { name: '3. Fase de Exames', count: stats.exames, color: 'bg-amber-50 border-amber-200 text-amber-900', icon: 'file-clock' },
                 { name: '4. Aguardando Clínica', count: stats.aguardandoClinica, color: 'bg-rose-50 border-rose-200 text-rose-900', icon: 'alert-circle' },
                 { name: '5. Cirurgia Agendada', count: stats.agendada, color: 'bg-blue-50 border-blue-200 text-blue-900', icon: 'calendar-check' },
-                { name: '6. Cirurgia Realizada', count: stats.realizada, color: 'bg-emerald-50 border-emerald-200 text-emerald-900', icon: 'check-circle', note: 'Conta cada olho/cirurgia, não cada paciente' },
+                // Sem `note` de propósito: a ressalva de que este card conta cada
+                // olho/cirurgia já está no subtítulo do card `cardFunilStatus`. Dentro
+                // do quadradinho ela empurrava o número pra cima e desalinhava este
+                // card em relação aos outros sete — não reintroduzir aqui.
+                { name: '6. Cirurgia Realizada', count: stats.realizada, color: 'bg-emerald-50 border-emerald-200 text-emerald-900', icon: 'check-circle' },
                 { name: 'Desistiu', count: stats.desistiu, color: 'bg-slate-100 border-slate-200 text-slate-700', icon: 'x-circle' },
                 { name: 'Sem Indicação', count: stats.semIndicacao, color: 'bg-slate-100 border-slate-200 text-slate-700', icon: 'minus-circle' }
             ];
@@ -2987,14 +3009,11 @@
             container.innerHTML = stages.map(s => {
                 const pct = Math.round((s.count / total) * 100);
                 return `
-                    <div class="p-3.5 rounded-xl border ${s.color} flex flex-col justify-between shadow-xs">
-                        <div class="flex items-center justify-between text-sm font-semibold mb-2">
-                            <span>${s.name}</span>
-                        </div>
-                        <div>
+                    <div class="p-3.5 rounded-xl border ${s.color} flex flex-col shadow-xs">
+                        <div class="text-sm font-semibold min-h-[2.5rem]">${s.name}</div>
+                        <div class="mt-auto pt-2">
                             <div class="text-2xl font-extrabold text-slate-900">${s.count}</div>
                             <div class="text-sm font-semibold mt-0.5">${pct}% do total</div>
-                            ${s.note ? `<div class="text-sm font-semibold mt-1 text-slate-700">${s.note}</div>` : ''}
                         </div>
                     </div>
                 `;
@@ -3247,7 +3266,7 @@
         // Nem sempre vem na exportação do Farol — a tabela mostra "quando disponível".
         // 'clientes - clientes_id → clientes_birthday' é o mesmo padrão de header do
         // formato "completo" citado acima, pro campo de nascimento.
-        function getPatientNascimento(item) { return getItemProp(item, ['Data de Nascimento', 'Data Nascimento', 'data_nascimento', 'Nascimento', 'nascimento', 'Data Nasc', 'clientes - clientes_id → clientes_birthday']); }
+        function getPatientNascimento(item) { return getItemProp(item, ['Data de Nascimento', 'Data Nascimento', 'data_nascimento', 'Nascimento', 'nascimento', 'Data Nasc', 'clientes - clientes_id → clientes_birthday', 'Aniversário']); }
 
         // Extraído para função própria para ser reaproveitado pelas exportações
         // (planilha/csv/pdf) sem duplicar a regra de busca.
@@ -3554,6 +3573,170 @@
         // de campo, normalizamos os cabeçalhos alternativos para os nomes
         // canônicos já usados em todo o dashboard, uma única vez, na entrada.
         // ================================================================
+        // ================================================================
+        // LAYOUT "1 LINHA = 1 PROCEDIMENTO" (export novo do Metabase, 2026-09)
+        // ----------------------------------------------------------------
+        // Nos layouts antigos cada paciente ocupa UMA linha e os procedimentos
+        // ficam em colunas paralelas (Cirg data 1..5). Neste aqui é o contrário:
+        // cada PROCEDIMENTO é uma linha, então o mesmo paciente aparece 2x se
+        // operou os dois olhos. Em vez de espalhar essa diferença pelo painel
+        // inteiro, a planilha é "achatada" UMA VEZ no upload: agrupamos as
+        // linhas por consulta, ordenamos por data e preenchemos as abas 1..N
+        // que todo o resto do código (getProcedureSlots, getActiveProcedureSlot,
+        // faturamento, insights, exportações) já sabe ler. Nada downstream muda.
+        // ================================================================
+        const PROC_ROW_COLS = {
+            status: 'Situação Procedimento',
+            date: 'Data Procedimento',
+            obs: 'Obs Procedimento',
+            lock: 'Data Bloqueio' // trava da conferência financeira, agora por linha
+        };
+
+        // Colunas de data deste layout que assumimos mm/dd/aaaa quando a
+        // autodetecção não consegue decidir (ver normalizeTextDateColumns).
+        // 'Aniversário' fica FORA porque vem em dd/mm/aaaa — na planilha
+        // conferida é a única exceção do arquivo.
+        const PROC_ROW_MDY_COLUMNS = ['agendamento_data', 'Data Agendou', PROC_ROW_COLS.date, PROC_ROW_COLS.lock];
+
+        function isProcedureRowLayout(headers) {
+            return headers.includes(PROC_ROW_COLS.status) && headers.includes(PROC_ROW_COLS.date);
+        }
+
+        // O export traz a string literal "null" em toda célula vazia (nenhuma
+        // célula vem de fato em branco). Sem isso, "null" viraria um status
+        // desconhecido, um telefone, uma trava de faturamento preenchida, etc.
+        function stripNullPlaceholders(records) {
+            records.forEach(row => {
+                Object.keys(row).forEach(k => {
+                    const v = String(row[k] || '').trim();
+                    if (v.toLowerCase() === 'null') row[k] = '';
+                });
+            });
+        }
+
+        const DATE_TEXT_RE = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+
+        // Descobre se uma coluna de datas em TEXTO está em dd/mm ou mm/dd
+        // olhando a coluna inteira: um único valor com o 1º número > 12 só
+        // pode ser dia; um com o 2º > 12 só pode ser dia na 2ª posição.
+        function detectDateColumnOrder(values) {
+            let sawDayFirst = false, sawDaySecond = false, total = 0;
+            values.forEach(v => {
+                const m = DATE_TEXT_RE.exec(String(v === undefined || v === null ? '' : v).trim());
+                if (!m) return;
+                total++;
+                if (parseInt(m[1], 10) > 12) sawDayFirst = true;
+                if (parseInt(m[2], 10) > 12) sawDaySecond = true;
+            });
+            if (!total) return null;                              // não é coluna de data
+            if (sawDayFirst && sawDaySecond) return 'MIXED';      // coluna inconsistente
+            if (sawDayFirst) return 'DMY';
+            if (sawDaySecond) return 'MDY';
+            return 'AMBIGUOUS';                                   // todo dia e todo mês ≤ 12
+        }
+
+        // Converte para dd/mm/aaaa (o formato que parseFlexibleDate e todas as
+        // telas assumem) só as colunas detectadas como mm/dd/aaaa. Rodado
+        // APENAS no layout novo — nos layouts antigos as datas já são dd/mm e
+        // mexer nelas só criaria risco de regressão por um valor digitado errado.
+        function normalizeTextDateColumns(records, headers, mdyFallbackColumns) {
+            const inconsistent = [];
+            headers.forEach(h => {
+                if (!h) return;
+                const order = detectDateColumnOrder(records.map(r => r[h]));
+                if (!order || order === 'DMY') return;
+                if (order === 'MIXED') { inconsistent.push(h); return; }
+                if (order === 'AMBIGUOUS' && !mdyFallbackColumns.includes(h)) return;
+                records.forEach(r => {
+                    const m = DATE_TEXT_RE.exec(String(r[h] || '').trim());
+                    if (m) r[h] = `${m[2].padStart(2, '0')}/${m[1].padStart(2, '0')}/${m[3]}`;
+                });
+            });
+            return inconsistent;
+        }
+
+        // "635891.0" (como o ID sai num CSV) e 635891 (como sai num .xlsx) são
+        // o mesmo paciente — sem isso o mesmo ID viraria duas jornadas.
+        function normalizeFarolId(value) {
+            return String(value === undefined || value === null ? '' : value).trim().replace(/\.0+$/, '');
+        }
+
+        // Cria as definições de aba 6, 7, ... sob demanda. As 5 fixas existem
+        // porque o layout antigo tem exatamente 5 colunas; aqui o limite é o
+        // número de linhas do paciente, então truncar em 5 perderia cirurgia
+        // (e pendência de faturamento) em silêncio.
+        function ensureProcedureSlotCapacity(count) {
+            while (PROCEDURE_SLOTS.length < count) {
+                const n = PROCEDURE_SLOTS.length + 1;
+                PROCEDURE_SLOTS.push({
+                    date: [`agendamento_cirg_data_clinica_r_${n}`, `agendamento_cirg_data_clinica_${n}`],
+                    status: [`agendamento_cirg_status_clinica_${n}`],
+                    obs: [`agendamento_cirg_obs_${n}`],
+                    lock: [`agendamento_cirg_data_clinica_lock_${n}`]
+                });
+            }
+        }
+
+        // Chave da jornada = a CONSULTA, não só o paciente. Decisão do usuário
+        // em 2026-09-11: o mesmo ID Farol pode ter duas consultas distintas no
+        // período (caso real conferido: um ID com CATARATA numa clínica e
+        // RETINA em outra, dias diferentes). Agrupar só por ID fundiria as duas
+        // numa jornada só e misturaria a conversão cirúrgica de clínicas
+        // diferentes — exatamente o que não pode acontecer.
+        function buildConsultaKey(row) {
+            return [
+                normalizeFarolId(row.clientes_id),
+                String(row.agendamento_data || '').trim(),
+                String(row.especialidades || '').trim().toUpperCase(),
+                String(row.clinicas || '').trim().toUpperCase()
+            ].join(' :: '); // separador explícito: sem ele "1"+"23" e "12"+"3" colidiriam
+        }
+
+        function pivotProcedureRowsToSlots(records) {
+            const groups = new Map();
+            records.forEach((row, idx) => {
+                const key = buildConsultaKey(row);
+                if (!groups.has(key)) groups.set(key, []);
+                groups.get(key).push({ row, idx });
+            });
+
+            const out = [];
+            groups.forEach(entries => {
+                // As linhas NÃO vêm em ordem cronológica no export (conferido:
+                // um "CIRURGIA - AGENDOU" de setembro vinha antes do "REALIZOU
+                // 1º OLHO" de julho do mesmo paciente). Sem ordenar por data, a
+                // aba "ativa" — que alimenta status, atraso e gargalo em todo o
+                // painel — sairia errada. Empate de data (dois procedimentos no
+                // mesmo dia, ex.: facectomia + aplicação) mantém a ordem do arquivo.
+                entries.sort((a, b) => {
+                    const da = parseFlexibleDate(a.row[PROC_ROW_COLS.date]);
+                    const db = parseFlexibleDate(b.row[PROC_ROW_COLS.date]);
+                    if (da && db && da.getTime() !== db.getTime()) return da.getTime() - db.getTime();
+                    if (da && !db) return -1;
+                    if (!da && db) return 1;
+                    return a.idx - b.idx;
+                });
+
+                const base = { ...entries[0].row };
+                base.clientes_id = normalizeFarolId(base.clientes_id);
+                delete base[PROC_ROW_COLS.status];
+                delete base[PROC_ROW_COLS.date];
+                delete base[PROC_ROW_COLS.obs];
+                delete base[PROC_ROW_COLS.lock];
+
+                ensureProcedureSlotCapacity(entries.length);
+                entries.forEach(({ row }, i) => {
+                    const def = PROCEDURE_SLOTS[i];
+                    base[def.status[0]] = row[PROC_ROW_COLS.status] || '';
+                    base[def.date[0]] = row[PROC_ROW_COLS.date] || '';
+                    base[def.obs[0]] = row[PROC_ROW_COLS.obs] || '';
+                    base[def.lock[0]] = row[PROC_ROW_COLS.lock] || '';
+                });
+                out.push(base);
+            });
+            return out;
+        }
+
         const HEADER_ALIASES = {
             'Id paciente': 'clientes_id',
             'Paciente (nome)': 'clientes',
@@ -3575,7 +3758,24 @@
             'Cirg data 5 status': 'agendamento_cirg_status_clinica_5',
             'Médico': 'medicos',
             'Clínica': 'clinicas',
-            'Especialidade': 'especialidades'
+            'Especialidade': 'especialidades',
+
+            // --- Layout "1 linha = 1 procedimento" (export novo do Metabase) ---
+            // Só os campos de nível CONSULTA entram aqui. Os de nível
+            // PROCEDIMENTO (Situação/Data/Obs Procedimento e Data Bloqueio)
+            // ficam com o nome original de propósito: quem os consome é o
+            // pivô (pivotProcedureRowsToSlots), que os distribui nas abas
+            // 1..N que o resto do painel já sabe ler.
+            'ID Farol': 'clientes_id',
+            'Nome': 'clientes',
+            'Data Consulta': 'agendamento_data',
+            'Clínica Consulta': 'clinicas',
+            'Médico Consulta': 'medicos'
+            // 'Especialidade' já está mapeado acima (compartilhado com o NPS).
+            // 'Clinica Procedimento'/'Médico Procedimento' não têm alias: na
+            // planilha conferida eles são SEMPRE iguais aos da consulta
+            // (0 divergências em 358 linhas), então mapeá-los também só criaria
+            // ambiguidade sobre qual dos dois vence.
             // Colunas sem equivalente hoje no dashboard (Tipo de agendamento,
             // Hora da consulta, Segundo olho, Motivo falta, Data/Status da
             // cirurgia legados, Campanha, Telefones, Data do cadastro,
@@ -3636,7 +3836,21 @@
                     }
 
                     if (parsedRecords.length > 0) {
-                        rawData = parsedRecords;
+                        // Layout "1 linha = 1 procedimento": limpa os "null"
+                        // literais, acerta o formato das datas e achata as
+                        // linhas em abas de procedimento. A partir daqui o
+                        // registro tem exatamente a mesma forma dos layouts
+                        // antigos, então nada mais no painel precisa saber
+                        // de qual planilha ele veio.
+                        let records = parsedRecords;
+                        let dateWarnings = [];
+                        if (isProcedureRowLayout(headers)) {
+                            stripNullPlaceholders(records);
+                            dateWarnings = normalizeTextDateColumns(records, headers, PROC_ROW_MDY_COLUMNS);
+                            records = pivotProcedureRowsToSlots(records);
+                        }
+
+                        rawData = records;
                         filteredData = [...rawData];
                         populateFilterDropdowns();
                         updateDashboard();
@@ -3644,7 +3858,15 @@
                         applyFaturamentoFilters();
                         populateGanhoFilters();
                         applyGanhoFilters();
-                        alert(`Planilha carregada com sucesso! ${parsedRecords.length} registros importados.`);
+
+                        let msg = `Planilha carregada com sucesso! ${parsedRecords.length} linha(s) lida(s).`;
+                        if (records.length !== parsedRecords.length) {
+                            msg += `\n${records.length} consulta(s) após agrupar os procedimentos do mesmo paciente.`;
+                        }
+                        if (dateWarnings.length) {
+                            msg += `\n\n⚠️ Coluna(s) com datas em formato inconsistente (dd/mm e mm/dd misturados): ${dateWarnings.join(', ')}. Foram lidas como dd/mm/aaaa — confira essas datas.`;
+                        }
+                        alert(msg);
                     } else {
                         alert('Nenhum registro válido foi encontrado na planilha.');
                     }

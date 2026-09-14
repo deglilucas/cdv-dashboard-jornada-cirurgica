@@ -41,9 +41,14 @@ Também usa a planilha de Consultas. Estima quanto ainda dá para faturar com os
 Para as páginas de **Consultas, Faturamento e Potencial de Ganho** funcionarem corretamente, a exportação do Farol precisa ter:
 - Dados de identificação do paciente e o **status da jornada** preenchido (conforme a lista oficial de status do Farol)
 - Os **campos de data** correspondentes a cada status — não basta o status em si
-- As colunas de **todas as abas de procedimento** (até 5, usadas por exemplo para acompanhar o 2º olho de catarata e o faturamento) — mesmo que a maioria fique vazia, as colunas precisam existir na exportação
+- Os **procedimentos do paciente**, em um dos dois arranjos aceitos (ver abaixo)
 
-⚠️ O export "resumido" do Metabase (`busca-*.csv`) tem menos detalhe e não traz o campo de trava do faturamento nem as abas extras de procedimento — a página de Faturamento não funciona bem com esse formato (tudo aparece como pendente).
+Existem dois arranjos possíveis para os procedimentos, e o painel aceita os dois:
+
+- **Uma linha por paciente**, com os procedimentos em colunas paralelas (até 5 abas — usadas por exemplo para acompanhar o 2º olho de catarata e o faturamento). Mesmo que a maioria fique vazia, as colunas precisam existir na exportação.
+- **Uma linha por procedimento**, em que o mesmo paciente aparece em várias linhas (quem operou os dois olhos aparece duas vezes). Nesse arranjo as linhas são agrupadas e achatadas na importação, e o resto do cálculo é idêntico. Aqui não há teto de 5 procedimentos: o limite é quantas linhas o paciente tiver.
+
+⚠️ O export "resumido" (`busca-*.csv`) tem menos detalhe e não traz o campo de trava do faturamento nem as abas extras de procedimento — a página de Faturamento não funciona bem com esse formato (tudo aparece como pendente).
 
 ## Exportação
 
@@ -145,8 +150,13 @@ Quando o paciente já tem indicação cirúrgica, quem contata é a **clínica p
 ### Detalhes de implementação que fazem diferença
 
 - **Fonte única por lista.** Cada lista tem uma função que devolve os dados já filtrados e ordenados; tela e exportações consomem essa mesma função. É o que garante que o arquivo baixado seja idêntico ao que está na tela, inclusive na ordenação — a exportação ignora só a paginação, nunca o filtro.
-- **Mais de um layout de planilha.** Existem dois formatos de exportação em uso, com nomes de coluna diferentes. Um mapa de apelidos de cabeçalho normaliza tudo para nomes canônicos **na entrada** — a alternativa (espalhar candidatos de nome por cada função) vira dívida técnica rápido.
-- **Datas.** Podem chegar como texto `dd/mm/aaaa` **ou** como número de série do Excel, às vezes com fração de hora. O leitor precisa aceitar os dois.
+- **Mais de um layout de planilha.** Existem três formatos de exportação em uso, com nomes de coluna diferentes. Um mapa de apelidos de cabeçalho normaliza tudo para nomes canônicos **na entrada** — a alternativa (espalhar candidatos de nome por cada função) vira dívida técnica rápido.
+- **Normalizar o arranjo na entrada, não no cálculo.** No formato "uma linha por procedimento", a conversão para o formato interno (um registro por consulta, com os procedimentos em abas) acontece uma única vez na importação. Nenhuma regra de negócio precisa saber de qual arranjo o dado veio — é o que evita duas versões de cada cálculo.
+- **A chave do agrupamento é a consulta, não o paciente.** Ao agrupar linhas de procedimento, usar identificador do paciente **+ data da consulta + especialidade + clínica**. O mesmo paciente pode ter duas consultas diferentes no período (especialidades e unidades distintas); agrupar só pelo identificador funde as duas e mistura a conversão cirúrgica de unidades diferentes.
+- **A ordem das linhas não é confiável.** As linhas de procedimento podem vir fora de ordem cronológica. Ordenar por data do procedimento antes de montar as abas — senão o "procedimento ativo", que alimenta status, atraso e gargalo, sai errado. Dois procedimentos no mesmo dia são legítimos; nesse empate, manter a ordem do arquivo.
+- **Datas.** Podem chegar como texto `dd/mm/aaaa`, como texto `mm/dd/aaaa` **ou** como número de série do Excel, às vezes com fração de hora. O leitor precisa aceitar os três — e a ordem dia/mês pode variar **entre colunas do mesmo arquivo** (um export real traz a data de nascimento em `dd/mm` e todas as demais em `mm/dd`). Detectar coluna a coluna: um valor com o 1º número > 12 só pode ser dia; um com o 2º > 12 idem. Coluna ambígua (todo dia e todo mês ≤ 12) precisa de um padrão declarado por layout.
+- **Célula vazia nem sempre é vazia.** Um dos exports preenche toda célula sem valor com a string literal `null`. Sem limpar isso na entrada, vira status desconhecido, telefone e trava de faturamento "preenchida".
+- **Identificador com sufixo decimal.** O mesmo identificador pode chegar como `635891` (numérico) ou `635891.0` (texto, em CSV). Normalizar, senão o mesmo paciente vira dois.
 - **CSV.** Ler com UTF-8 explícito (senão corrompe acentos) e sem reinterpretação automática de tipos (senão datas de texto são lidas no padrão americano mês/dia e corrompem toda data com dia ≤ 12).
 
 ## Tecnologia
