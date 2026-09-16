@@ -25,7 +25,7 @@ Página principal — é aqui que você sobe a planilha de consultas. Mostra:
 - KPIs gerais (quantos pacientes em cada fase da jornada: exames, aguardando clínica, cirurgia agendada, realizada, etc.)
 - **Insights** com recomendações de ação priorizadas por especialidade (ex.: "cirurgia agendada com data vencida — reagendar com o paciente"). ⚠️ Não é uma IA de verdade — são regras fixas combinadas com a equipe, sem chamada a nenhum modelo.
 - Funil da jornada, gráficos de distribuição por status e por tipo de cirurgia, performance por clínica parceira
-- Lista detalhada de cada paciente (telefone, data de nascimento quando disponível, status atual e se está atrasado), **ordenada do caso mais quente para conversão ao mais frio** — a mesma ordem sai na planilha e no PDF
+- Lista detalhada de cada paciente (telefone, data de nascimento quando disponível, e o status de cada procedimento com a data e se está atrasado — o 1º e o 2º aparecem em colunas separadas, para que a cirurgia já feita não "suma" quando o paciente avança para a seguinte), **ordenada do caso mais quente para conversão ao mais frio** — a mesma ordem sai na planilha e no PDF
 
 ### 2. NPS
 Tem upload próprio (planilha separada de avaliações). Mostra a nota de satisfação geral e por clínica, o detalhamento por categoria avaliada (atendimento, acompanhamento, clínica, médico) e uma lista de destaques que precisam de atenção — comentários ou avaliações negativas, com telefone do paciente para contato.
@@ -41,14 +41,15 @@ Também usa a planilha de Consultas. Estima quanto ainda dá para faturar com os
 Para as páginas de **Consultas, Faturamento e Potencial de Ganho** funcionarem corretamente, a exportação do Farol precisa ter:
 - Dados de identificação do paciente e o **status da jornada** preenchido (conforme a lista oficial de status do Farol)
 - Os **campos de data** correspondentes a cada status — não basta o status em si
-- Os **procedimentos do paciente**, em um dos dois arranjos aceitos (ver abaixo)
+- Os **procedimentos do paciente**, em um dos três arranjos aceitos (ver abaixo)
 
-Existem dois arranjos possíveis para os procedimentos, e o painel aceita os dois:
+Existem três arranjos possíveis para os procedimentos, e o painel aceita os três:
 
-- **Uma linha por paciente**, com os procedimentos em colunas paralelas (até 5 abas — usadas por exemplo para acompanhar o 2º olho de catarata e o faturamento). Mesmo que a maioria fique vazia, as colunas precisam existir na exportação.
+- **Uma linha por paciente, procedimentos em colunas paralelas** (até 5 abas — usadas por exemplo para acompanhar o 2º olho de catarata e o faturamento). Mesmo que a maioria fique vazia, as colunas precisam existir na exportação.
 - **Uma linha por procedimento**, em que o mesmo paciente aparece em várias linhas (quem operou os dois olhos aparece duas vezes). Nesse arranjo as linhas são agrupadas e achatadas na importação, e o resto do cálculo é idêntico. Aqui não há teto de 5 procedimentos: o limite é quantas linhas o paciente tiver.
+- **Uma linha por paciente, procedimentos empacotados numa coluna só** — todos os procedimentos vêm concatenados num único campo de texto, no formato `1: <data> - <status> | 2: <data> - <status>`. O índice numérico é a aba do procedimento e deve ser respeitado (não reordenar por data). Atenção ao separar data de status: o próprio status contém hífen (`CIRURGIA - REALIZOU 1º OLHO`), então só o **primeiro** hífen depois da data separa os dois. Também sem teto de 5.
 
-⚠️ O export "resumido" (`busca-*.csv`) tem menos detalhe e não traz o campo de trava do faturamento nem as abas extras de procedimento — a página de Faturamento não funciona bem com esse formato (tudo aparece como pendente).
+⚠️ O export "resumido" (`busca-*.csv`) **não traz o campo de trava do faturamento** — a página de Faturamento não funciona com ele (toda cirurgia realizada aparece como pendente). Os demais cálculos funcionam normalmente. Esse export é montado coluna a coluna, então existem variantes dele **sem nenhuma coluna de procedimento**: nessas, todo paciente cai corretamente em "sem status", porque o dado não está na planilha.
 
 ## Exportação
 
@@ -63,7 +64,7 @@ Esta seção existe para que a lógica do painel possa ser reimplementada em **o
 ### Regras principais
 
 **1. Procedimento ativo — o painel não olha só a primeira cirurgia**
-Cada consulta acompanha até **5 abas de procedimento** (o paciente pode operar os dois olhos, ou ter uma segunda cirurgia). Regra de preenchimento: a aba 1 sempre conta, mesmo vazia — vazio é o pior caso; as abas 2 a 5 só contam se tiverem qualquer valor, porque a maioria dos pacientes não terá um segundo procedimento. O **procedimento ativo** é a **última aba preenchida**, e é ela que define status, data e atraso do paciente em todo o painel. Sem essa regra, um paciente que operou o 1º olho e já tem o 2º agendado aparece como "resolvido" e a data da 2ª cirurgia nunca é checada — pode estar vencida há anos sem ninguém ver.
+Cada consulta acompanha **N abas de procedimento** (o paciente pode operar os dois olhos, ou ter uma segunda cirurgia). O teto de 5 vale só para o arranjo em colunas paralelas, onde é a própria planilha que traz 5 colunas; nos outros dois arranjos o limite é quantos procedimentos o paciente tiver, e truncar em 5 perderia cirurgia — e pendência de faturamento — em silêncio. Regra de preenchimento: a aba 1 sempre conta, mesmo vazia — vazio é o pior caso; as abas seguintes só contam se tiverem qualquer valor, porque a maioria dos pacientes não terá um segundo procedimento. O **procedimento ativo** é a **última aba preenchida**, e é ela que define status, data e atraso do paciente em todo o painel. Sem essa regra, um paciente que operou o 1º olho e já tem o 2º agendado aparece como "resolvido" e a data da 2ª cirurgia nunca é checada — pode estar vencida há anos sem ninguém ver.
 
 **2. Status da jornada — lista fechada, uma única função de classificação**
 Os status vêm de uma lista oficial e fechada de 12 valores. Toda classificação passa por **uma única função**, usada por KPIs, funil, tabelas e ordenação. É a regra mais importante de arquitetura: telas que reclassificam status por conta própria divergem entre si — já aconteceu neste projeto e teve de ser corrigido.
@@ -150,8 +151,8 @@ Quando o paciente já tem indicação cirúrgica, quem contata é a **clínica p
 ### Detalhes de implementação que fazem diferença
 
 - **Fonte única por lista.** Cada lista tem uma função que devolve os dados já filtrados e ordenados; tela e exportações consomem essa mesma função. É o que garante que o arquivo baixado seja idêntico ao que está na tela, inclusive na ordenação — a exportação ignora só a paginação, nunca o filtro.
-- **Mais de um layout de planilha.** Existem três formatos de exportação em uso, com nomes de coluna diferentes. Um mapa de apelidos de cabeçalho normaliza tudo para nomes canônicos **na entrada** — a alternativa (espalhar candidatos de nome por cada função) vira dívida técnica rápido.
-- **Normalizar o arranjo na entrada, não no cálculo.** No formato "uma linha por procedimento", a conversão para o formato interno (um registro por consulta, com os procedimentos em abas) acontece uma única vez na importação. Nenhuma regra de negócio precisa saber de qual arranjo o dado veio — é o que evita duas versões de cada cálculo.
+- **Mais de um layout de planilha.** Existem quatro formatos de exportação em uso, com nomes de coluna diferentes — e eles mudam sem aviso: um deles trocou as colunas de procedimento por um campo empacotado de um mês para o outro. Um mapa de apelidos de cabeçalho normaliza tudo para nomes canônicos **na entrada** — a alternativa (espalhar candidatos de nome por cada função) vira dívida técnica rápido. A detecção é por arquivo e o layout mais específico ganha, de modo que os formatos convivem sem conflito: cada importação substitui a base inteira.
+- **Normalizar o arranjo na entrada, não no cálculo.** Nos formatos "uma linha por procedimento" e "procedimentos empacotados", a conversão para o formato interno (um registro por consulta, com os procedimentos em abas) acontece uma única vez na importação. Nenhuma regra de negócio precisa saber de qual arranjo o dado veio — é o que evita duas versões de cada cálculo.
 - **A chave do agrupamento é a consulta, não o paciente.** Ao agrupar linhas de procedimento, usar identificador do paciente **+ data da consulta + especialidade + clínica**. O mesmo paciente pode ter duas consultas diferentes no período (especialidades e unidades distintas); agrupar só pelo identificador funde as duas e mistura a conversão cirúrgica de unidades diferentes.
 - **A ordem das linhas não é confiável.** As linhas de procedimento podem vir fora de ordem cronológica. Ordenar por data do procedimento antes de montar as abas — senão o "procedimento ativo", que alimenta status, atraso e gargalo, sai errado. Dois procedimentos no mesmo dia são legítimos; nesse empate, manter a ordem do arquivo.
 - **Datas.** Podem chegar como texto `dd/mm/aaaa`, como texto `mm/dd/aaaa` **ou** como número de série do Excel, às vezes com fração de hora. O leitor precisa aceitar os três — e a ordem dia/mês pode variar **entre colunas do mesmo arquivo** (um export real traz a data de nascimento em `dd/mm` e todas as demais em `mm/dd`). Detectar coluna a coluna: um valor com o 1º número > 12 só pode ser dia; um com o 2º > 12 idem. Coluna ambígua (todo dia e todo mês ≤ 12) precisa de um padrão declarado por layout.
@@ -161,4 +162,4 @@ Quando o paciente já tem indicação cirúrgica, quem contata é a **clínica p
 
 ## Tecnologia
 
-Arquivo único (`index.html`) — HTML, CSS (Tailwind) e JavaScript puro, sem backend, sem banco de dados, sem etapa de build. Bibliotecas via CDN (Chart.js, SheetJS, jsPDF, Lucide Icons).
+Arquivo único (`index.html`) — HTML, CSS (Tailwind) e JavaScript puro, sem backend, sem banco de dados, sem etapa de build. Bibliotecas via CDN (Chart.js, SheetJS, ExcelJS, html2canvas, jsPDF + AutoTable, Lucide Icons), com versão fixa e hash de integridade.

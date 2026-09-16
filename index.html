@@ -225,12 +225,10 @@
                     <div class="multi-select relative" id="filterSurgery" data-placeholder="Todas as Especialidades" data-accent="indigo" data-onchange="applyFilters"></div>
                 </div>
 
-                <!-- Filtro Status da Jornada -->
+                <!-- Filtro Status da Jornada (seleção múltipla) -->
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-0.5">Status da Jornada</label>
-                    <select id="filterStatus" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
-                        <option value="">Todos</option>
-                    </select>
+                    <div class="multi-select relative" id="filterStatus" data-placeholder="Todos os Status" data-accent="indigo" data-onchange="applyFilters"></div>
                 </div>
 
                 <!-- Filtro Período (Data da Consulta) -->
@@ -1011,9 +1009,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-0.5">Status da Jornada</label>
-                    <select id="ganhoFilterStatus" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition">
-                        <option value="">Todos</option>
-                    </select>
+                    <div class="multi-select relative" id="ganhoFilterStatus" data-placeholder="Todos os Status" data-accent="emerald" data-onchange="applyGanhoFilters"></div>
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-0.5">Período (Consulta)</label>
@@ -1435,6 +1431,30 @@
             return slots[slots.length - 1];
         }
 
+        // Valor do paciente no filtro "Status da Jornada". Campo vazio vira uma opção
+        // própria em vez de sumir da lista: pedido do usuário em 2026-09-16 — status em
+        // branco é tão filtrável quanto os outros e, na régua do painel, até mais
+        // preocupante (não se sabe onde o paciente está). O rótulo diz "(em branco)" de
+        // propósito: o KPI/funil "Sem Status" agrupa vazio + AGUARDANDO RETORNO, mas aqui
+        // a lista é de status CRUS da planilha e "AGUARDANDO RETORNO" já é opção própria —
+        // marcar as duas reproduz exatamente o número do KPI.
+        const EMPTY_STATUS_OPTION = 'Sem Status (em branco)';
+
+        // Fonte única do valor usado TANTO para montar a lista de opções quanto para
+        // filtrar, nas duas páginas — se divergirem, a opção existe mas não casa com
+        // nenhum paciente (ou o contrário).
+        function getJourneyStatusFilterValue(item) {
+            return getActiveProcedureSlot(item).statusRaw.trim() || EMPTY_STATUS_OPTION;
+        }
+
+        // A opção de vazio vai sempre em PRIMEIRO na lista (o resto em ordem alfabética):
+        // é o caso mais crítico, não pode ficar perdido no meio.
+        function buildJourneyStatusOptions(values) {
+            const hasEmpty = values.delete(EMPTY_STATUS_OPTION);
+            const sorted = Array.from(values).sort();
+            return hasEmpty ? [EMPTY_STATUS_OPTION, ...sorted] : sorted;
+        }
+
         // Regra: para CATARATA, se a aba 1 é "realizou 1º olho" e NENHUMA outra aba (2-5)
         // tem QUALQUER valor, falta o acompanhamento do 2º olho (potencial, ainda nem
         // acionado). Corrigido em 2026-08-12 (pedido do usuário): antes checava só se
@@ -1680,14 +1700,13 @@
                 // Texto bruto do procedimento ATIVO (ver getActiveProcedureSlot) — se o
                 // filtro listasse sempre a aba 1, um paciente com 2ª cirurgia em andamento
                 // não apareceria filtrável pelo status real que está sendo acompanhado.
-                const st = getActiveProcedureSlot(item).statusRaw;
                 if (c) clinics.add(c.trim());
                 if (s) surgeries.add(s.trim());
-                if (st) statuses.add(st.trim());
+                statuses.add(getJourneyStatusFilterValue(item));
             });
             populateMultiSelect('ganhoFilterClinic', Array.from(clinics).sort());
             populateMultiSelect('ganhoFilterSurgery', Array.from(surgeries).sort());
-            populateSelect('ganhoFilterStatus', Array.from(statuses).sort());
+            populateMultiSelect('ganhoFilterStatus', buildJourneyStatusOptions(statuses));
 
             // Pré-seleciona as primárias que existirem na planilha (nome exato pode variar
             // de acento/caixa, daí o normalizeSpecialtyKey). Nenhuma primária encontrada =
@@ -1708,19 +1727,19 @@
         function applyGanhoFilters() {
             const clinics = getMultiSelectValues('ganhoFilterClinic');
             const surgeries = getMultiSelectValues('ganhoFilterSurgery');
-            const status = document.getElementById('ganhoFilterStatus').value;
+            const statuses = getMultiSelectValues('ganhoFilterStatus');
             const dateStart = document.getElementById('ganhoDateStart').value;
             const dateEnd = document.getElementById('ganhoDateEnd').value;
 
             ganhoFilteredData = rawData.filter(item => {
                 const c = getItemProp(item, CLINIC_ALIASES);
                 const s = getItemProp(item, SURGERY_ALIASES);
-                const st = getActiveProcedureSlot(item).statusRaw;
+                const st = getJourneyStatusFilterValue(item);
                 const d = parseFlexibleDate(getItemProp(item, ['agendamento_data', 'data', 'Data']));
 
                 const matchClinic = matchesMultiSelect(clinics, c);
                 const matchSurgery = matchesMultiSelect(surgeries, s);
-                const matchStatus = !status || st === status;
+                const matchStatus = matchesMultiSelect(statuses, st);
                 const matchPeriod = isWithinPeriod(d, dateStart, dateEnd);
                 return matchClinic && matchSurgery && matchStatus && matchPeriod;
             });
@@ -2153,27 +2172,14 @@
                 // COMPARECEU/FALTOU da consulta, não o status da jornada cirúrgica na clínica.
                 // Texto bruto do procedimento ATIVO (ver getActiveProcedureSlot) — mesma
                 // razão do comentário em populateGanhoFilters.
-                const st = getActiveProcedureSlot(item).statusRaw;
-
                 if (c) clinics.add(c.trim());
                 if (s) surgeries.add(s.trim());
-                if (st) statuses.add(st.trim());
+                statuses.add(getJourneyStatusFilterValue(item));
             });
 
             populateMultiSelect('filterClinic', Array.from(clinics).sort());
             populateMultiSelect('filterSurgery', Array.from(surgeries).sort());
-            populateSelect('filterStatus', Array.from(statuses).sort());
-        }
-
-        function populateSelect(elementId, items) {
-            const select = document.getElementById(elementId);
-            select.innerHTML = select.options[0].outerHTML; // Preserve first default option
-            items.forEach(item => {
-                const option = document.createElement('option');
-                option.value = item;
-                option.textContent = item;
-                select.appendChild(option);
-            });
+            populateMultiSelect('filterStatus', buildJourneyStatusOptions(statuses));
         }
 
         function getItemProp(item, candidates) {
@@ -2213,9 +2219,9 @@
         }
 
         function setupEventListeners() {
-            // Clínica e Especialidade são filtros de seleção múltipla: eles se
-            // religam sozinhos via data-onchange (ver initMultiSelects).
-            ['filterStatus', 'filterDateStart', 'filterDateEnd'].forEach(id => {
+            // Clínica, Especialidade e Status da Jornada são filtros de seleção
+            // múltipla: eles se religam sozinhos via data-onchange (ver initMultiSelects).
+            ['filterDateStart', 'filterDateEnd'].forEach(id => {
                 document.getElementById(id).addEventListener('change', applyFilters);
             });
 
@@ -2257,9 +2263,9 @@
                 () => faturamentoFilteredRecords.length, renderFaturamentoTable);
 
             // Potencial de Ganho: Filtros (mesma base de dados da Página 1). Clínica e
-            // Especialidade são múltiplos e se religam via data-onchange; Status é
-            // select único, igual ao da página de Consultas.
-            ['ganhoFilterStatus', 'ganhoDateStart', 'ganhoDateEnd'].forEach(id => {
+            // Clínica, Especialidade e Status da Jornada são múltiplos e se religam
+            // via data-onchange (ver initMultiSelects).
+            ['ganhoDateStart', 'ganhoDateEnd'].forEach(id => {
                 document.getElementById(id).addEventListener('change', applyGanhoFilters);
             });
             // Um único listener delegado cobre todos os inputs de valor base, mesmo
@@ -2287,19 +2293,19 @@
         function applyFilters() {
             const clinics = getMultiSelectValues('filterClinic');
             const surgeries = getMultiSelectValues('filterSurgery');
-            const status = document.getElementById('filterStatus').value;
+            const statuses = getMultiSelectValues('filterStatus');
             const dateStart = document.getElementById('filterDateStart').value;
             const dateEnd = document.getElementById('filterDateEnd').value;
 
             filteredData = rawData.filter(item => {
                 const c = getItemProp(item, CLINIC_ALIASES);
                 const s = getItemProp(item, SURGERY_ALIASES);
-                const st = getActiveProcedureSlot(item).statusRaw;
+                const st = getJourneyStatusFilterValue(item);
                 const d = parseFlexibleDate(getItemProp(item, ['agendamento_data', 'data', 'Data']));
 
                 const matchClinic = matchesMultiSelect(clinics, c);
                 const matchSurgery = matchesMultiSelect(surgeries, s);
-                const matchStatus = !status || st === status;
+                const matchStatus = matchesMultiSelect(statuses, st);
                 const matchPeriod = isWithinPeriod(d, dateStart, dateEnd);
                 return matchClinic && matchSurgery && matchStatus && matchPeriod;
             });
@@ -3737,6 +3743,64 @@
             return out;
         }
 
+        // ================================================================
+        // LAYOUT "PROCEDIMENTOS EMPACOTADOS NUMA COLUNA SÓ" (export
+        // `busca-*` novo do Metabase, 2026-09-16)
+        // ----------------------------------------------------------------
+        // O export "resumido" deixou de trazer uma coluna por procedimento
+        // (`Cirg data 1..5` + `Cirg data N status`) e passou a trazer TUDO
+        // numa única coluna `Procedimentos`, no formato:
+        //   "1: 15/06/2026 - CIRURGIA - REALIZOU 1º OLHO | 2: 16/06/2026 - ..."
+        // Sem desempacotar isso, nenhum status é lido e o painel inteiro cai
+        // em "Sem Status" (foi exatamente o sintoma relatado: conta os
+        // pacientes atendidos, mas não conta nada por status).
+        // Mesma estratégia do layout "1 linha = 1 procedimento": achatar UMA
+        // VEZ no upload, preenchendo as abas 1..N que getProcedureSlots() já
+        // lê — nada downstream precisa saber de qual planilha o dado veio.
+        // ================================================================
+        const PACKED_PROC_COL = 'Procedimentos';
+
+        // "1: 15/06/2026 - CIRURGIA - REALIZOU 1º OLHO"
+        //  ^índice da aba   ^data          ^status (que TAMBÉM tem " - " dentro,
+        //                                   por isso só o 1º hífen após a data separa)
+        const PACKED_PROC_RE = /^(\d+)\s*:\s*(?:(\d{1,2}\/\d{1,2}\/\d{4})\s*-\s*)?([\s\S]+)$/;
+
+        // Só vale quando a planilha NÃO traz as colunas explícitas de status:
+        // se um export futuro trouxer as duas coisas, as colunas por aba
+        // (já normalizadas por HEADER_ALIASES) continuam ganhando.
+        function isPackedProcedureColumnLayout(headers) {
+            return headers.includes(PACKED_PROC_COL)
+                && !headers.includes(PROCEDURE_SLOTS[0].status[0]);
+        }
+
+        function expandPackedProcedureColumn(records) {
+            records.forEach(row => {
+                const entries = String(row[PACKED_PROC_COL] || '')
+                    .split('|')
+                    .map(part => PACKED_PROC_RE.exec(part.trim()))
+                    .filter(Boolean)
+                    .map(m => ({ slot: parseInt(m[1], 10), date: m[2] || '', status: m[3].trim() }))
+                    .filter(e => e.slot >= 1);
+
+                // O índice "N:" da célula É a aba do Farol (e já vem em ordem
+                // cronológica no export conferido), então ele manda: não dá pra
+                // reordenar por data sem risco de trocar a numeração da clínica.
+                if (entries.length) ensureProcedureSlotCapacity(Math.max(...entries.map(e => e.slot)));
+                entries.forEach(({ slot, date, status }) => {
+                    const def = PROCEDURE_SLOTS[slot - 1];
+                    row[def.status[0]] = status;
+                    row[def.date[0]] = date;
+                });
+
+                row.clientes_id = normalizeFarolId(row.clientes_id);
+                delete row[PACKED_PROC_COL];
+            });
+            // Este layout NÃO tem campo de trava (lock) da conferência
+            // financeira — igual ao "resumido" antigo. A página de Faturamento
+            // vai mostrar toda cirurgia realizada como pendente; é limitação da
+            // planilha, não do painel.
+        }
+
         const HEADER_ALIASES = {
             'Id paciente': 'clientes_id',
             'Paciente (nome)': 'clientes',
@@ -3848,6 +3912,11 @@
                             stripNullPlaceholders(records);
                             dateWarnings = normalizeTextDateColumns(records, headers, PROC_ROW_MDY_COLUMNS);
                             records = pivotProcedureRowsToSlots(records);
+                        } else if (isPackedProcedureColumnLayout(headers)) {
+                            // Export `busca-*` novo: procedimentos empacotados
+                            // na coluna `Procedimentos` em vez de uma coluna por
+                            // aba. Desempacota nas abas 1..N antes de seguir.
+                            expandPackedProcedureColumn(records);
                         }
 
                         rawData = records;
