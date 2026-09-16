@@ -79,6 +79,35 @@
             border-radius: 9999px;
             border-width: 1px;
         }
+        /* Só existe no papel (par de .no-print). Hoje: a linha de "Filtros
+           aplicados" que substitui os campos de filtro na impressão. */
+        .print-only { display: none; }
+        /* BUG CORRIGIDO — NÃO REINTRODUZIR: filho de grid tem `min-width: auto`
+           por padrão, ou seja, não encolhe abaixo da própria palavra mais longa.
+           Nos cards de KPI (que são grid por causa do subgrid de alinhamento)
+           isso empurrava título e legenda PRA FORA do card assim que a coluna
+           ficava estreita — e como o card tem `overflow: hidden`, o texto saía
+           cortado no meio ("TOTAL ATENDIDO", "Pacientes em Acompanhament").
+           Aparecia no PDF (A4 = ~1047px úteis) e também na tela entre ~1024 e
+           ~1150px. Não é só cosmético: é informação sumindo sem aviso.
+           `overflow-wrap: anywhere` é o par do `min-width: 0`: com a coluna já
+           podendo encolher, ele deixa a palavra longa ("Acompanhamento") quebrar
+           em vez de vazar. Só age quando a palavra realmente não cabe — nas
+           larguras normais não muda nada. */
+        .kpi-card > * { min-width: 0; overflow-wrap: anywhere; }
+        /* Faixa em que os 6 cards de KPI já estão lado a lado (`lg`, 1024px) mas
+           a tela ainda é estreita: com o respiro normal o texto não cabe e o
+           `min-width: 0` acima sozinho não resolve. Acima de 1280px o padding
+           cheio volta. A mesma compensação é feita para o papel, no @media
+           print (A4 paisagem cai justamente dentro desta faixa). */
+        @media (min-width: 1024px) and (max-width: 1279px) {
+            /* `!important` é obrigatório: o Tailwind Play CDN injeta o CSS dele
+               DEPOIS deste <style>, então `p-5`/`gap-4` venceriam por ordem
+               (mesma especificidade). Sem isso a regra vira letra morta — foi o
+               que aconteceu na 1ª tentativa. */
+            .kpi-row { gap: 0.5rem !important; }
+            .kpi-card { padding: 0.75rem !important; }
+        }
         @media print {
             /* Paisagem: o painel é um dashboard largo (gráficos de ~1180px na
                tela). Em A4 retrato a área útil é ~718px e os gráficos saíam a
@@ -98,6 +127,39 @@
             /* Painel de filtro múltiplo aberto na hora do Ctrl+P não deve
                aparecer no PDF cobrindo os cards. */
             .ms-panel { display: none !important; }
+
+            /* Os CAMPOS de filtro saem do PDF (2026-09-16, pedido do usuário):
+               no papel eles não funcionam e davam a falsa impressão de que a
+               clínica poderia escolher o recorte ali. No lugar entra a linha
+               `.print-only` de "Filtros aplicados", preenchida por
+               renderFilterSummary() — sem ela o PDF perderia a informação de
+               QUAL recorte gerou aqueles números, que é justamente o que quem
+               recebe o arquivo precisa saber. */
+            .filter-controls { display: none !important; }
+            .print-only { display: block !important; }
+
+            /* BUG CORRIGIDO — NÃO REINTRODUZIR: o funil é `xl:grid-cols-8`, e
+               `xl` (1280px) NÃO ativa na impressão — a área útil do A4 paisagem
+               é ~1047px. Os 8 cards quebravam em 4+4, deixando o PDF com um
+               layout diferente do que a pessoa vê na tela. Forçamos as 8
+               colunas aqui e compensamos a largura menor com gap/padding
+               menores (fonte NÃO muda: a régua de legibilidade do painel vale
+               no papel também). O `nowrap` no "% do total" é o que mantém os 8
+               números na mesma linha do olho: nessa largura "100% do total"
+               quebrava em 2 linhas só no primeiro card, empurrando o número
+               dele 20px pra cima. Conferido a 1047px: 0 transbordo, 8 números
+               com o mesmo topo. */
+            #funnelContainer { grid-template-columns: repeat(8, minmax(0, 1fr)) !important; gap: 0.4rem !important; }
+            #funnelContainer > div { padding: 0.5rem !important; }
+            #funnelContainer > div > div:last-child > div:last-child { white-space: nowrap; }
+
+            /* Mesma história na fileira de KPIs: os 6 cards cabem em 1047px
+               (o `lg` de 1024px ativa), mas com o padding/gap da tela o texto
+               ficava maior que o card e era cortado pelo overflow:hidden. Aqui
+               também a fonte NÃO muda — só o respiro em volta. Conferido a
+               1047px: 0 corte e os 6 números com o mesmo topo. */
+            .kpi-row { gap: 0.5rem !important; }
+            .kpi-card { padding: 0.6rem !important; }
 
             /* BUG CORRIGIDO — NÃO REINTRODUZIR: o header e as barras de filtro
                usam position:sticky para acompanhar a rolagem na tela. Na
@@ -212,7 +274,10 @@
 
             <p class="hidden text-sm font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5" id="unknownStatusWarning"></p>
 
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+            <!-- Só aparece no PDF, no lugar dos campos de filtro (ver @media print). -->
+            <p class="print-only text-sm font-semibold text-slate-700" id="filterSummaryConsultas"></p>
+
+            <div class="filter-controls grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                 <!-- Filtro Clínica (seleção múltipla) -->
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-0.5">Clínica</label>
@@ -250,9 +315,9 @@
              legenda ocuparem 1 ou 2 linhas. Premissa/ressalva NUNCA entra dentro do
              card (empurra o número e desalinha a fileira) — vai no rodapé abaixo. -->
         <div class="space-y-2">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 lg:grid-rows-[auto_auto_auto]">
+        <div class="kpi-row grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 lg:grid-rows-[auto_auto_auto]">
             <!-- Total Compareceram -->
-            <div class="white-card rounded-2xl p-5 relative overflow-hidden group flex flex-col lg:grid lg:grid-rows-[subgrid] lg:row-span-3">
+            <div class="kpi-card white-card rounded-2xl p-5 relative overflow-hidden group flex flex-col lg:grid lg:grid-rows-[subgrid] lg:row-span-3">
                 <div class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-1 min-h-[2.5rem]">Total Atendidos</div>
                 <div class="text-3xl font-extrabold text-slate-900" id="kpiTotal">0</div>
                 <div class="text-sm text-indigo-600 font-semibold mt-auto pt-2 flex items-center gap-1">
@@ -262,7 +327,7 @@
             </div>
 
             <!-- Sem Status / Aguardando Retorno (pior caso: não sabemos o status atual) -->
-            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-slate-300 bg-slate-100/60 flex flex-col lg:grid lg:grid-rows-[subgrid] lg:row-span-3">
+            <div class="kpi-card white-card rounded-2xl p-5 relative overflow-hidden group border-slate-300 bg-slate-100/60 flex flex-col lg:grid lg:grid-rows-[subgrid] lg:row-span-3">
                 <div class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-1 min-h-[2.5rem]">Sem Status / Aguard. Retorno</div>
                 <div class="text-3xl font-extrabold text-slate-700" id="kpiSemStatus">0</div>
                 <div class="text-sm text-slate-700 font-semibold mt-auto pt-2 flex items-center gap-1">
@@ -272,7 +337,7 @@
             </div>
 
             <!-- Exames Pendentes -->
-            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-amber-200 bg-amber-50/30 flex flex-col lg:grid lg:grid-rows-[subgrid] lg:row-span-3">
+            <div class="kpi-card white-card rounded-2xl p-5 relative overflow-hidden group border-amber-200 bg-amber-50/30 flex flex-col lg:grid lg:grid-rows-[subgrid] lg:row-span-3">
                 <div class="text-sm font-bold text-amber-800 uppercase tracking-wider mb-1 min-h-[2.5rem]">Fase de Exames</div>
                 <div class="text-3xl font-extrabold text-amber-600" id="kpiExams">0</div>
                 <div class="text-sm text-amber-700 font-semibold mt-auto pt-2 flex items-center gap-1">
@@ -282,7 +347,7 @@
             </div>
 
             <!-- Gargalo: Aguardando Clínica Agendar -->
-            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-rose-200 bg-rose-50/30 flex flex-col lg:grid lg:grid-rows-[subgrid] lg:row-span-3">
+            <div class="kpi-card white-card rounded-2xl p-5 relative overflow-hidden group border-rose-200 bg-rose-50/30 flex flex-col lg:grid lg:grid-rows-[subgrid] lg:row-span-3">
                 <div class="text-sm font-bold text-rose-800 uppercase tracking-wider mb-1 min-h-[2.5rem]">Gargalo de Agendamento</div>
                 <div class="text-3xl font-extrabold text-rose-600" id="kpiAguardandoClinica">0</div>
                 <div class="text-sm text-rose-700 font-semibold mt-auto pt-2 flex items-center gap-1">
@@ -292,7 +357,7 @@
             </div>
 
             <!-- Cirurgias Agendadas -->
-            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-blue-200 bg-blue-50/30 flex flex-col lg:grid lg:grid-rows-[subgrid] lg:row-span-3">
+            <div class="kpi-card white-card rounded-2xl p-5 relative overflow-hidden group border-blue-200 bg-blue-50/30 flex flex-col lg:grid lg:grid-rows-[subgrid] lg:row-span-3">
                 <div class="text-sm font-bold text-blue-800 uppercase tracking-wider mb-1 min-h-[2.5rem]">Cirurgia Agendada</div>
                 <div class="text-3xl font-extrabold text-blue-600" id="kpiAgendadas">0</div>
                 <div class="text-sm text-blue-700 font-semibold mt-auto pt-2 flex items-center gap-1">
@@ -302,7 +367,7 @@
             </div>
 
             <!-- Cirurgia Realizada -->
-            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-emerald-200 bg-emerald-50/30 flex flex-col lg:grid lg:grid-rows-[subgrid] lg:row-span-3">
+            <div class="kpi-card white-card rounded-2xl p-5 relative overflow-hidden group border-emerald-200 bg-emerald-50/30 flex flex-col lg:grid lg:grid-rows-[subgrid] lg:row-span-3">
                 <div class="text-sm font-bold text-emerald-800 uppercase tracking-wider mb-1 min-h-[2.5rem]">Cirurgia Realizada</div>
                 <div class="text-3xl font-extrabold text-emerald-600" id="kpiRealizadas">0</div>
                 <div class="text-sm text-emerald-700 font-semibold mt-auto pt-2 flex items-center gap-1">
@@ -612,7 +677,9 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <p class="print-only text-sm font-semibold text-slate-700" id="filterSummaryNps"></p>
+
+            <div class="filter-controls grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-0.5">Clínica</label>
                     <div class="multi-select relative" id="npsFilterClinic" data-placeholder="Todas as Clínicas" data-accent="teal" data-onchange="npsApplyFilters"></div>
@@ -897,7 +964,9 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <p class="print-only text-sm font-semibold text-slate-700" id="filterSummaryFaturamento"></p>
+
+                <div class="filter-controls grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-0.5">Clínica</label>
                         <div class="multi-select relative" id="faturamentoFilterClinic" data-placeholder="Todas as Clínicas" data-accent="amber" data-onchange="applyFaturamentoFilters"></div>
@@ -998,7 +1067,9 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <p class="print-only text-sm font-semibold text-slate-700" id="filterSummaryGanho"></p>
+
+            <div class="filter-controls grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-0.5">Clínica</label>
                     <div class="multi-select relative" id="ganhoFilterClinic" data-placeholder="Todas as Clínicas" data-accent="emerald" data-onchange="applyGanhoFilters"></div>
@@ -1570,6 +1641,12 @@
 
             faturamentoCurrentPage = 1;
             document.getElementById('faturamentoCountLabel').textContent = `${faturamentoFilteredRecords.length} pendência(s) no filtro`;
+            renderFilterSummary('filterSummaryFaturamento', [
+                { label: 'Clínica', value: describeMultiSelectFilter('faturamentoFilterClinic', 'todas') },
+                { label: 'Especialidade', value: describeMultiSelectFilter('faturamentoFilterSurgery', 'todas') },
+                { label: 'Período da cirurgia', value: describePeriodFilter('faturamentoDateStart', 'faturamentoDateEnd') },
+                { label: 'Pendências no recorte', value: String(faturamentoFilteredRecords.length) }
+            ]);
             renderFaturamentoTable();
         }
 
@@ -1743,6 +1820,14 @@
                 const matchPeriod = isWithinPeriod(d, dateStart, dateEnd);
                 return matchClinic && matchSurgery && matchStatus && matchPeriod;
             });
+
+            renderFilterSummary('filterSummaryGanho', [
+                { label: 'Clínica', value: describeMultiSelectFilter('ganhoFilterClinic', 'todas') },
+                { label: 'Especialidade', value: describeMultiSelectFilter('ganhoFilterSurgery', 'todas') },
+                { label: 'Status da Jornada', value: describeMultiSelectFilter('ganhoFilterStatus', 'todos') },
+                { label: 'Período da consulta', value: describePeriodFilter('ganhoDateStart', 'ganhoDateEnd') },
+                { label: 'Pacientes no recorte', value: String(ganhoFilteredData.length) }
+            ]);
 
             document.getElementById('ganhoCountLabel').textContent = `${ganhoFilteredData.length} paciente(s) no filtro`;
             renderGanhoPotencialCards();
@@ -2156,6 +2241,37 @@
             return selectedValues.length === 0 || selectedValues.includes(value);
         }
 
+        // ================================================================
+        // RESUMO DE FILTROS PARA IMPRESSÃO (2026-09-16, pedido do usuário)
+        // Na tela os filtros são controles; no PDF eles não funcionam e davam
+        // a falsa impressão de que a clínica poderia escolher o recorte ali.
+        // O @media print esconde `.filter-controls` e mostra `.print-only` —
+        // esta linha. Ela lista SEMPRE todas as dimensões (com "todas"/"todos"
+        // quando não há filtro) em vez de só as ativas: quem recebe o PDF
+        // precisa saber o recorte inteiro, e "não aparece" seria ambíguo entre
+        // "sem filtro" e "campo que nem existe nessa página".
+        // ================================================================
+        function describeMultiSelectFilter(id, rotuloQuandoVazio) {
+            const selecionados = getMultiSelectValues(id);
+            return selecionados.length ? selecionados.join(', ') : rotuloQuandoVazio;
+        }
+
+        function describePeriodFilter(startId, endId) {
+            const br = iso => iso.split('-').reverse().join('/');
+            const ini = document.getElementById(startId).value;
+            const fim = document.getElementById(endId).value;
+            if (ini && fim) return `${br(ini)} a ${br(fim)}`;
+            if (ini) return `a partir de ${br(ini)}`;
+            if (fim) return `até ${br(fim)}`;
+            return 'todo o arquivo';
+        }
+
+        function renderFilterSummary(targetId, partes) {
+            const el = document.getElementById(targetId);
+            if (!el) return;
+            el.textContent = 'Filtros aplicados — ' + partes.map(p => `${p.label}: ${p.value}`).join('   ·   ');
+        }
+
         function closeMultiSelectPanels() {
             document.querySelectorAll('.ms-panel').forEach(p => p.classList.add('hidden'));
         }
@@ -2311,7 +2427,7 @@
             });
 
             currentPage = 1;
-            updateDashboard();
+            updateDashboard(); // já redesenha a linha de "Filtros aplicados" do PDF
             syncGanhoClinicFilter();
         }
 
@@ -2335,6 +2451,16 @@
                 ? `${filteredData.length} registro(s) analisado(s)`
                 : 'Nenhuma planilha carregada';
             renderUnknownStatusWarning();
+            // Aqui e não em applyFilters(): o upload chama updateDashboard()
+            // direto (sem passar por applyFilters), então só ali a linha do PDF
+            // ficaria vazia até alguém mexer em algum filtro.
+            renderFilterSummary('filterSummaryConsultas', [
+                { label: 'Clínica', value: describeMultiSelectFilter('filterClinic', 'todas') },
+                { label: 'Especialidade', value: describeMultiSelectFilter('filterSurgery', 'todas') },
+                { label: 'Status da Jornada', value: describeMultiSelectFilter('filterStatus', 'todos') },
+                { label: 'Período da consulta', value: describePeriodFilter('filterDateStart', 'filterDateEnd') },
+                { label: 'Pacientes no recorte', value: String(filteredData.length) }
+            ]);
             updateKPIs();
             renderAIInsights();
             renderFunnel();
@@ -4038,7 +4164,7 @@
             });
 
             npsCurrentPage = 1;
-            npsUpdateDashboard();
+            npsUpdateDashboard(); // já redesenha a linha de "Filtros aplicados" do PDF
         }
 
         function npsGetNota(item) {
@@ -4105,6 +4231,15 @@
             document.getElementById('npsDataCountLabel').textContent = npsRawData.length > 0
                 ? `${npsFilteredData.length} avaliação(ões) no filtro`
                 : 'Nenhuma planilha de NPS carregada';
+
+            // Mesmo motivo do updateDashboard() de Consultas: o upload de NPS
+            // chama esta função direto, sem passar por npsApplyFilters().
+            renderFilterSummary('filterSummaryNps', [
+                { label: 'Clínica', value: describeMultiSelectFilter('npsFilterClinic', 'todas') },
+                { label: 'Especialidade', value: describeMultiSelectFilter('npsFilterSurgery', 'todas') },
+                { label: 'Período da cirurgia', value: describePeriodFilter('npsDateStart', 'npsDateEnd') },
+                { label: 'Avaliações no recorte', value: String(npsFilteredData.length) }
+            ]);
 
             // Regra de negócio: quando falta a Nota mas há avaliação qualitativa
             // preenchida, o registro entra num cálculo separado ("Nota Ausente")
