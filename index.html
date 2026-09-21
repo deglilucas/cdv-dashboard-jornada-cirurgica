@@ -2518,8 +2518,13 @@
                 ? `Cirurgia Realizada conta cada olho/cirurgia operado, não cada paciente: ${n(stats.realizada)} cirurgias de ${n(stats.realizadaPacientes)} paciente(s).`
                 : 'Cirurgia Realizada conta cada olho/cirurgia operado, não cada paciente.');
 
+            // A 3ª frase precisa citar a NÃO-EXCLUSIVIDADE, não só a contagem por olho:
+            // numa planilha em que ninguém operou os dois olhos (realizada ===
+            // realizadaPacientes) a soma ainda passa do total, porque quem já operou e
+            // tem um procedimento novo em andamento conta no grupo da cirurgia feita E
+            // no do procedimento ativo. Atribuir isso só ao "cada olho" seria impreciso.
             if (stats.total > 0 && somaStatus !== stats.total) {
-                partes.push(`Por isso a soma dos status (${n(somaStatus)}) não fecha com o total de pacientes (${n(stats.total)}).`);
+                partes.push(`Quem já operou e tem outro procedimento em andamento conta nos dois grupos — por isso a soma dos status (${n(somaStatus)}) não fecha com o total de pacientes (${n(stats.total)}).`);
             }
 
             return partes.join(' ');
