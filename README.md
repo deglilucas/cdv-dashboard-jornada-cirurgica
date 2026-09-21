@@ -76,6 +76,9 @@ Qualquer status ainda em andamento (exame agendado *ou* pendente, aguardando a c
 **4. Conversão conta cirurgias, não pacientes** ⚠️ *contraintuitivo*
 "Cirurgia realizada" soma **todas** as abas com cirurgia realizada de cada paciente, não só a do procedimento ativo — toda cirurgia feita é uma conversão válida. Duas consequências deliberadas: quem operou os dois olhos conta **2**, e os grupos **deixam de ser mutuamente exclusivos** (o mesmo paciente soma em "realizada" e no gargalo da cirurgia seguinte). Por isso a soma das colunas pode passar do total de pacientes e a taxa de conversão pode passar de 100% — é a régua de benchmark interno, não um bug.
 
+**4b. Total atendidos conta pacientes; os status contam consultas** ⚠️ *as duas contagens não fecham, de propósito*
+O total de atendidos (e o denominador da conversão) é a contagem de **pacientes distintos**. Já cada grupo de status é contado por **consulta**, porque a jornada é da consulta e não do paciente (ver "a chave do agrupamento é a consulta", abaixo): um mesmo paciente com duas consultas no período tem dois status independentes e aparece nas duas etapas. Somado ao efeito da regra 4, a soma dos status fica **acima** do total de pacientes. As duas premissas precisam estar **escritas na tela**, junto dos números — sem isso a conta parece simplesmente errada para quem recebe o relatório, que foi o que aconteceu neste projeto. Contar tudo por consulta "fecharia" a soma, mas passaria a chamar de paciente algo que não é.
+
 **5. 2º olho de catarata**
 Só se aplica a catarata: se a aba 1 é "realizou 1º olho" e nenhuma outra aba tem qualquer valor, o paciente é sinalizado como pendência de acompanhamento. Se a aba 1 já é "realizou 2º olho" (cirurgia isolada), não há follow-up. Se já existe uma aba 2 em andamento, ela vira o procedimento ativo e o alerta genérico não se aplica — o caso passa a ser acompanhado pelo próprio status dela.
 
