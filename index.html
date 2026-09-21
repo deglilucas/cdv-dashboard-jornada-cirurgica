@@ -433,7 +433,7 @@
                         <i data-lucide="git-commit" class="w-5 h-5 text-indigo-600"></i>
                         Funil e Distribuição de Status da Jornada
                     </h3>
-                    <p class="text-sm text-slate-700">Fluxo dos pacientes por etapa (cada card abaixo) e a distribuição por status do procedimento mais recente de cada paciente (gráfico). Atenção: "Cirurgia Realizada" no funil conta cada olho/cirurgia operado — pode ser maior que a soma das fatias "Realizou" do gráfico, que contam 1 vez por paciente.</p>
+                    <p class="text-sm text-slate-700">Fluxo dos pacientes por etapa (cada card abaixo) e a distribuição por status do procedimento mais recente de cada consulta (gráfico). Atenção: "Atendidos" conta pacientes distintos, enquanto as demais etapas contam consultas — um mesmo paciente com duas consultas no período aparece em duas etapas. Além disso, "Cirurgia Realizada" conta cada olho/cirurgia operado, então também pode ser maior que a soma das fatias "Realizou" do gráfico, que contam 1 vez por consulta.</p>
                 </div>
                 <div class="relative no-print">
                     <button onclick="toggleExportMenu(event, 'menuFunilStatus')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-sm font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
@@ -2447,8 +2447,14 @@
         }
 
         function updateDashboard() {
+            // Diz explicitamente consulta x paciente: o rótulo genérico "registro(s)"
+            // fazia o número parecer uma contagem de pacientes e não batia com o
+            // "Total Atendidos" quando alguém tinha 2 consultas no período.
+            const pacientesNoFiltro = countDistinctPatients(filteredData);
             document.getElementById('dataCountLabel').textContent = filteredData.length > 0
-                ? `${filteredData.length} registro(s) analisado(s)`
+                ? (pacientesNoFiltro !== filteredData.length
+                    ? `${filteredData.length} consulta(s) de ${pacientesNoFiltro} paciente(s)`
+                    : `${filteredData.length} consulta(s) analisada(s)`)
                 : 'Nenhuma planilha carregada';
             renderUnknownStatusWarning();
             // Aqui e não em applyFilters(): o upload chama updateDashboard()
@@ -2459,7 +2465,9 @@
                 { label: 'Especialidade', value: describeMultiSelectFilter('filterSurgery', 'todas') },
                 { label: 'Status da Jornada', value: describeMultiSelectFilter('filterStatus', 'todos') },
                 { label: 'Período da consulta', value: describePeriodFilter('filterDateStart', 'filterDateEnd') },
-                { label: 'Pacientes no recorte', value: String(filteredData.length) }
+                { label: 'Pacientes no recorte', value: pacientesNoFiltro !== filteredData.length
+                    ? `${pacientesNoFiltro} (em ${filteredData.length} consultas)`
+                    : String(pacientesNoFiltro) }
             ]);
             updateKPIs();
             renderAIInsights();
@@ -2482,12 +2490,39 @@
             document.getElementById('kpiAguardandoClinica').textContent = stats.aguardandoClinica.toLocaleString('pt-BR');
             document.getElementById('kpiAgendadas').textContent = stats.agendada.toLocaleString('pt-BR');
             document.getElementById('kpiRealizadas').textContent = stats.realizada.toLocaleString('pt-BR');
-            // A ressalva de "Cirurgia Realizada" mora no rodapé da fileira, não dentro
-            // do card — dentro dele, a linha extra empurrava o número e desalinhava
-            // esse card em relação aos outros cinco.
-            document.getElementById('kpiRealizadasBase').textContent = stats.realizada !== stats.realizadaPacientes
-                ? `Cirurgia Realizada conta cada olho/cirurgia operado, não cada paciente: ${stats.realizada.toLocaleString('pt-BR')} cirurgias de ${stats.realizadaPacientes.toLocaleString('pt-BR')} paciente(s) no filtro atual.`
-                : 'Cirurgia Realizada conta cada olho/cirurgia operado, não cada paciente.';
+            // As ressalvas moram no rodapé da fileira, não dentro dos cards — dentro
+            // deles a linha extra empurra o número e desalinha o card em relação aos
+            // outros cinco (ver a regra de alinhamento/subgrid no CLAUDE.md).
+            document.getElementById('kpiRealizadasBase').textContent = buildKpiPremisesText(stats);
+        }
+
+        // Explica, no rodapé da fileira de KPIs, as DUAS premissas que fazem a soma dos
+        // status passar do "Total Atendidos" — antes elas não estavam escritas em lugar
+        // nenhum e a conta parecia simplesmente errada:
+        //   1. Total Atendidos conta PACIENTES, mas cada card de status conta CONSULTAS
+        //      (um paciente com 2 consultas no período aparece em 2 status diferentes).
+        //   2. Cirurgia Realizada conta cada olho operado, não cada paciente (regra de
+        //      negócio de 2026-08-18: é o que permite uma clínica passar de 100% de
+        //      conversão cirúrgica).
+        function buildKpiPremisesText(stats) {
+            const n = v => v.toLocaleString('pt-BR');
+            const somaStatus = stats.semStatus + stats.exames + stats.aguardandoClinica
+                + stats.agendada + stats.realizada + stats.desistiu + stats.semIndicacao;
+            const partes = [];
+
+            if (stats.totalConsultas !== stats.total) {
+                partes.push(`Total Atendidos conta pacientes distintos: ${n(stats.total)} paciente(s) em ${n(stats.totalConsultas)} consulta(s) no filtro atual — cada consulta tem seu próprio status.`);
+            }
+
+            partes.push(stats.realizada !== stats.realizadaPacientes
+                ? `Cirurgia Realizada conta cada olho/cirurgia operado, não cada paciente: ${n(stats.realizada)} cirurgias de ${n(stats.realizadaPacientes)} paciente(s).`
+                : 'Cirurgia Realizada conta cada olho/cirurgia operado, não cada paciente.');
+
+            if (stats.total > 0 && somaStatus !== stats.total) {
+                partes.push(`Por isso a soma dos status (${n(somaStatus)}) não fecha com o total de pacientes (${n(stats.total)}).`);
+            }
+
+            return partes.join(' ');
         }
 
         // ================================================================
@@ -2665,9 +2700,41 @@
                 .map(entry => entry.item);
         }
 
+        // Chave do PACIENTE — não confundir com buildConsultaKey(), que é a chave da
+        // JORNADA. O mesmo ID Farol pode ter mais de uma consulta no período (caso real
+        // conferido: 2 consultas do mesmo paciente em datas diferentes), e cada consulta
+        // vira um registro próprio em rawData. Por isso `filteredData.length` conta
+        // CONSULTAS, não pacientes — usar esta chave sempre que o rótulo disser "paciente".
+        // Sem ID (planilha que não traz a coluna), cai no nome pra não fundir pacientes
+        // diferentes num único "sem id".
+        function getPatientKey(item) {
+            const id = normalizeFarolId(getItemProp(item, ['clientes_id', 'id', 'ID']));
+            if (id) return `id::${id}`;
+            const nome = getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']).trim().toUpperCase();
+            if (nome) return `nome::${nome}`;
+            // Nem ID nem nome (variantes do export "busca" em que a capitalização do
+            // header não bate com HEADER_ALIASES): cada registro vira um paciente
+            // próprio, senão todos colapsariam num só e o total despencaria. A marca
+            // vai num WeakMap e NÃO dentro do registro — uma chave a mais no objeto
+            // apareceria em Object.keys() e vazaria pra quem varre os campos crus.
+            if (!anonPatientKeys.has(item)) anonPatientKeys.set(item, `anon::${++anonPatientSeq}`);
+            return anonPatientKeys.get(item);
+        }
+        const anonPatientKeys = new WeakMap();
+        let anonPatientSeq = 0;
+
+        function countDistinctPatients(data) {
+            return new Set(data.map(getPatientKey)).size;
+        }
+
         function buildGroupStats(data) {
             const stats = {
-                total: data.length, semStatus: 0, exames: 0,
+                // "total" = PACIENTES distintos (é o que o card "Total Atendidos" e as
+                // porcentagens dizem contar). `totalConsultas` guarda a contagem de
+                // jornadas, que é o que os grupos de status contam — a diferença entre
+                // os dois é explicada no rodapé da fileira de KPIs (ver updateKPIs).
+                total: countDistinctPatients(data), totalConsultas: data.length,
+                semStatus: 0, exames: 0,
                 aguardandoClinica: 0, agendada: 0, realizada: 0, realizadaPacientes: 0, desistiu: 0,
                 semIndicacao: 0, olho2Pendente: 0, topGargalo: null, distinctClinics: 0,
                 // Gargalos: item ainda em andamento cuja data marcada já passou — granular por
@@ -3120,11 +3187,14 @@
         // mesmo motivo do updateKPIs (evitar divergência com o resto do painel).
         function renderFunnel() {
             const container = document.getElementById('funnelContainer');
-            const total = filteredData.length || 1;
             const stats = buildGroupStats(filteredData);
+            // Denominador = PACIENTES (mesma base do card "Total Atendidos"), não
+            // filteredData.length, que conta CONSULTAS — com um paciente de 2 consultas
+            // os dois divergiam e o funil dizia 100% num total diferente do da fileira.
+            const total = stats.total || 1;
 
             const stages = [
-                { name: '1. Atendidos', count: filteredData.length, color: 'bg-indigo-50 border-indigo-200 text-indigo-900', icon: 'users' },
+                { name: '1. Atendidos', count: stats.total, color: 'bg-indigo-50 border-indigo-200 text-indigo-900', icon: 'users' },
                 { name: '2. Sem Status', count: stats.semStatus, color: 'bg-slate-200 border-slate-300 text-slate-800', icon: 'help-circle' },
                 { name: '3. Fase de Exames', count: stats.exames, color: 'bg-amber-50 border-amber-200 text-amber-900', icon: 'file-clock' },
                 { name: '4. Aguardando Clínica', count: stats.aguardandoClinica, color: 'bg-rose-50 border-rose-200 text-rose-900', icon: 'alert-circle' },
@@ -3279,13 +3349,18 @@
         // mesma regra do classifyStatus: uma única fonte de verdade, sem duplicar lógica.
         function buildClinicSummary() {
             const summary = {};
+            const patientsByClinic = {};
 
             filteredData.forEach(item => {
                 const cl = getItemProp(item, CLINIC_ALIASES) || 'Outros / Não Especificado';
                 if (!summary[cl]) {
                     summary[cl] = { total: 0, semStatus: 0, exames: 0, aguardando: 0, agendadas: 0, realizadas: 0, desistiu: 0, semIndicacao: 0 };
+                    patientsByClinic[cl] = new Set();
                 }
-                summary[cl].total++;
+                // A coluna se chama "Total Pacientes", então conta paciente distinto e
+                // não linha — o mesmo paciente com 2 consultas na clínica é 1 paciente
+                // (mesma régua do card "Total Atendidos", ver getPatientKey).
+                patientsByClinic[cl].add(getPatientKey(item));
 
                 const slots = getProcedureSlots(item);
                 const group = statusGroup(slots[slots.length - 1].code);
@@ -3302,6 +3377,8 @@
                 const realizouSlots = slots.filter(sl => sl.code === 'CIRURGIA_REALIZOU_1' || sl.code === 'CIRURGIA_REALIZOU_2');
                 summary[cl].realizadas += realizouSlots.length;
             });
+
+            Object.keys(summary).forEach(cl => { summary[cl].total = patientsByClinic[cl].size; });
 
             // Não ordena aqui — a ordem de exibição/exportação é definida por
             // sortClinicSummaryEntries(), que respeita a coluna clicada pelo usuário
@@ -3629,10 +3706,13 @@
 
             tbody.innerHTML = p.pageData.map(item => buildPatientRowHtml(item, { showProcedureHistory: true })).join('');
 
-            document.getElementById('patientPrintCount').textContent = `Relatório com ${p.totalRecords} paciente(s) — filtro atual aplicado no momento da exportação.`;
+            // "consulta(s)" e não "paciente(s)": cada linha desta lista é uma JORNADA
+            // (consulta), então o número diverge do card "Total Atendidos" sempre que
+            // alguém tem 2 consultas no período — era uma das contagens que não batia.
+            document.getElementById('patientPrintCount').textContent = `Relatório com ${p.totalRecords} consulta(s) — filtro atual aplicado no momento da exportação.`;
 
             if (exportAll) return;
-            updatePaginationFooter('paginationInfo', 'prevPageBtn', 'nextPageBtn', p, 'paciente(s)');
+            updatePaginationFooter('paginationInfo', 'prevPageBtn', 'nextPageBtn', p, 'consulta(s)');
         }
 
         // ================================================================
