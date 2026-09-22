@@ -3735,9 +3735,22 @@
             });
         }
 
+        // Mesma ordem "plug and play" da Lista Detalhada (ver sortByConversionPriority):
+        // esta também é uma lista de TRABALHO — o responsável da clínica abre pra atacar
+        // convertíveis e precisa saber por onde começar. Escolha do usuário em 2026-09-21:
+        // manda a prioridade de STATUS, não o valor em R$ — o dinheiro já está evidenciado
+        // nos cartões acima, e ordenar por valor colocaria um caso frio na frente de um
+        // lead quente prestes a esfriar.
+        // Como getGanhoConvertiblePatients() já exclui quem realizou e quem está sem
+        // indicação, dos 8 grupos da régua só aparecem os ranks 1, 2, 3, 4 e 7 (desistiu) —
+        // ela funciona aqui sem adaptação nenhuma.
+        // Aplicada nesta função e só nela: é a fonte única da tela e das 3 exportações do
+        // Ganho, então arquivo e tela saem sempre na mesma ordem (WYSIWYG, como o resto).
         function getSearchedGanhoPatientData() {
             const search = (document.getElementById('ganhoPatientSearch').value || '').toLowerCase();
-            return getGanhoConvertiblePatients(ganhoFilteredData).filter(item => patientMatchesSearch(item, search));
+            return sortByConversionPriority(
+                getGanhoConvertiblePatients(ganhoFilteredData).filter(item => patientMatchesSearch(item, search))
+            );
         }
 
         function renderGanhoPatientTable(exportAll = false) {

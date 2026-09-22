@@ -3,7 +3,20 @@
 **Data:** 2026-08-26
 **Contexto:** junto com a implementação da ordenação por prioridade de conversão na Lista Detalhada dos Pacientes, o pedido foi *"aproveite para revisar o código e checar se isso é passível de aplicar regras nos outros KPIs e páginas"*.
 
-Este arquivo é **só diagnóstico e proposta** — nada aqui foi implementado. Cada item tem o ponto exato do código, o esforço e o que precisa ser decidido antes.
+Cada item tem o ponto exato do código, o esforço e o que precisa ser decidido antes.
+
+## Status (revisado em 2026-09-21)
+
+| # | Item | Status |
+|---|---|---|
+| 1 | Lista de Pacientes Potenciais (Ganho) | ✅ **FEITO em 2026-09-21** — por prioridade de status, escolha explícita do usuário |
+| 2 | Pendências de Faturamento | ⏳ aberto — falta confirmar a régua ("mais antiga primeiro") |
+| 3 | Avaliações de NPS | ⏳ aberto — falta checar redundância com o card de Destaques |
+| 4 | Unificar as 3 réguas de especialidade | ⏳ aberto — muda a ordem dos cartões do Ganho, precisa de decisão |
+| 5 | Divergência Insights × Lista | ⏳ aberto — **decisão de negócio**, não técnica |
+| 6 | Consolidado das Clínicas | ✅ encerrado sem ação (já tem ordenação clicável; recomendado não mexer) |
+
+⚠️ Conferido item a item contra o código em 2026-09-21: nada dos itens 2 a 5 foi implementado nesse meio-tempo — `faturamentoFilteredRecords` e `npsFilteredData` continuam saindo na ordem bruta, as 3 réguas de especialidade continuam existindo e a divergência do item 5 continua real.
 
 ---
 
@@ -19,9 +32,11 @@ Aplicada num lugar só: `getSearchedPatientData()`, que é a fonte única da tel
 
 ---
 
-## 1. Lista de Pacientes Potenciais para Operar (Potencial de Ganho) — **ALTA prioridade**
+## 1. Lista de Pacientes Potenciais para Operar (Potencial de Ganho) — ✅ FEITO em 2026-09-21
 
-**Situação hoje:** sai na ordem bruta da planilha. É exatamente o mesmo tipo de lista de trabalho da Lista Detalhada — o responsável da clínica abre pra atacar convertíveis, mas não tem nenhuma pista de por onde começar.
+> **Implementado**, com a decisão pendente resolvida pelo usuário: **prioridade de status**, não R$ (a recomendação abaixo). `getSearchedGanhoPatientData()` agora envolve o retorno em `sortByConversionPriority()` — uma linha, no ponto único que alimenta tela e as 3 exportações. O resto desta seção fica como registro do diagnóstico original.
+
+**Situação antes:** saía na ordem bruta da planilha. É exatamente o mesmo tipo de lista de trabalho da Lista Detalhada — o responsável da clínica abre pra atacar convertíveis, mas não tem nenhuma pista de por onde começar.
 
 **Por que é o candidato mais forte:** a estrutura é idêntica à de Consultas — `getSearchedGanhoPatientData()` é a fonte única de tela + xlsx + CSV + PDF. É literalmente **uma linha** (envolver o retorno em `sortByConversionPriority()`), exatamente como foi feito em `getSearchedPatientData()`.
 
