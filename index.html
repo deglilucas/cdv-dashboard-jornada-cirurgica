@@ -830,6 +830,46 @@
             </div>
         </div>
 
+        <!-- NPS: Destaques Positivos (Promotores + Comentários Elogiosos).
+             Vem ANTES do card de detratores por pedido do usuário (2026-09-22): a clínica
+             lê primeiro o que deu certo, e os detratores em seguida como ponto de atenção. -->
+        <div class="white-card rounded-2xl p-6 space-y-4 border-l-4 border-l-emerald-500" id="cardNpsPositivos">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-600/20">
+                        <i data-lucide="thumbs-up" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Destaques Positivos</h3>
+                        <p class="text-sm text-slate-700">Promotores (nota 9 ou 10) e respostas com sinais de satisfação, identificados por um filtro de palavras-chave — o que a clínica está acertando</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="relative no-print shrink-0">
+                        <button onclick="toggleExportMenu(event, 'menuNpsPositivos')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-sm font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            Exportar como...
+                            <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                        </button>
+                        <div id="menuNpsPositivos" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
+                            <button onclick="exportSectionAsPdf('cardNpsPositivos','NPS_Destaques_Positivos')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
+                            </button>
+                            <button onclick="exportSectionAsJpeg('cardNpsPositivos','NPS_Destaques_Positivos')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                                <i data-lucide="image" class="w-3.5 h-3.5 text-teal-600"></i> Exportar como JPEG
+                            </button>
+                        </div>
+                    </div>
+                    <span class="text-sm text-slate-600 font-medium" id="npsPositivosCountLabel">0 destaque(s)</span>
+                </div>
+            </div>
+            <!-- `export-expand`: mesma razão do card de detratores — sem isso o html2canvas
+                 capturaria só os ~420px visíveis e cortaria o resto da lista em silêncio. -->
+            <div class="space-y-2 max-h-[420px] overflow-y-auto custom-scrollbar pr-1 export-expand" id="npsPositivosContainer">
+                <!-- Populado via JS -->
+            </div>
+        </div>
+
         <!-- NPS: Destaques (Detratores + Comentários Negativos) -->
         <div class="white-card rounded-2xl p-6 space-y-4 border-l-4 border-l-rose-500" id="cardNpsDestaques">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -1919,12 +1959,19 @@
         function renderGanhoPotencialCards() {
             const container = document.getElementById('ganhoCardsContainer');
             const stats = buildGanhoEspecialidadeStats(ganhoFilteredData);
-            // Ordem de prioridade por nível de especialidade (primária > secundária > terciária);
-            // dentro do mesmo nível, maior potencial de ganho primeiro.
-            const entries = Object.entries(stats).sort((a, b) => {
-                const tierDiff = getSpecialtyTierOrder(a[0]) - getSpecialtyTierOrder(b[0]);
-                return tierDiff !== 0 ? tierDiff : b[1].ganhoPotencial - a[1].ganhoPotencial;
-            });
+            // Ordem de prioridade por nível de especialidade (primária > secundária >
+            // terciária); dentro do mesmo nível, maior potencial de ganho primeiro —
+            // este cartão é um RANKING FINANCEIRO, não uma fila de trabalho.
+            // A ordem de especialidade entra só como ÚLTIMO desempate, quando duas têm
+            // exatamente o mesmo ganho potencial (ex.: as duas ainda sem valor base
+            // configurado, as duas em R$ 0): antes esse empate caía na ordem arbitrária
+            // de `Object.entries`, que muda conforme a planilha. Não altera o ranking
+            // de quem tem valores diferentes.
+            const entries = Object.entries(stats).sort((a, b) =>
+                getSpecialtyTierOrder(a[0]) - getSpecialtyTierOrder(b[0])
+                || b[1].ganhoPotencial - a[1].ganhoPotencial
+                || getSpecialtyPriorityOrder(a[0]) - getSpecialtyPriorityOrder(b[0])
+            );
 
             const totalConvertiveis = entries.reduce((sum, [, s]) => sum + s.convertiveis, 0);
             const totalGanho = entries.reduce((sum, [, s]) => sum + s.ganhoPotencial, 0);
@@ -2632,16 +2679,28 @@
         const CONVERSION_RANK_JA_OPEROU = 6;        // demais casos já operados (nada em aberto a cobrar)
         const CONVERSION_RANK_DESCONHECIDO = 9;     // status fora da lista oficial do Farol — vai pro fim
 
-        // Ordem completa de especialidade. O NÍVEL (primária/secundária/terciária) já existe
-        // em SPECIALTY_RULES, mas a ordem DENTRO do nível é uma régua nova e NÃO bate com a
-        // ordem de declaração daquele objeto (ex.: pterígio vem antes de calázio, estrabismo
-        // antes de glaucoma), por isso precisa ser explícita aqui em vez de derivada dele.
-        // Especialidade fora da lista ("outras") vai por último, dentro das terciárias.
-        const SPECIALTY_PRIORITY_ORDER = [
+        // Ordem DENTRO de cada nível. É a única coisa que NÃO dá pra derivar de
+        // SPECIALTY_RULES: lá a ordem de declaração não é a de prioridade (calázio vem
+        // antes de pterígio, glaucoma antes de estrabismo), então essa sequência precisa
+        // ser explícita.
+        const SPECIALTY_ORDER_WITHIN_TIER = [
             'CATARATA', 'REFRATIVA', 'BLEFAROPLASTIA', 'RETINA',
             'CAPSULOTOMIA', 'PTERIGIO', 'CALAZIO', 'CONSULTA OFTALMOLOGICA',
             'ESTRABISMO', 'GLAUCOMA', 'CERATOCONE', 'CORNEA'
         ];
+
+        // Ordem completa = nível (de `SPECIALTY_RULES[].tier`, a FONTE ÚNICA do nível) +
+        // a sequência acima como desempate. ⚠️ Unificado em 2026-09-22 (decisão do usuário:
+        // "seguir a regra de negócio já definida das primárias/secundárias/terciárias para
+        // a ordem"): antes esta lista era escrita à mão já ordenada por nível, então
+        // reclassificar uma especialidade em SPECIALTY_RULES deixava as duas divergentes em
+        // silêncio — o tipo de divergência que centralizar `classifyStatus()` veio evitar.
+        // Derivando, o nível muda num lugar só e esta ordem acompanha sozinha.
+        // `sort` é estável em JS moderno, então dentro do mesmo nível a sequência acima é
+        // preservada — o resultado é idêntico à lista manual que existia antes.
+        // Especialidade fora da lista ("outras") vai por último (ver getSpecialtyPriorityOrder).
+        const SPECIALTY_PRIORITY_ORDER = [...SPECIALTY_ORDER_WITHIN_TIER]
+            .sort((a, b) => getSpecialtyTierOrder(a) - getSpecialtyTierOrder(b));
         function getSpecialtyPriorityOrder(especialidade) {
             const key = normalizeSpecialtyKey(especialidade);
             const idx = SPECIALTY_PRIORITY_ORDER.findIndex(k => key.includes(k));
@@ -2903,18 +2962,23 @@
         // clínica parceira não faz exame de laboratório) ou "CdV (gestão)" para revisões
         // internas (sem indicação alta, conversão abaixo da meta) — não são contato direto
         // com paciente, por isso ficam sempre por último, com tag visual diferente (cinza).
+        // ⚠️ A ORDEM DESTAS RECOMENDAÇÕES SEGUE A MESMA RÉGUA DA LISTA DETALHADA
+        // (`CONVERSION_PRIORITY_RANK`) — alinhado em 2026-09-22 por decisão do usuário:
+        // "seguir a regra que está na lista, para ficar mais igual ao que a clínica vai
+        // encontrar na planilha que enviarmos a eles". Até então as duas telas discordavam
+        // sobre o que era mais urgente, e isso era acidente, não escolha.
+        // Ordem: aguardando a clínica agendar (rank 1) → cirurgia agendada vencida (rank 2)
+        // → exames, os 3 tipos (rank 3) → 2º olho de catarata (rank 5) → itens de gestão,
+        // que não são fila de paciente e por isso ficam sempre no fim.
+        // ⚠️ Isto SUPERA a ordem definida em 2026-08-11, que trazia o 2º olho ANTES dos
+        // exames e a cirurgia vencida antes do "aguardando agendar". Não reverter pra
+        // aquela sem um pedido novo — e, se reverter, a régua da Lista Detalhada tem de
+        // mudar junto, senão a divergência volta.
         function buildRecommendations(sp, stats) {
             const rule = getSpecialtyRule(sp.key);
             const ov = stats.overdue;
             const recs = [];
 
-            if (ov.CIRURGIA_AGENDOU > 0) {
-                recs.push({
-                    priority: 'urgente', responsavel: 'Clínica',
-                    headline: `Reagendar ${ov.CIRURGIA_AGENDOU} cirurgia${ov.CIRURGIA_AGENDOU > 1 ? 's' : ''} vencida${ov.CIRURGIA_AGENDOU > 1 ? 's' : ''}`,
-                    detail: 'Paciente não voltou após a data marcada — contato urgente pra reagendar ou confirmar.'
-                });
-            }
             if (ov.AGUARDANDO_CLINICA_AGENDAR > 0) {
                 // "Maior acúmulo" só faz sentido comparando clínicas — com uma única unidade
                 // no filtro, apontar "maior acúmulo" seria óbvio/redundante.
@@ -2927,18 +2991,18 @@
                     detail: `${gargaloTxt}Prazo interno vencido — seguir com a marcação da cirurgia.`
                 });
             }
+            if (ov.CIRURGIA_AGENDOU > 0) {
+                recs.push({
+                    priority: 'urgente', responsavel: 'Clínica',
+                    headline: `Reagendar ${ov.CIRURGIA_AGENDOU} cirurgia${ov.CIRURGIA_AGENDOU > 1 ? 's' : ''} vencida${ov.CIRURGIA_AGENDOU > 1 ? 's' : ''}`,
+                    detail: 'Paciente não voltou após a data marcada — contato urgente pra reagendar ou confirmar.'
+                });
+            }
             if (ov.EXAMES_REALIZOU_PENDENTE_RETORNO > 0) {
                 recs.push({
                     priority: 'urgente', responsavel: 'Clínica',
                     headline: `Dar sequência a ${ov.EXAMES_REALIZOU_PENDENTE_RETORNO} retorno${ov.EXAMES_REALIZOU_PENDENTE_RETORNO > 1 ? 's' : ''} em atraso`,
                     detail: 'Exame já foi realizado — só falta retomar contato pra fechar o retorno.'
-                });
-            }
-            if (sp.key === 'CATARATA' && stats.olho2Pendente > 0) {
-                recs.push({
-                    priority: 'oportunidade', responsavel: 'Clínica',
-                    headline: `Acionar régua do 2º olho (${stats.olho2Pendente} pac.)`,
-                    detail: 'Operou o 1º olho e não tem registro do 2º — oportunidade de alta conversão.'
                 });
             }
             // Exame oftalmológico é feito na própria clínica parceira — quem contata o
@@ -2960,6 +3024,13 @@
                     priority: 'atencao', responsavel: 'CdV',
                     headline: `Destravar ${clinicoAtrasado} exame${clinicoAtrasado > 1 ? 's' : ''} ${clinicoAtrasado > 1 ? 'laboratoriais' : 'laboratorial'} em atraso`,
                     detail: 'Exame fora da clínica (laboratório) — CdV ajuda no contato com o paciente pra remarcar.'
+                });
+            }
+            if (sp.key === 'CATARATA' && stats.olho2Pendente > 0) {
+                recs.push({
+                    priority: 'oportunidade', responsavel: 'Clínica',
+                    headline: `Acionar régua do 2º olho (${stats.olho2Pendente} pac.)`,
+                    detail: 'Operou o 1º olho e não tem registro do 2º — oportunidade de alta conversão.'
                 });
             }
             const semIndicacaoPct = stats.total ? Math.round((stats.semIndicacao / stats.total) * 100) : 0;
@@ -3526,9 +3597,20 @@
             else if (group === 'AGUARDANDO_CLINICA') badgeColor = 'bg-rose-100 text-rose-800 border-rose-300';
             else if (group === 'CIRURGIA_AGENDADA') badgeColor = 'bg-blue-100 text-blue-800 border-blue-300';
             else if (group === 'CIRURGIA_REALIZADA') badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
-            else if (group === 'SEM_STATUS') badgeColor = 'bg-slate-200 text-slate-700 border-slate-300';
-            // Encerrou (desistiu ou sem indicação): vermelho claro, sempre — não depende de data.
-            else if (group === 'ENCERROU_DESISTIU' || group === 'ENCERROU_SEM_INDICACAO') badgeColor = 'bg-red-50 text-red-500 border-red-200';
+            // ⚠️ Vermelho, não cinza (2026-09-22, pedido do usuário): não saber onde o
+            // paciente está é PENDÊNCIA, não neutralidade — o cinza fazia o pior caso da
+            // jornada parecer o mais inofensivo da planilha. Mesmo vermelho do "atrasado":
+            // SEM_STATUS não tem data, então nunca colide com aquele override.
+            else if (group === 'SEM_STATUS') badgeColor = 'bg-red-100 text-red-700 border-red-300';
+            // Desistiu: vermelho claro — é perda, e reversível, então cobra ação.
+            else if (group === 'ENCERROU_DESISTIU') badgeColor = 'bg-red-50 text-red-500 border-red-200';
+            // ⚠️ Sem indicação cirúrgica: MARROM (2026-09-22, pedido do usuário). Estava no
+            // mesmo vermelho de "desistiu", o que fazia parecer um indicativo ruim para a
+            // clínica — mas aqui não há ação a tomar além de encerrar o atendimento com o
+            // paciente: é desfecho clínico legítimo, não falha. Marrom sai da escala de
+            // alerta (vermelho/laranja/azul) sem virar o cinza de "não sei", que agora é
+            // o vermelho acima.
+            else if (group === 'ENCERROU_SEM_INDICACAO') badgeColor = 'bg-[#EFE3D6] text-[#7C4A21] border-[#DCC7AE]';
 
             // Data do procedimento/retorno marcado — mesma aba do status mostrado ao lado.
             const journeyDate = slot.date;
@@ -3565,6 +3647,20 @@
                     overdueTag = '<span class="ml-1 text-sm font-bold text-sky-500 whitespace-nowrap">(em andamento)</span>';
                     dateStatusLabel = 'Em andamento';
                 }
+            }
+
+            // ⚠️ "Sem status"/"aguardando retorno" não tem data de gargalo, então
+            // getJourneyDueDiffDays() devolve null e a coluna de ação saía VAZIA ("-") —
+            // justamente no caso em que não se sabe onde o paciente está. Pedido do
+            // usuário em 2026-09-22: a ação tem de dizer "necessário atualização".
+            // Reaproveita o rótulo que já existe (e a cor laranja que EXPORT_DATE_OBS_FILL
+            // já associa a ele) em vez de criar um 4º rótulo com a mesma semântica.
+            // Vem DEPOIS do bloco acima de propósito: aqui dueDiffDays é sempre null, então
+            // não há o que sobrescrever — mas se um dia SEM_STATUS ganhar data, o estado
+            // calculado a partir dela deve vencer, e este `if` não roda.
+            if (group === 'SEM_STATUS' && dueDiffDays === null) {
+                overdueTag = '<span class="ml-1 text-sm font-bold text-orange-600 whitespace-nowrap">(necessário atualização)</span>';
+                dateStatusLabel = 'Necessário atualização';
             }
 
             // Regra de negócio: desistência sem motivo registrado precisa ficar visível
@@ -4323,6 +4419,16 @@
             }).map(campo => NPS_AVAL_LABELS[campo]);
         }
 
+        // Espelho da função acima: o que o paciente ELOGIOU. É o detalhe que o card de
+        // Destaques Positivos mostra enquanto a planilha não trouxer comentário — sem
+        // isso o card só conseguiria dizer "é promotor", sem nenhum conteúdo pra clínica.
+        function npsGetCategoriasPositivas(item) {
+            return Object.keys(NPS_AVAL_LABELS).filter(campo => {
+                const v = normalizeFreeText(getItemProp(item, [campo])).trim();
+                return v.startsWith('GOSTEI');
+            }).map(campo => NPS_AVAL_LABELS[campo]);
+        }
+
         const NPS_AVAL_FIELDS = Object.keys(NPS_AVAL_LABELS);
 
         function npsUpdateDashboard() {
@@ -4373,6 +4479,7 @@
             renderNpsGauge(npsScore);
             renderNpsClinicsChart();
             renderNpsCategories();
+            renderNpsPositivos();
             renderNpsDestaques();
             renderNpsTable();
         }
@@ -4533,15 +4640,62 @@
             'insatisfeito', 'insatisfeita', 'decepcionado', 'decepcionada', 'arrependido', 'arrependida'
         ];
 
+        // ================================================================
+        // NPS: PALAVRAS-CHAVE POSITIVAS (2026-09-22, pedido do usuário)
+        // ----------------------------------------------------------------
+        // Contrapartida da lista acima: serve ao card "Destaques Positivos", que mostra
+        // à clínica os elogios que ela recebeu. Mesma natureza da lista negativa — é um
+        // PONTO DE PARTIDA genérico pra cirurgia oftalmológica e atendimento, pra refinar
+        // com o vocabulário real dos pacientes quando o Farol passar a exportar o campo
+        // de comentário (hoje nenhum export traz — ver NPS_COMMENT_FIELDS).
+        // ================================================================
+        const NPS_POSITIVE_KEYWORDS = [
+            // Resultado da cirurgia / visão
+            'voltei a enxergar', 'voltei a ver', 'consigo enxergar', 'enxergando bem', 'enxergo bem',
+            'enxergando melhor', 'visao melhorou', 'melhorou muito', 'visao perfeita', 'visao otima',
+            'nao preciso mais de oculos', 'sem oculos', 'larguei os oculos',
+            'mudou minha vida', 'renasci', 'milagre', 'nova vida',
+            'deu tudo certo', 'correu tudo bem', 'sem dor', 'nao senti dor', 'recuperacao rapida',
+            'resultado otimo', 'resultado excelente', 'superou as expectativas', 'melhor do que esperava',
+            // Atendimento
+            'atendimento otimo', 'atendimento excelente', 'atendimento muito bom', 'otimo atendimento',
+            'excelente atendimento', 'bem atendido', 'bem atendida', 'super bem atendido', 'super bem atendida',
+            'atencioso', 'atenciosa', 'atenciosos', 'atenciosas', 'acolhimento', 'acolhedor', 'acolhedora',
+            'educados', 'gentis', 'gentileza', 'carinho', 'humanizado', 'humanizada',
+            // Equipe médica e estrutura
+            'excelente profissional', 'otimo profissional', 'otima profissional', 'profissionais excelentes',
+            'equipe maravilhosa', 'equipe otima', 'equipe excelente', 'medico otimo', 'medica otima',
+            'clinica otima', 'clinica excelente', 'estrutura otima', 'muito organizada', 'muito limpa',
+            // Satisfação e recomendação
+            'recomendo', 'super recomendo', 'indico', 'indicaria', 'voltarei', 'voltaria',
+            'muito satisfeito', 'muito satisfeita', 'satisfeito', 'satisfeita',
+            'gratidao', 'agradecido', 'agradecida', 'parabens',
+            'maravilhoso', 'maravilhosa', 'excelente', 'otimo', 'otima', 'perfeito', 'perfeita', 'nota 10'
+        ];
+
+        // Negações que invalidam um elogio. ⚠️ Necessário porque vários termos positivos são
+        // SUBSTRING de uma frase negativa — o caso claro é "nao recomendo", que contém
+        // "recomendo". Sem isso, um detrator entraria no card de elogios.
+        // Aplicado SÓ na varredura positiva: a lista negativa já traz as negações escritas
+        // por extenso ("nao recomendo", "nao estou enxergando"), então o mesmo filtro ali
+        // anularia justamente os termos que devem casar.
+        const NPS_NEGACOES_RE = /(?:^|\s)(?:NAO|NUNCA|NEM|JAMAIS)\s+$/;
+
         // Campos que sabidamente não são texto livre — pular na varredura evita
         // falso positivo (ex: um CEP ou telefone batendo por acaso com um número).
         // Campos de identificação/localização do paciente e da clínica: nunca contêm
         // opinião do paciente, então ficam fora da varredura de palavras-chave — evita
         // destaque falso vindo de um nome de rua, bairro, e-mail ou nome de médico.
+        // Os campos `Aval. *` entram aqui (2026-09-22) por serem CATEGÓRICOS, não texto
+        // livre: só contêm "Gostei"/"Não". Hoje nenhuma palavra-chave das duas listas casa
+        // com esses dois valores, então incluí-los não muda resultado nenhum — é pra evitar
+        // a armadilha de alguém acrescentar "gostei" à lista positiva depois e todo mundo
+        // virar elogio de uma vez. O que esses campos dizem já é lido, e melhor, por
+        // npsGetCategoriasPositivas()/npsGetCategoriasNegativas().
         const NPS_NON_TEXT_FIELDS = new Set(['Nota', 'Telefone', 'Telefone 1', 'Telefone 2', 'CEP',
             'Data da Cirurgia', 'Data da Aval.', 'Email', 'E-mail', 'Endereço', 'Endereco',
             'Número', 'Numero', 'Bairro', 'Cidade', 'Estado', 'Cliente', 'clientes',
-            'clinicas', 'medicos', 'especialidades']);
+            'clinicas', 'medicos', 'especialidades', ...NPS_AVAL_FIELDS]);
 
         function normalizeFreeText(s) {
             return (s || '').toString().toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -4559,17 +4713,128 @@
                 .replace(/'/g, '&#39;');
         }
 
-        function findNegativeKeywords(item) {
+        // Varredura de palavras-chave em todos os campos de texto livre da avaliação.
+        // Generalizada em 2026-09-22 pra servir às duas listas (negativa e positiva) —
+        // duas cópias divergiriam na primeira vez que alguém mexesse só numa delas.
+        // `ignoreNegated` liga o filtro de negação (ver NPS_NEGACOES_RE): só a varredura
+        // positiva usa.
+        function findKeywordsInItem(item, keywords, { ignoreNegated = false } = {}) {
             const found = [];
             Object.keys(item).forEach(key => {
                 if (NPS_NON_TEXT_FIELDS.has(key)) return;
                 const text = normalizeFreeText(item[key]);
                 if (!text) return;
-                NPS_NEGATIVE_KEYWORDS.forEach(kw => {
-                    if (text.includes(normalizeFreeText(kw)) && !found.includes(kw)) found.push(kw);
+                keywords.forEach(kw => {
+                    if (found.includes(kw)) return;
+                    const alvo = normalizeFreeText(kw);
+                    // Percorre TODAS as ocorrências: a 1ª pode estar negada ("não
+                    // recomendo") e uma seguinte não ("recomendo muito").
+                    for (let i = text.indexOf(alvo); i !== -1; i = text.indexOf(alvo, i + 1)) {
+                        if (ignoreNegated && NPS_NEGACOES_RE.test(text.slice(Math.max(0, i - 12), i))) continue;
+                        found.push(kw);
+                        break;
+                    }
                 });
             });
             return found;
+        }
+
+        function findNegativeKeywords(item) {
+            return findKeywordsInItem(item, NPS_NEGATIVE_KEYWORDS);
+        }
+
+        function findPositiveKeywords(item) {
+            return findKeywordsInItem(item, NPS_POSITIVE_KEYWORDS, { ignoreNegated: true });
+        }
+
+        // ================================================================
+        // DESTAQUES POSITIVOS (2026-09-22, pedido do usuário)
+        // ----------------------------------------------------------------
+        // "Mostrar à clínica os principais destaques de comentários" positivos, com o
+        // reconhecimento de palavras-chave já pronto pra quando o NPS passar a trazer o
+        // campo de comentário. Enquanto não traz, o card não fica vazio: lista os
+        // promotores com as categorias que eles marcaram como "Gostei".
+        // Espelha renderNpsDestaques() de propósito (mesma estrutura de item, mesma
+        // paleta invertida) — a clínica lê os dois cards em sequência, elogio primeiro.
+        // ================================================================
+        function renderNpsPositivos() {
+            const container = document.getElementById('npsPositivosContainer');
+            const highlights = [];
+
+            npsFilteredData.forEach(item => {
+                const nota = npsGetNota(item);
+                const isPromotor = nota !== null && nota >= 9;
+                const keywords = findPositiveKeywords(item);
+                if (isPromotor || keywords.length > 0) {
+                    highlights.push({ item, nota, isPromotor, keywords });
+                }
+            });
+
+            // Elogio COM texto vale mais que promotor sem comentário: é o que a clínica
+            // consegue mostrar/usar. Por isso quem tem palavra-chave sobe, e dentro disso
+            // a nota maior primeiro.
+            highlights.sort((a, b) =>
+                (b.keywords.length > 0) - (a.keywords.length > 0)
+                || (b.nota ?? 0) - (a.nota ?? 0)
+            );
+
+            document.getElementById('npsPositivosCountLabel').textContent = `${highlights.length} destaque(s)`;
+
+            if (highlights.length === 0) {
+                container.innerHTML = '<p class="text-sm text-slate-600 text-center py-6">Nenhum destaque positivo encontrado no filtro atual.</p>';
+                return;
+            }
+
+            const MAX_DESTAQUES = 50;
+            container.innerHTML = highlights.slice(0, MAX_DESTAQUES).map(h => {
+                const nome = npsGetPaciente(h.item) || 'Sem Nome';
+                const clinica = npsGetClinica(h.item);
+                const medico = npsGetMedico(h.item);
+                const comentario = npsGetComentario(h.item);
+                const positivas = npsGetCategoriasPositivas(h.item);
+
+                const tags = [];
+                if (h.isPromotor) {
+                    tags.push(`<span class="px-2 py-0.5 rounded-full text-sm font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 whitespace-nowrap">PROMOTOR (nota ${h.nota})</span>`);
+                }
+                h.keywords.forEach(kw => {
+                    tags.push(`<span class="px-2 py-0.5 rounded-full text-sm font-bold bg-teal-100 text-teal-800 border border-teal-300 whitespace-nowrap">"${escapeHtml(kw)}"</span>`);
+                });
+
+                // Sem telefone aqui, ao contrário do card negativo: elogio não gera
+                // acionamento do paciente, então não há motivo pra expor contato num
+                // card que vai impresso/exportado pra clínica parceira.
+                const blocoComentario = comentario
+                    ? `<div class="mt-2 pt-2 border-t border-emerald-200/70">
+                           <p class="text-sm font-bold text-emerald-700 uppercase tracking-wider mb-1 flex items-center gap-1">
+                               <i data-lucide="message-square-quote" class="w-3 h-3"></i> Comentário do paciente
+                           </p>
+                           <p class="text-sm text-slate-800 italic leading-relaxed">"${escapeHtml(comentario)}"</p>
+                       </div>`
+                    : (positivas.length
+                        ? `<div class="mt-2 pt-2 border-t border-emerald-200/70">
+                               <p class="text-sm text-slate-600">
+                                   <span class="font-bold text-emerald-700">Elogiou:</span> ${escapeHtml(positivas.join(' · '))}
+                               </p>
+                               <p class="text-sm text-slate-600 mt-0.5">Esta planilha não traz campo de comentário — detalhe vindo das avaliações por categoria.</p>
+                           </div>`
+                        : '');
+
+                return `
+                    <div class="p-3 rounded-xl border border-emerald-200 bg-emerald-50/40">
+                        <div class="flex flex-wrap items-start justify-between gap-2">
+                            <div class="text-sm">
+                                <span class="font-bold text-slate-900">${escapeHtml(nome)}</span>
+                                <div class="text-slate-700 mt-1">${escapeHtml(clinica || 'Sem Clínica')}${medico ? ' · ' + escapeHtml(medico) : ''}</div>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5">${tags.join('')}</div>
+                        </div>
+                        ${blocoComentario}
+                    </div>
+                `;
+            }).join('') + (highlights.length > MAX_DESTAQUES ? `<p class="text-sm text-slate-600 text-center pt-2">Mostrando ${MAX_DESTAQUES} de ${highlights.length} destaques.</p>` : '');
+
+            lucide.createIcons();
         }
 
         function renderNpsDestaques() {
@@ -4992,13 +5257,19 @@
         // de cor nova/duplicada. Só o .xlsx recebe cor: CSV é texto puro (sem metadado de
         // célula) e o PDF de tabela real não foi colorido por ora.
         const EXPORT_STATUS_FILL = {
-            SEM_STATUS: { bg: 'E2E8F0', fg: '334155' },
+            // Vermelho, não cinza (2026-09-22) — ver o comentário em buildProcedureSlotCell.
+            // Estas cores têm de acompanhar as da tela: a planilha colorida existe
+            // justamente pra bater com o que a clínica vê no painel.
+            SEM_STATUS: { bg: 'FEE2E2', fg: 'B91C1C' },
             EXAMES: { bg: 'FEF3C7', fg: '92400E' },
             AGUARDANDO_CLINICA: { bg: 'FFE4E6', fg: '9F1239' },
             CIRURGIA_AGENDADA: { bg: 'DBEAFE', fg: '1E40AF' },
             CIRURGIA_REALIZADA: { bg: 'D1FAE5', fg: '065F46' }, // "concluído"
             ENCERROU_DESISTIU: { bg: 'FEE2E2', fg: 'B91C1C' },
-            ENCERROU_SEM_INDICACAO: { bg: 'FEE2E2', fg: 'B91C1C' },
+            // Marrom: desfecho clínico legítimo, sem ação pendente (2026-09-22).
+            ENCERROU_SEM_INDICACAO: { bg: 'EFE3D6', fg: '7C4A21' },
+            // OUTROS segue cinza de propósito: status fora da lista oficial do Farol é
+            // "não reconhecido", não "não preenchido" — são coisas diferentes.
             OUTROS: { bg: 'E2E8F0', fg: '334155' },
             // "Potencial 2º olho" nas colunas "2º Procedimento" (ver SECOND_EYE_POTENTIAL_CELL)
             // — violeta, pra ficar visualmente distinto de todo status real do Farol.

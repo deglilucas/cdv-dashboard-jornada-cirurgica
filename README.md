@@ -136,7 +136,19 @@ A lista sai ordenada do lead mais quente para o mais frio, para que o responsáv
 2. **Dentro do mesmo status:** atrasado → vence hoje → em andamento → sem data
 3. **Desempate por especialidade** (níveis abaixo)
 
-A mesma ordem vale na tela e nos arquivos exportados.
+A mesma ordem vale na tela e nos arquivos exportados — e também na **lista de pacientes convertíveis** do potencial de ganho, que é uma lista de trabalho equivalente (ali o critério é o status, não o valor em R$: o dinheiro já está evidenciado nos cartões, e ordenar por valor colocaria um caso frio à frente de um lead quente).
+
+**Uma régua de prioridade só, em todas as telas**
+As recomendações de ação seguem **exatamente esta mesma ordem**. Ter duas hierarquias diferentes — uma na lista de pacientes, outra nas recomendações — faz o painel afirmar duas coisas distintas sobre o que é mais urgente; é uma divergência silenciosa, e foi preciso corrigi-la neste projeto. Itens de **gestão** (triagem, queda de conversão) não entram na régua: não são fila de paciente e ficam sempre no fim.
+
+**Cor por grupo de status**
+A cor comunica se há ação pendente, não o quanto o desfecho é bom:
+- **Vermelho** — em atraso, **e também "sem status"/"aguardando retorno"**: não saber onde o paciente está é a pior pendência da jornada, e pintá-la de cinza faz o pior caso parecer o mais inofensivo da lista. Esses registros também recebem "necessário atualização" na coluna de ação, que antes saía vazia justamente neles.
+- **Laranja** — vence hoje. **Azul** — em andamento, dentro do prazo.
+- **Marrom** — encerrado **sem indicação cirúrgica**: desfecho clínico legítimo, sem ação a tomar além de encerrar o atendimento. Não deve dividir a cor de alerta com "desistiu", que é perda reversível e cobra ação.
+- **Cinza** — só para status fora da lista oficial: "não reconhecido" é diferente de "não preenchido".
+
+A planilha exportada usa as mesmas cores da tela; se divergirem, a exportação colorida perde o propósito.
 
 **Níveis de especialidade**
 - **Primárias:** catarata > refrativa > blefaroplastia > retina

@@ -128,6 +128,10 @@ Contexto: é um dashboard 100% client-side (sem backend), mas cada usuário sobe
 
 ## FASE 3 — Plano de divisão em múltiplos arquivos
 
+> **📌 AGENDADA PELO USUÁRIO PARA 2026-09-23.** Escopo esclarecido com ele em 2026-09-22, porque o nome "dividir o arquivo" confunde: **divide só o JavaScript**, em `js/*.js`. O `index.html` continua sendo **um único arquivo e um único link** — o markup das 4 abas não sai de lá, as abas seguem alternando por `switchTab()` sem recarregar, e nada muda para quem usa o painel. Links separados por página seriam outra coisa, bem maior: as 4 abas compartilham a planilha carregada em memória, então cada troca de página recarregaria o navegador e **perderia os dados**; evitar isso exigiria persistir **dados de paciente** no navegador ou num backend, que é decisão de privacidade, não só técnica. Não confundir as duas.
+>
+> ⚠️ **Antes de começar, reler o checklist de 5 passos abaixo.** O passo 1 (confirmar que os ajustes de regra já foram feitos e commitados) está satisfeito em 2026-09-22: `REVISAO-ORDEM-PRIORIDADE-2026-08-26.md` teve **todos os itens fechados**. Os passos 2 a 4 (regerar o mapa de funções do zero, reclassificar o que é novo) continuam **obrigatórios** — o arquivo passou de 4.169 para ~5.500 linhas desde que este plano foi escrito, com funções que não existiam (`getPatientKey`, `buildKpiPremisesText`, `findKeywordsInItem`, `renderNpsPositivos`, `getSpecialtyPriorityOrder`, entre outras). **Não confiar no mapa de funções deste documento.**
+>
 > **⏸️ ADIADA a pedido do usuário (2026-08-11)** — Fases 1 e 2 já foram commitadas/pushadas na branch `fix/nps-negativo-e-escaping-xss`. O usuário quer fazer ajustes visuais e de regras de negócio **antes** desta fase, de propósito: é mais barato mexer no arquivo único agora e só depois separar em `js/*.js`, do que separar primeiro e ter que replicar cada ajuste em vários arquivos.
 >
 > **Antes de executar esta fase, quando for a vez dela:**
