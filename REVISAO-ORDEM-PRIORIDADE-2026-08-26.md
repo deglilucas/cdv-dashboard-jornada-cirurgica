@@ -10,13 +10,21 @@ Cada item tem o ponto exato do código, o esforço e o que precisa ser decidido 
 | # | Item | Status |
 |---|---|---|
 | 1 | Lista de Pacientes Potenciais (Ganho) | ✅ **FEITO em 2026-09-21** — por prioridade de status, escolha explícita do usuário |
-| 2 | Pendências de Faturamento | ⏳ aberto — falta confirmar a régua ("mais antiga primeiro") |
-| 3 | Avaliações de NPS | ⏳ aberto — falta checar redundância com o card de Destaques |
-| 4 | Unificar as 3 réguas de especialidade | ⏳ aberto — muda a ordem dos cartões do Ganho, precisa de decisão |
-| 5 | Divergência Insights × Lista | ⏳ aberto — **decisão de negócio**, não técnica |
+| 2 | Pendências de Faturamento | ❌ **DESCARTADO em 2026-09-22** pelo usuário: *"toda pendência é igualmente igual"* — não há hierarquia de urgência a representar, a tabela fica na ordem bruta. Não reabrir sem pedido novo |
+| 3 | Avaliações de NPS | ✅ **RESOLVIDO DE OUTRA FORMA em 2026-09-22** — ver abaixo |
+| 4 | Unificar as 3 réguas de especialidade | ✅ **FEITO em 2026-09-22** — ver abaixo |
+| 5 | Divergência Insights × Lista | ✅ **RESOLVIDO em 2026-09-22** — os Insights passaram a seguir a régua da Lista |
 | 6 | Consolidado das Clínicas | ✅ encerrado sem ação (já tem ordenação clicável; recomendado não mexer) |
 
-⚠️ Conferido item a item contra o código em 2026-09-21: nada dos itens 2 a 5 foi implementado nesse meio-tempo — `faturamentoFilteredRecords` e `npsFilteredData` continuam saindo na ordem bruta, as 3 réguas de especialidade continuam existindo e a divergência do item 5 continua real.
+🎉 **Com isso todos os itens deste documento estão fechados.**
+
+**Item 5 — resolvido unificando pela régua da Lista.** Decisão do usuário: *"pode seguir a regra que está na lista, para ficar mais igual ao que a clínica vai encontrar na planilha que enviarmos a eles"*. `buildRecommendations()` foi reordenado para `CONVERSION_PRIORITY_RANK`: aguardando clínica agendar → cirurgia agendada vencida → os 3 tipos de exame → 2º olho de catarata → itens de gestão no fim. Isso **supera a ordem de 2026-08-11**; se algum dia for revertida, a régua da Lista tem de mudar junto, senão a divergência volta em silêncio.
+
+**Item 3 — o usuário mudou o escopo.** Em vez de ordenar a tabela de Avaliações Detalhadas por detrator primeiro, pediu um **card de Destaques Positivos** (`cardNpsPositivos`), colocado ANTES do card de detratores: a clínica lê primeiro o que está acertando, e os detratores em seguida como ponto de atenção. Inclui o reconhecimento de palavras-chave positivas já pronto para quando o NPS passar a exportar o campo de comentário. **A tabela continua na ordem da planilha** — a proposta original desta seção não será feita. Detalhes da implementação e das armadilhas (filtro de negação para "não recomendo") no `CLAUDE.md`.
+
+**Item 4 — feito, mantendo o cartão como ranking financeiro.** As 3 réguas viraram uma: `SPECIALTY_ORDER_WITHIN_TIER` guarda só a ordem dentro do nível e `SPECIALTY_PRIORITY_ORDER` passou a ser derivada dela pelo `tier` de `SPECIALTY_RULES`, que é a fonte única do nível. Resultado idêntico à lista manual antiga (conferido elemento a elemento), mas agora reclassificar uma especialidade não deixa as duas ordens divergentes em silêncio. A ordem de especialidade entra nos cartões do Ganho só como **último desempate**, quando o ganho potencial empata — o ranking financeiro foi preservado, conforme a recomendação original desta seção.
+
+⚠️ Conferido item a item contra o código em 2026-09-21 (antes desta rodada): nada tinha sido implementado nesse meio-tempo. **O item 5 segue aberto** e é o único que resta.
 
 ---
 
