@@ -983,8 +983,8 @@
                         <i data-lucide="receipt" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <h2 class="text-lg font-bold text-slate-900 tracking-tight">Pendências de Faturamento</h2>
-                        <p class="text-sm text-slate-700">Cirurgias já realizadas cujo campo de trava (lock) ainda está vazio — ou seja, ainda não foram reportadas/pagas no relatório financeiro mensal da clínica</p>
+                        <h2 class="text-lg font-bold text-slate-900 tracking-tight">Pendências de repasse - cirurgias no Farol que ainda não estão trancadas</h2>
+                        <p class="text-base font-medium text-slate-900">Cirurgias registradas no Farol que ainda não foram localizadas no relatório financeiro.</p>
                     </div>
                 </div>
             </div>
@@ -1026,6 +1026,15 @@
                 </div>
             </div>
 
+            <!-- Faturamento: KPI de FEE estimado a receber (ver renderFaturamentoFeeKpi) -->
+            <div class="white-card rounded-2xl p-6 border-l-4 border-l-emerald-600 space-y-2" id="cardFaturamentoFee">
+                <div class="flex items-center gap-2 text-sm font-bold text-emerald-800 uppercase tracking-wider">
+                    <i data-lucide="hand-coins" class="w-4 h-4"></i>
+                    Estimativa de valores a receber da clínica após a conferência
+                </div>
+                <div id="faturamentoFeeContent" class="space-y-3"></div>
+            </div>
+
             <!-- Faturamento: Tabela -->
             <div class="white-card rounded-2xl p-6 space-y-4" id="cardFaturamentoTable">
                 <div class="flex flex-wrap items-start justify-between gap-3">
@@ -1034,7 +1043,7 @@
                             <i data-lucide="clipboard-list" class="w-5 h-5 text-amber-600"></i>
                             Cirurgias Realizadas e Ainda Não Reportadas/Pagas
                         </h3>
-                        <p class="text-sm text-slate-700">Cada linha é um procedimento (1º ou 2º olho) com status "realizou" cuja aba correspondente ainda não tem o campo de trava preenchido</p>
+                        <p class="text-sm text-slate-700">Cada linha é um procedimento (1º ou 2º olho) com status "realizou" e ainda não foi encontrada no relatório financeiro da clínica. As cirurgias já trancadas aparecem no fim da lista.</p>
                     </div>
                     <div class="relative no-print shrink-0">
                         <button onclick="toggleExportMenu(event, 'menuFaturamento')" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold rounded-lg flex items-center gap-1.5 transition shadow-sm whitespace-nowrap">
@@ -1066,6 +1075,7 @@
                                 <th class="p-3">Procedimento</th>
                                 <th class="p-3">Data da Cirurgia</th>
                                 <th class="p-3">Médico</th>
+                                <th class="p-3">Situação</th>
                             </tr>
                         </thead>
                         <tbody id="faturamentoTableBody" class="divide-y divide-slate-100">
@@ -1075,7 +1085,7 @@
                 </div>
 
                 <div class="flex items-center justify-between pt-2 text-sm text-slate-700 font-medium no-print">
-                    <span id="faturamentoPaginationInfo">Mostrando 0 de 0 pendências</span>
+                    <span id="faturamentoPaginationInfo">Mostrando 0 de 0 cirurgias</span>
                     <div class="flex gap-2">
                         <button id="faturamentoPrevPageBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 disabled:opacity-40 border border-slate-200">Anterior</button>
                         <button id="faturamentoNextPageBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 disabled:opacity-40 border border-slate-200">Próximo</button>
@@ -1142,7 +1152,7 @@
                     </div>
                     <div>
                         <h3 class="text-base font-bold text-slate-900">Potencial de Ganho Cirúrgico</h3>
-                        <p class="text-sm text-slate-700">Pacientes que ainda podem converter em cirurgia, multiplicados pelo valor base configurado abaixo</p>
+                        <p class="text-base font-medium text-slate-900">Pacientes que ainda podem converter em cirurgia, multiplicados pelo valor base configurado abaixo</p>
                     </div>
                 </div>
                 <div class="relative no-print">
@@ -1380,6 +1390,37 @@
             return true;
         }
 
+        // Filtro de período já abre com a menor e a maior data do relatório carregado
+        // (2026-09-24, pedido do usuário: puxou consultas de 01/05 a 15/08, o filtro mostra
+        // 01/05 a 15/08). Cada página usa a data da SUA regra de filtro — consulta em
+        // Consultas/Ganho, cirurgia realizada no Faturamento, cirurgia no NPS. Os limites
+        // também viram min/max do campo, então não dá pra escolher data fora do relatório.
+        function toIsoDateLocal(d) {
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+        function setPeriodFilterBounds(startId, endId, dates) {
+            const valid = dates.filter(d => d && !isNaN(d.getTime()));
+            const bounds = valid.length
+                ? [toIsoDateLocal(new Date(Math.min(...valid))), toIsoDateLocal(new Date(Math.max(...valid)))]
+                : ['', ''];
+            [startId, endId].forEach((id, i) => {
+                const el = document.getElementById(id);
+                el.value = bounds[i];
+                el.min = bounds[0];
+                el.max = bounds[1];
+                el.dataset.reportBound = bounds[i];
+            });
+        }
+        // ⚠️ Valor do filtro de período para APLICAR: o limite igual ao do relatório conta
+        // como "sem limite". Sem isso, só de abrir com o período preenchido o
+        // isWithinPeriod() passaria a descartar todo registro SEM data (consulta sem data,
+        // cirurgia sem data...), e os números mudariam sem ninguém ter filtrado nada.
+        // Quando a pessoa aperta o período, vale a regra de sempre.
+        function getPeriodFilterValue(id) {
+            const el = document.getElementById(id);
+            return el.value && el.value !== el.dataset.reportBound ? el.value : '';
+        }
+
         // ================================================================
         // CLASSIFICAÇÃO OFICIAL DE STATUS (lista fechada do Farol)
         // Fonte: "Descrição de status pós consulta.pdf" — 12 status possíveis.
@@ -1594,31 +1635,97 @@
         const SURGERY_ALIASES = ['especialidades', 'especialidade', 'Cirurgia'];
         const MEDICO_ALIASES = ['medicos', 'medico', 'Médico'];
 
-        // Pendências de faturamento: cada procedimento "realizou" (1º ou 2º olho) cuja
-        // trava (lock) DA MESMA ABA ainda está vazia — ou seja, ainda não foi reportado/pago.
-        function getPendingBillingRecords(data) {
+        // Cirurgias para conferência de repasse: cada procedimento "realizou" (1º ou 2º olho)
+        // vira uma linha, com `trancada` = trava (lock) DA MESMA ABA preenchida — ou seja,
+        // já reportada/paga. Desde 2026-09-24 a lista traz as trancadas também (no fim, ver
+        // sortBillingRecords); antes só entravam as pendentes.
+        function getBillingRecords(data) {
             const records = [];
             data.forEach(item => {
                 const slots = getProcedureSlots(item);
                 slots.forEach(sl => {
                     const isRealizou = sl.code === 'CIRURGIA_REALIZOU_1' || sl.code === 'CIRURGIA_REALIZOU_2';
-                    if (isRealizou && !sl.isLocked) {
-                        records.push({
-                            // ID do cliente no Farol: é por ele que a clínica
-                            // localiza o paciente para conferir o faturamento.
-                            id: getItemProp(item, ['clientes_id', 'id', 'ID']),
-                            paciente: getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']) || 'Sem Nome',
-                            clinica: getItemProp(item, CLINIC_ALIASES) || 'Sem Clínica',
-                            especialidade: getItemProp(item, SURGERY_ALIASES) || 'Não Especificado',
-                            medico: getItemProp(item, MEDICO_ALIASES) || '-',
-                            procedimento: sl.code === 'CIRURGIA_REALIZOU_1' ? '1º Olho' : '2º Olho',
-                            slot: sl.slot,
-                            data: sl.date
-                        });
-                    }
+                    if (!isRealizou) return;
+                    const clinicaRaw = getItemProp(item, CLINIC_ALIASES);
+                    const especialidadeRaw = getItemProp(item, SURGERY_ALIASES);
+                    records.push({
+                        // ID do cliente no Farol: é por ele que a clínica
+                        // localiza o paciente para conferir o faturamento.
+                        id: getItemProp(item, ['clientes_id', 'id', 'ID']),
+                        paciente: getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']) || 'Sem Nome',
+                        clinica: clinicaRaw || 'Sem Clínica',
+                        especialidade: especialidadeRaw || 'Não Especificado',
+                        // Chave do valor base: tem de ser montada IGUAL à do Potencial de
+                        // Ganho (buildGanhoEspecialidadeStats/buildValorBaseCombos), inclusive
+                        // no fallback de campo vazio, senão getValorBase() não acha o preço.
+                        valorBaseClinica: clinicaRaw || 'Não identificada',
+                        valorBaseEspecialidade: especialidadeRaw || 'Não Especificado',
+                        medico: getItemProp(item, MEDICO_ALIASES) || '-',
+                        procedimento: sl.code === 'CIRURGIA_REALIZOU_1' ? '1º Olho' : '2º Olho',
+                        slot: sl.slot,
+                        data: sl.date,
+                        trancada: sl.isLocked
+                    });
                 });
             });
             return records;
+        }
+
+        // Ordem da lista de repasse (2026-09-24, pedido do usuário): pendentes (não
+        // trancadas) primeiro — são a prioridade da conferência —, trancadas no fim; dentro
+        // de cada grupo, da cirurgia mais antiga para a mais recente (é dinheiro parado há
+        // mais tempo). Sem data vai pro fim do próprio grupo. Fonte única da tela e das
+        // exportações (as duas leem faturamentoFilteredRecords, já ordenado).
+        function sortBillingRecords(records) {
+            return records.slice().sort((a, b) =>
+                (a.trancada - b.trancada)
+                || ((a.data ? 0 : 1) - (b.data ? 0 : 1))
+                || ((a.data && b.data) ? a.data - b.data : 0)
+            );
+        }
+
+        // FEE da central gestora = 25% do valor da cirurgia realizada (regra passada pelo
+        // usuário em 2026-09-24: cirurgia de R$ 100 → R$ 25 de FEE). O valor da cirurgia é
+        // o MESMO valor base configurado na página Potencial de Ganho, por (clínica,
+        // especialidade) — não há outra fonte de preço no painel.
+        const FEE_PERCENTUAL = 0.25;
+
+        // Estimativa a receber = FEE de cada cirurgia AINDA NÃO TRANCADA do filtro atual
+        // (trancada = já reportada e com FEE pago, então não é mais "a receber"). Cada
+        // olho é uma cirurgia, logo um FEE. Sem valor base configurado, a cirurgia fica
+        // fora da soma e vira aviso — nunca entra como R$ 0 em silêncio (mesma regra do
+        // Potencial de Ganho).
+        function buildFaturamentoFeeStats(records) {
+            const st = { pendentes: 0, semPreco: 0, feeEstimado: 0 };
+            records.forEach(rec => {
+                if (rec.trancada) return;
+                st.pendentes++;
+                const valor = getValorBase(rec.valorBaseClinica, rec.valorBaseEspecialidade);
+                if (valor === null) st.semPreco++;
+                else st.feeEstimado += valor * FEE_PERCENTUAL;
+            });
+            return st;
+        }
+
+        function renderFaturamentoFeeKpi() {
+            const el = document.getElementById('faturamentoFeeContent');
+            if (!el) return;
+            const st = buildFaturamentoFeeStats(faturamentoFilteredRecords);
+            const pct = Math.round(FEE_PERCENTUAL * 100);
+            // Rótulo usa a SIGLA "CdV", nunca o nome da empresa por extenso: o repositório
+            // é público (regra do CLAUDE.md, 2026-09-22).
+            el.innerHTML = `
+                <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <span class="text-base font-bold text-slate-900">FEE de ${pct}% da CdV:</span>
+                    <span class="text-3xl font-extrabold text-emerald-700">${formatBRL(st.feeEstimado)}</span>
+                </div>
+                <ul class="list-disc pl-5 space-y-1 text-base font-semibold text-slate-900">
+                    <li>${st.pendentes} cirurgia(s) ainda não trancada(s) no filtro atual.</li>
+                    ${st.semPreco > 0 ? `<li>${st.semPreco} sem valor base configurado (não somada(s) à estimativa).</li>` : ''}
+                </ul>
+                <p class="text-base font-semibold text-slate-900">Premissa: FEE de ${pct}% sobre o valor base de cada cirurgia, o mesmo configurado por clínica e especialidade na página Potencial de Ganho. Considera só as cirurgias ainda não trancadas.</p>
+                <p class="text-base font-semibold text-slate-900"><strong class="font-extrabold">Importante:</strong> o valor de repasse pode ser maior, caso o paciente tenha feito exames no período selecionado.</p>
+            `;
         }
 
         function collectUnknownStatuses(data) {
@@ -1662,31 +1769,36 @@
             });
             populateMultiSelect('faturamentoFilterClinic', Array.from(clinics).sort());
             populateMultiSelect('faturamentoFilterSurgery', Array.from(surgeries).sort());
+            // Mesma data que applyFaturamentoFilters() filtra: a da cirurgia realizada.
+            setPeriodFilterBounds('faturamentoDateStart', 'faturamentoDateEnd',
+                getBillingRecords(rawData).map(rec => rec.data));
         }
 
         function applyFaturamentoFilters() {
             const clinics = getMultiSelectValues('faturamentoFilterClinic');
             const surgeries = getMultiSelectValues('faturamentoFilterSurgery');
-            const dateStart = document.getElementById('faturamentoDateStart').value;
-            const dateEnd = document.getElementById('faturamentoDateEnd').value;
+            const dateStart = getPeriodFilterValue('faturamentoDateStart');
+            const dateEnd = getPeriodFilterValue('faturamentoDateEnd');
 
-            const allPending = getPendingBillingRecords(rawData);
-
-            faturamentoFilteredRecords = allPending.filter(rec => {
+            faturamentoFilteredRecords = sortBillingRecords(getBillingRecords(rawData).filter(rec => {
                 const matchClinic = matchesMultiSelect(clinics, rec.clinica);
                 const matchSurgery = matchesMultiSelect(surgeries, rec.especialidade);
                 const matchPeriod = isWithinPeriod(rec.data, dateStart, dateEnd);
                 return matchClinic && matchSurgery && matchPeriod;
-            });
+            }));
 
+            const pendentes = faturamentoFilteredRecords.filter(rec => !rec.trancada).length;
+            const trancadas = faturamentoFilteredRecords.length - pendentes;
             faturamentoCurrentPage = 1;
-            document.getElementById('faturamentoCountLabel').textContent = `${faturamentoFilteredRecords.length} pendência(s) no filtro`;
+            document.getElementById('faturamentoCountLabel').textContent = `${pendentes} pendência(s) · ${trancadas} trancada(s) no filtro`;
             renderFilterSummary('filterSummaryFaturamento', [
                 { label: 'Clínica', value: describeMultiSelectFilter('faturamentoFilterClinic', 'todas') },
                 { label: 'Especialidade', value: describeMultiSelectFilter('faturamentoFilterSurgery', 'todas') },
                 { label: 'Período da cirurgia', value: describePeriodFilter('faturamentoDateStart', 'faturamentoDateEnd') },
-                { label: 'Pendências no recorte', value: String(faturamentoFilteredRecords.length) }
+                { label: 'Pendências no recorte', value: String(pendentes) },
+                { label: 'Já trancadas no recorte', value: String(trancadas) }
             ]);
+            renderFaturamentoFeeKpi();
             renderFaturamentoTable();
         }
 
@@ -1730,13 +1842,19 @@
                     </td>
                     <td class="p-3 text-slate-600 font-medium">${rec.data ? rec.data.toLocaleDateString('pt-BR') : '-'}</td>
                     <td class="p-3 text-slate-600 text-sm font-medium">${escapeHtml(rec.medico)}</td>
+                    <td class="p-3">
+                        ${rec.trancada
+                            ? '<span class="badge-pill bg-emerald-100 text-emerald-800 border-emerald-300 whitespace-nowrap">Trancada</span>'
+                            : '<span class="badge-pill bg-red-100 text-red-700 border-red-300 whitespace-nowrap">Pendente</span>'}
+                    </td>
                 </tr>
-            `).join('') || '<tr><td colspan="7" class="p-4 text-center text-slate-600">Nenhuma pendência de faturamento encontrada no filtro atual.</td></tr>';
+            `).join('') || '<tr><td colspan="8" class="p-4 text-center text-slate-600">Nenhuma cirurgia realizada encontrada no filtro atual.</td></tr>';
 
-            document.getElementById('faturamentoPrintCount').textContent = `Relatório com ${p.totalRecords} pendência(s) — filtro atual aplicado no momento da exportação.`;
+            const pendentes = faturamentoFilteredRecords.filter(rec => !rec.trancada).length;
+            document.getElementById('faturamentoPrintCount').textContent = `Relatório com ${p.totalRecords} cirurgia(s) — ${pendentes} pendente(s) e ${p.totalRecords - pendentes} já trancada(s) — filtro atual aplicado no momento da exportação.`;
 
             if (exportAll) return;
-            updatePaginationFooter('faturamentoPaginationInfo', 'faturamentoPrevPageBtn', 'faturamentoNextPageBtn', p, 'pendência(s)');
+            updatePaginationFooter('faturamentoPaginationInfo', 'faturamentoPrevPageBtn', 'faturamentoNextPageBtn', p, 'cirurgia(s)');
         }
 
         // O antigo downloadFaturamentoReport() (botão "Baixar (.xlsx)" na barra de
@@ -1824,6 +1942,9 @@
             populateMultiSelect('ganhoFilterClinic', Array.from(clinics).sort());
             populateMultiSelect('ganhoFilterSurgery', Array.from(surgeries).sort());
             populateMultiSelect('ganhoFilterStatus', buildJourneyStatusOptions(statuses));
+            // Mesma data que applyGanhoFilters() filtra: a da consulta.
+            setPeriodFilterBounds('ganhoDateStart', 'ganhoDateEnd',
+                rawData.map(item => parseFlexibleDate(getItemProp(item, ['agendamento_data', 'data', 'Data']))));
 
             // Pré-seleciona as primárias que existirem na planilha (nome exato pode variar
             // de acento/caixa, daí o normalizeSpecialtyKey). Nenhuma primária encontrada =
@@ -1845,8 +1966,8 @@
             const clinics = getMultiSelectValues('ganhoFilterClinic');
             const surgeries = getMultiSelectValues('ganhoFilterSurgery');
             const statuses = getMultiSelectValues('ganhoFilterStatus');
-            const dateStart = document.getElementById('ganhoDateStart').value;
-            const dateEnd = document.getElementById('ganhoDateEnd').value;
+            const dateStart = getPeriodFilterValue('ganhoDateStart');
+            const dateEnd = getPeriodFilterValue('ganhoDateEnd');
 
             ganhoFilteredData = rawData.filter(item => {
                 const c = getItemProp(item, CLINIC_ALIASES);
@@ -1886,10 +2007,16 @@
                 const group = statusGroup(classifyStatus(getItemProp(item, ['agendamento_cirg_status_clinica'])));
 
                 if (!bySpecialty[especialidade]) {
-                    bySpecialty[especialidade] = { total: 0, realizada: 0, semIndicacao: 0, convertiveis: 0, ganhoPotencial: 0, semPreco: 0 };
+                    bySpecialty[especialidade] = { total: 0, realizada: 0, semIndicacao: 0, convertiveis: 0, ganhoPotencial: 0, semPreco: 0, items: [], clinicas: new Set() };
                 }
                 const st = bySpecialty[especialidade];
                 st.total++;
+                // Mesmas clínicas que a tabela de Valor Base lista para esta especialidade
+                // (buildValorBaseCombos também usa todo registro do filtro, não só convertíveis).
+                st.clinicas.add(clinica);
+                // Registros crus da especialidade (inclusive quem já operou) — a mediana
+                // consulta → 1ª cirurgia precisa deles; ver renderGanhoEspecialidadeCard().
+                st.items.push(item);
 
                 if (group === 'CIRURGIA_REALIZADA') {
                     st.realizada++;
@@ -1905,53 +2032,122 @@
             return bySpecialty;
         }
 
-        const GANHO_ACCENT_PALETTE = ['indigo', 'blue', 'pink', 'cyan', 'violet', 'teal', 'amber', 'rose', 'emerald', 'orange'];
-
         function formatBRL(n) {
             return (n || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
         }
 
+        // Ganho potencial = dinheiro que DEIXAMOS DE GANHAR com quem não operou (pedido do
+        // usuário em 2026-09-24): sai com "-" na frente e em vermelho escuro, em todo lugar
+        // que mostra esse valor. Zero fica sem sinal ("-R$ 0" não significa nada).
+        // Só o GANHO leva o sinal: o valor base é PREÇO de referência, não perda.
+        const GANHO_PERDIDO_COLOR = '#7F1D1D';
+        function formatBRLPerdido(n) {
+            return n > 0 ? `-${formatBRL(n)}` : formatBRL(0);
+        }
+
+        // Destaque do bloco "GANHO POTENCIAL" de cada cartão (2026-09-24): gradiente de
+        // vermelho, do tom mais forte (mais convertíveis) ao mais claro (menos) — mostra
+        // do mais crítico ao menos crítico. Só ESSE bloco é colorido: o cartão em si é
+        // branco-gelo e igual para todas as especialidades (o usuário testou o cartão
+        // inteiro colorido e não gostou). Paleta enviada pelo usuário; a 1ª versão ia até
+        // #7F1D1D e ficou escura demais. `bg` = fundo do bloco, `border` = o tom mais
+        // vivo do mesmo degrau. Cor inline: o Tailwind não gera classe para hex solto
+        // montado em tempo de execução.
+        const GANHO_CARD_PALETTE = [
+            { bg: '#FFBBB9', border: '#FF5355' },
+            { bg: '#FFC7C5', border: '#FE7472' },
+            { bg: '#FED1D0', border: '#FF8B8B' },
+            { bg: '#FFD9D8', border: '#FEA1A0' },
+            { bg: '#FEE0DF', border: '#FEB2AD' },
+            { bg: '#FFE6E5', border: '#FFC0BF' }
+        ];
+        // Escala por POSIÇÃO no ranking de convertíveis, não proporcional ao número: com
+        // escala linear, uma especialidade muito maior (ex.: catarata 66 contra 14/15 das
+        // outras) deixava todas as demais com o mesmo tom e o gradiente sumia. Empate
+        // recebe a mesma cor; com mais de 6 contagens distintas, vizinhas dividem degrau.
+        // `rankedValues` = contagens distintas, em ordem crescente.
+        function getGanhoCardShade(convertiveis, rankedValues) {
+            // Um valor só (1 especialidade, ou todas empatadas): tom mais forte —
+            // não há "menos convertível" para clarear.
+            const t = rankedValues.length > 1 ? rankedValues.indexOf(convertiveis) / (rankedValues.length - 1) : 1;
+            return GANHO_CARD_PALETTE[Math.round((1 - t) * (GANHO_CARD_PALETTE.length - 1))];
+        }
+
         function renderGanhoResumoCard(totalConvertiveis, totalGanho, totalSemPreco) {
             return `
-                <div class="col-span-full p-4 rounded-xl border border-emerald-300 bg-emerald-50 space-y-2">
-                    <div class="flex items-center gap-2 text-sm font-bold text-emerald-800">
+                <div class="col-span-full p-4 rounded-xl border border-red-300 bg-red-50 space-y-2">
+                    <div class="flex items-center gap-2 text-sm font-bold text-red-900">
                         <i data-lucide="circle-dollar-sign" class="w-4 h-4"></i>
                         GANHO POTENCIAL TOTAL — TODAS AS ESPECIALIDADES NO FILTRO ATUAL
                     </div>
-                    <div class="text-3xl font-extrabold text-emerald-700">${formatBRL(totalGanho)}</div>
-                    <p class="text-sm text-slate-700 font-medium">${totalConvertiveis} paciente(s) convertível(is) no filtro atual${totalSemPreco > 0 ? ` — ${totalSemPreco} ainda sem valor base configurado` : ''}.</p>
+                    <div class="text-3xl font-extrabold" style="color:${GANHO_PERDIDO_COLOR}">${formatBRLPerdido(totalGanho)}</div>
+                    <p class="text-base text-slate-900 font-semibold">${totalConvertiveis} paciente(s) convertível(is) no filtro atual${totalSemPreco > 0 ? ` — ${totalSemPreco} ainda sem valor base configurado` : ''}.</p>
+                    <p class="text-base text-slate-900 font-semibold">Premissa: o valor considera todos os pacientes do Farol que ainda não operaram, dentro do filtro atual (exceto quem não tem indicação cirúrgica).</p>
                 </div>
             `;
         }
 
-        function renderGanhoEspecialidadeCard(especialidade, st, idx) {
-            const accent = GANHO_ACCENT_PALETTE[idx % GANHO_ACCENT_PALETTE.length];
+        // Mediana consulta → 1ª cirurgia da especialidade — mesmo cálculo e mesma régua de
+        // SLA dos cartões de Insights (Consultas). Roda sobre TODOS os registros da
+        // especialidade no filtro, não só os convertíveis: convertível, por definição,
+        // ainda não operou e não teria data de cirurgia. Mini bloco próprio, e SÓ a cor do
+        // número indica o atingimento — sem texto do sinalizador ("dentro da meta" etc.),
+        // pedido do usuário em 2026-09-24. Terciárias não têm régua de SLA: número neutro.
+        function buildGanhoMedianHtml(especialidade, items) {
+            const result = computeMedianDaysToFirstSurgery(items);
+            let valor;
+            if (!result) {
+                valor = '<span class="text-base font-semibold text-slate-700">sem dados suficientes</span>';
+            } else {
+                const ruleKey = findSpecialtyRuleKey(especialidade);
+                const sla = (ruleKey ? SPECIALTY_RULES[ruleKey] : getSpecialtyRule(null)).sla;
+                const slaInfo = sla ? classifyMedianSLA(result.median, sla) : null;
+                const cor = slaInfo ? `text-${slaInfo.color}-700` : 'text-slate-900';
+                valor = `<span class="text-2xl font-extrabold ${cor}">${result.median} dia${result.median !== 1 ? 's' : ''}</span>`;
+            }
+            return `
+                <div class="p-3 rounded-lg border border-slate-200 bg-white">
+                    <p class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="hourglass" class="w-4 h-4"></i>
+                        Mediana consulta → 1ª cirurgia
+                    </p>
+                    ${valor}
+                </div>
+            `;
+        }
+
+        // "Valor base calculado" do cartão (2026-09-24, pedido do usuário): o MESMO número
+        // digitado na tabela de Valor Base, não uma média derivada do ganho. Como o valor é
+        // por (clínica, especialidade), clínicas com preços diferentes viram uma faixa.
+        function describeValorBaseEspecialidade(especialidade, clinicas) {
+            const valores = [...new Set([...clinicas].map(c => getValorBase(c, especialidade)).filter(v => v !== null))];
+            if (valores.length === 0) return 'não configurado';
+            if (valores.length === 1) return formatBRL(valores[0]);
+            return `${formatBRL(Math.min(...valores))} a ${formatBRL(Math.max(...valores))} (varia por clínica)`;
+        }
+
+        function renderGanhoEspecialidadeCard(especialidade, st, shade) {
             const smallSample = st.total > 0 && st.total < MIN_SAMPLE_SIZE;
-            const valorMedio = st.convertiveis > 0 ? st.ganhoPotencial / st.convertiveis : 0;
 
             return `
-                <div class="p-4 rounded-xl border border-${accent}-200 bg-${accent}-50/40 flex flex-col justify-between space-y-2">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2 text-sm font-bold text-${accent}-800">
+                <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2 text-sm font-bold text-slate-900">
                             <i data-lucide="stethoscope" class="w-4 h-4"></i>
                             ${escapeHtml(especialidade.toUpperCase())}
                         </div>
-                        ${smallSample ? `<span class="text-sm font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full whitespace-nowrap">AMOSTRA PEQUENA</span>` : ''}
+                        ${smallSample ? `<span class="text-sm font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full whitespace-nowrap">AMOSTRA PEQUENA</span>` : ''}
                     </div>
-                    <div class="text-sm text-slate-700 space-y-1">
-                        <p>Total de Pacientes: <strong>${st.total}</strong></p>
-                        <p>Total de Cirurgias Realizadas: <strong>${st.realizada}</strong></p>
-                        <p>Pacientes Convertíveis: <strong>${st.convertiveis}</strong></p>
-                        <p>Valor Médio da Cirurgia: <strong>${formatBRL(valorMedio)}</strong></p>
-                        ${st.semPreco > 0 ? `<p class="text-amber-700 text-sm">${st.semPreco} paciente(s) sem valor base configurado (não somados ao ganho abaixo).</p>` : ''}
+                    <div class="text-sm text-slate-800 font-medium space-y-1">
+                        <p>Total de Pacientes convertíveis: <strong>${st.convertiveis}</strong></p>
+                        <p>Valor base calculado: <strong>${describeValorBaseEspecialidade(especialidade, st.clinicas)}</strong></p>
+                        ${st.semPreco > 0 ? `<p class="text-amber-800 font-semibold">${st.semPreco} paciente(s) sem valor base configurado (não somados ao ganho abaixo).</p>` : ''}
                     </div>
-                    <div class="pt-2 border-t border-${accent}-200/60">
-                        <p class="text-sm font-extrabold text-${accent}-800">GANHO POTENCIAL: ${formatBRL(st.ganhoPotencial)}</p>
+                    ${buildGanhoMedianHtml(especialidade, st.items)}
+                    <div class="p-3 rounded-lg border text-slate-900" style="background-color:${shade.bg};border-color:${shade.border}">
+                        <p class="text-sm font-extrabold">GANHO POTENCIAL: <span class="inline-block px-2 py-0.5 rounded-md bg-white" style="color:${GANHO_PERDIDO_COLOR}">${formatBRLPerdido(st.ganhoPotencial)}</span></p>
                     </div>
-                    <div class="text-sm font-bold text-${accent}-900 flex items-center gap-1.5">
-                        <i data-lucide="zap" class="w-4 h-4"></i>
-                        Acompanhar ${st.convertiveis} paciente${st.convertiveis !== 1 ? 's' : ''} para agendamento de cirurgia.
-                    </div>
+                    <p class="text-base font-semibold text-slate-900">Premissa: valor incluído está sendo baseado no procedimento mais barato da subespecialidade.</p>
                 </div>
             `;
         }
@@ -1977,8 +2173,12 @@
             const totalGanho = entries.reduce((sum, [, s]) => sum + s.ganhoPotencial, 0);
             const totalSemPreco = entries.reduce((sum, [, s]) => sum + s.semPreco, 0);
 
+            const rankedConv = [...new Set(entries.map(([, s]) => s.convertiveis))].sort((a, b) => a - b);
+
             let html = renderGanhoResumoCard(totalConvertiveis, totalGanho, totalSemPreco);
-            html += entries.map(([especialidade, st], idx) => renderGanhoEspecialidadeCard(especialidade, st, idx)).join('');
+            html += entries.map(([especialidade, st]) =>
+                renderGanhoEspecialidadeCard(especialidade, st, getGanhoCardShade(st.convertiveis, rankedConv))
+            ).join('');
             container.innerHTML = html || '<p class="col-span-full text-sm text-slate-600 text-center py-4">Nenhum paciente no filtro atual.</p>';
             lucide.createIcons();
         }
@@ -2343,6 +2543,9 @@
             populateMultiSelect('filterClinic', Array.from(clinics).sort());
             populateMultiSelect('filterSurgery', Array.from(surgeries).sort());
             populateMultiSelect('filterStatus', buildJourneyStatusOptions(statuses));
+            // Mesma data que applyFilters() filtra: a da consulta.
+            setPeriodFilterBounds('filterDateStart', 'filterDateEnd',
+                rawData.map(item => parseFlexibleDate(getItemProp(item, ['agendamento_data', 'data', 'Data']))));
         }
 
         function getItemProp(item, candidates) {
@@ -2457,8 +2660,8 @@
             const clinics = getMultiSelectValues('filterClinic');
             const surgeries = getMultiSelectValues('filterSurgery');
             const statuses = getMultiSelectValues('filterStatus');
-            const dateStart = document.getElementById('filterDateStart').value;
-            const dateEnd = document.getElementById('filterDateEnd').value;
+            const dateStart = getPeriodFilterValue('filterDateStart');
+            const dateEnd = getPeriodFilterValue('filterDateEnd');
 
             filteredData = rawData.filter(item => {
                 const c = getItemProp(item, CLINIC_ALIASES);
@@ -2631,9 +2834,14 @@
         function normalizeSpecialtyKey(s) {
             return (s || '').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
         }
-        function getSpecialtyTierOrder(especialidade) {
+        // Chave de SPECIALTY_RULES que casa com o texto cru da planilha (acento/caixa
+        // normalizados), ou null se a especialidade não está na lista oficial.
+        function findSpecialtyRuleKey(especialidade) {
             const key = normalizeSpecialtyKey(especialidade);
-            const found = Object.keys(SPECIALTY_RULES).find(k => key.includes(k));
+            return Object.keys(SPECIALTY_RULES).find(k => key.includes(k)) || null;
+        }
+        function getSpecialtyTierOrder(especialidade) {
+            const found = findSpecialtyRuleKey(especialidade);
             return found ? TIER_ORDER[SPECIALTY_RULES[found].tier] : 3;
         }
 
@@ -4338,13 +4546,16 @@
             });
             populateMultiSelect('npsFilterClinic', Array.from(clinics).sort());
             populateMultiSelect('npsFilterSurgery', Array.from(surgeries).sort());
+            // Mesma data que npsApplyFilters() filtra: a da cirurgia.
+            setPeriodFilterBounds('npsDateStart', 'npsDateEnd',
+                npsRawData.map(item => parseFlexibleDate(getItemProp(item, ['Data da Cirurgia']))));
         }
 
         function npsApplyFilters() {
             const clinics = getMultiSelectValues('npsFilterClinic');
             const surgeries = getMultiSelectValues('npsFilterSurgery');
-            const dateStart = document.getElementById('npsDateStart').value;
-            const dateEnd = document.getElementById('npsDateEnd').value;
+            const dateStart = getPeriodFilterValue('npsDateStart');
+            const dateEnd = getPeriodFilterValue('npsDateEnd');
 
             npsFilteredData = npsRawData.filter(item => {
                 const c = npsGetClinica(item);
@@ -4998,6 +5209,9 @@
             document.getElementById('tabGanho').classList.toggle('hidden', tab !== 'ganho');
             updateTabNav();
             updateStickyOffsets();
+            // O valor base é editado na página Potencial de Ganho: recalcula o FEE ao
+            // entrar no Faturamento para não mostrar a estimativa com preço antigo.
+            if (tab === 'faturamento') renderFaturamentoFeeKpi();
         }
 
         // Relatório completo da página = indicadores + insights + gráficos.
@@ -5408,7 +5622,7 @@
             patients: { build: () => buildPatientExportRows(), sheet: 'Pacientes', file: 'Lista_Detalhada_Pacientes', title: 'Lista Detalhada dos Pacientes' },
             clinicSummary: { build: () => buildClinicExportRows(), sheet: 'Consolidado Clínicas', file: 'Relatorio_Consolidado_Clinicas', title: 'Relatório Consolidado para Envio à Gestão das Clínicas' },
             nps: { build: () => buildNpsExportRows(), sheet: 'Avaliacoes NPS', file: 'Avaliacoes_NPS', title: 'Avaliações Detalhadas de NPS (Base para Envio à Clínica)' },
-            faturamento: { build: () => buildFaturamentoExportRows(), sheet: 'Pendencias Faturamento', file: 'Pendencias_Faturamento', title: 'Pendências de Faturamento — Cirurgias Realizadas e Não Reportadas' },
+            faturamento: { build: () => buildFaturamentoExportRows(), sheet: 'Pendencias Repasse', file: 'Pendencias_Repasse', title: 'Pendências de repasse — cirurgias no Farol ainda não trancadas (trancadas no fim)' },
             valorBase: { build: () => buildValorBaseExportRows(), sheet: 'Valor Base', file: 'Configuracao_Valor_Base', title: 'Configuração de Valor Base por Clínica e Especialidade' },
             ganhoPatients: { build: () => buildGanhoPatientExportRows(), sheet: 'Pacientes Convertiveis', file: 'Pacientes_Potencial_Ganho', title: 'Pacientes Convertíveis — Potencial de Ganho' },
         };
@@ -5521,7 +5735,8 @@
                 'Especialidade': rec.especialidade,
                 'Procedimento': rec.procedimento,
                 'Data da Cirurgia': rec.data ? rec.data.toLocaleDateString('pt-BR') : '',
-                'Médico': rec.medico
+                'Médico': rec.medico,
+                'Situação': rec.trancada ? 'Trancada' : 'Pendente'
             }));
         }
         function exportFaturamentoAsSpreadsheet() { exportAs('faturamento', 'spreadsheet'); }

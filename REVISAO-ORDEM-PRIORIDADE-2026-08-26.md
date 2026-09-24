@@ -10,7 +10,7 @@ Cada item tem o ponto exato do código, o esforço e o que precisa ser decidido 
 | # | Item | Status |
 |---|---|---|
 | 1 | Lista de Pacientes Potenciais (Ganho) | ✅ **FEITO em 2026-09-21** — por prioridade de status, escolha explícita do usuário |
-| 2 | Pendências de Faturamento | ❌ **DESCARTADO em 2026-09-22** pelo usuário: *"toda pendência é igualmente igual"* — não há hierarquia de urgência a representar, a tabela fica na ordem bruta. Não reabrir sem pedido novo |
+| 2 | Pendências de Faturamento | ❌ **DESCARTADO em 2026-09-22** pelo usuário: *"toda pendência é igualmente igual"* — não há hierarquia de urgência a representar, a tabela fica na ordem bruta. Não reabrir sem pedido novo. ✅ **REABERTO e IMPLEMENTADO em 2026-09-24** a pedido do usuário: pendentes primeiro, da cirurgia mais antiga para a mais recente, e as já trancadas no fim da lista (`sortBillingRecords()`) |
 | 3 | Avaliações de NPS | ✅ **RESOLVIDO DE OUTRA FORMA em 2026-09-22** — ver abaixo |
 | 4 | Unificar as 3 réguas de especialidade | ✅ **FEITO em 2026-09-22** — ver abaixo |
 | 5 | Divergência Insights × Lista | ✅ **RESOLVIDO em 2026-09-22** — os Insights passaram a seguir a régua da Lista |
