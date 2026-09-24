@@ -1142,7 +1142,7 @@
                     </div>
                     <div>
                         <h3 class="text-base font-bold text-slate-900">Potencial de Ganho Cirúrgico</h3>
-                        <p class="text-sm text-slate-700">Pacientes que ainda podem converter em cirurgia, multiplicados pelo valor base configurado abaixo</p>
+                        <p class="text-base font-medium text-slate-900">Pacientes que ainda podem converter em cirurgia, multiplicados pelo valor base configurado abaixo</p>
                     </div>
                 </div>
                 <div class="relative no-print">
@@ -1921,14 +1921,14 @@
             return n > 0 ? `-${formatBRL(n)}` : formatBRL(0);
         }
 
-        // Fundo dos cartões por especialidade (2026-09-24): gradiente de vermelho, do mais
-        // claro (menos convertíveis) ao mais escuro (mais convertíveis) — o cartão fala de
-        // valor perdido, então não pode parecer "bom". Cor inline porque é interpolada
-        // (o Tailwind não gera classe para cor calculada em tempo de execução).
-        // Paleta fechada com o usuário (2026-09-24), do tom mais forte ao mais claro —
-        // a 1ª versão ia até #7F1D1D e ficou escura demais. `bg` = fundo do cartão,
-        // `border` = o tom mais vivo do mesmo degrau. Todos são claros, então o texto
-        // é sempre escuro.
+        // Destaque do bloco "GANHO POTENCIAL" de cada cartão (2026-09-24): gradiente de
+        // vermelho, do tom mais forte (mais convertíveis) ao mais claro (menos) — mostra
+        // do mais crítico ao menos crítico. Só ESSE bloco é colorido: o cartão em si é
+        // branco-gelo e igual para todas as especialidades (o usuário testou o cartão
+        // inteiro colorido e não gostou). Paleta enviada pelo usuário; a 1ª versão ia até
+        // #7F1D1D e ficou escura demais. `bg` = fundo do bloco, `border` = o tom mais
+        // vivo do mesmo degrau. Cor inline: o Tailwind não gera classe para hex solto
+        // montado em tempo de execução.
         const GANHO_CARD_PALETTE = [
             { bg: '#FFBBB9', border: '#FF5355' },
             { bg: '#FFC7C5', border: '#FE7472' },
@@ -1946,8 +1946,7 @@
             // Um valor só (1 especialidade, ou todas empatadas): tom mais forte —
             // não há "menos convertível" para clarear.
             const t = rankedValues.length > 1 ? rankedValues.indexOf(convertiveis) / (rankedValues.length - 1) : 1;
-            const step = GANHO_CARD_PALETTE[Math.round((1 - t) * (GANHO_CARD_PALETTE.length - 1))];
-            return { bg: step.bg, border: step.border, divider: step.border, text: '#0F172A' };
+            return GANHO_CARD_PALETTE[Math.round((1 - t) * (GANHO_CARD_PALETTE.length - 1))];
         }
 
         function renderGanhoResumoCard(totalConvertiveis, totalGanho, totalSemPreco) {
@@ -1958,7 +1957,8 @@
                         GANHO POTENCIAL TOTAL — TODAS AS ESPECIALIDADES NO FILTRO ATUAL
                     </div>
                     <div class="text-3xl font-extrabold" style="color:${GANHO_PERDIDO_COLOR}">${formatBRLPerdido(totalGanho)}</div>
-                    <p class="text-sm text-slate-700 font-medium">${totalConvertiveis} paciente(s) convertível(is) no filtro atual${totalSemPreco > 0 ? ` — ${totalSemPreco} ainda sem valor base configurado` : ''}.</p>
+                    <p class="text-base text-slate-900 font-semibold">${totalConvertiveis} paciente(s) convertível(is) no filtro atual${totalSemPreco > 0 ? ` — ${totalSemPreco} ainda sem valor base configurado` : ''}.</p>
+                    <p class="text-base text-slate-900 font-semibold">Premissa: o valor considera todos os pacientes do Farol que ainda não operaram, dentro do filtro atual (exceto quem não tem indicação cirúrgica).</p>
                 </div>
             `;
         }
@@ -1975,7 +1975,7 @@
             const sla = (ruleKey ? SPECIALTY_RULES[ruleKey] : getSpecialtyRule(null)).sla;
             const slaInfo = sla ? classifyMedianSLA(result.median, sla) : null;
             const valor = slaInfo
-                ? `<strong class="px-1.5 py-0.5 rounded bg-white text-${slaInfo.color}-700">${result.median}d</strong> (${slaInfo.label})`
+                ? `<strong class="text-${slaInfo.color}-700">${result.median}d</strong> (${slaInfo.label})`
                 : `<strong>${result.median}d</strong>`;
             return `Mediana consulta → 1ª cirurgia: ${valor}`;
         }
@@ -1988,28 +1988,28 @@
             const valorMedio = comPreco > 0 ? st.ganhoPotencial / comPreco : 0;
 
             return `
-                <div class="p-4 rounded-xl border flex flex-col justify-between space-y-2" style="background-color:${shade.bg};border-color:${shade.border};color:${shade.text}">
+                <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between space-y-3">
                     <div class="flex items-center justify-between gap-2">
-                        <div class="flex items-center gap-2 text-sm font-bold">
+                        <div class="flex items-center gap-2 text-sm font-bold text-slate-900">
                             <i data-lucide="stethoscope" class="w-4 h-4"></i>
                             ${escapeHtml(especialidade.toUpperCase())}
                         </div>
-                        ${smallSample ? `<span class="text-sm font-bold bg-white text-slate-700 px-2 py-0.5 rounded-full whitespace-nowrap">AMOSTRA PEQUENA</span>` : ''}
+                        ${smallSample ? `<span class="text-sm font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full whitespace-nowrap">AMOSTRA PEQUENA</span>` : ''}
                     </div>
-                    <div class="text-sm font-medium space-y-1">
+                    <div class="text-sm text-slate-800 font-medium space-y-1">
                         <p>Total de Pacientes convertíveis: <strong>${st.convertiveis}</strong></p>
                         <p>Valor Médio da Cirurgia: <strong>${formatBRL(valorMedio)}</strong></p>
                         <p>${buildGanhoMedianHtml(especialidade, st.items)}</p>
-                        ${st.semPreco > 0 ? `<p class="px-2 py-1 rounded-md bg-white text-amber-800 font-semibold">${st.semPreco} paciente(s) sem valor base configurado (não somados ao ganho abaixo).</p>` : ''}
+                        ${st.semPreco > 0 ? `<p class="text-amber-800 font-semibold">${st.semPreco} paciente(s) sem valor base configurado (não somados ao ganho abaixo).</p>` : ''}
                     </div>
-                    <div class="pt-2 border-t" style="border-color:${shade.divider}">
+                    <div class="p-3 rounded-lg border space-y-2 text-slate-900" style="background-color:${shade.bg};border-color:${shade.border}">
                         <p class="text-sm font-extrabold">GANHO POTENCIAL: <span class="inline-block px-2 py-0.5 rounded-md bg-white" style="color:${GANHO_PERDIDO_COLOR}">${formatBRLPerdido(st.ganhoPotencial)}</span></p>
+                        <p class="text-sm font-bold flex items-center gap-1.5">
+                            <i data-lucide="zap" class="w-4 h-4 shrink-0"></i>
+                            Acompanhar ${st.convertiveis} paciente${st.convertiveis !== 1 ? 's' : ''} para agendamento de cirurgia.
+                        </p>
                     </div>
-                    <div class="text-sm font-bold flex items-center gap-1.5">
-                        <i data-lucide="zap" class="w-4 h-4"></i>
-                        Acompanhar ${st.convertiveis} paciente${st.convertiveis !== 1 ? 's' : ''} para agendamento de cirurgia.
-                    </div>
-                    <p class="text-sm font-medium pt-2 border-t" style="border-color:${shade.divider}">Premissa: valor incluído está sendo baseado no procedimento mais barato da subespecialidade.</p>
+                    <p class="text-base font-semibold text-slate-900">Premissa: valor incluído está sendo baseado no procedimento mais barato da subespecialidade.</p>
                 </div>
             `;
         }
