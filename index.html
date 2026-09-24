@@ -983,8 +983,8 @@
                         <i data-lucide="receipt" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <h2 class="text-lg font-bold text-slate-900 tracking-tight">Pendências de Faturamento</h2>
-                        <p class="text-sm text-slate-700">Cirurgias já realizadas cujo campo de trava (lock) ainda está vazio — ou seja, ainda não foram reportadas/pagas no relatório financeiro mensal da clínica</p>
+                        <h2 class="text-lg font-bold text-slate-900 tracking-tight">Pendências de repasse - cirurgias no Farol que ainda não estão trancadas</h2>
+                        <p class="text-base font-medium text-slate-900">Cirurgias registradas no Farol que ainda não foram localizadas no relatório financeiro.</p>
                     </div>
                 </div>
             </div>
@@ -1026,6 +1026,15 @@
                 </div>
             </div>
 
+            <!-- Faturamento: KPI de FEE estimado a receber (ver renderFaturamentoFeeKpi) -->
+            <div class="white-card rounded-2xl p-6 border-l-4 border-l-emerald-600 space-y-2" id="cardFaturamentoFee">
+                <div class="flex items-center gap-2 text-sm font-bold text-emerald-800 uppercase tracking-wider">
+                    <i data-lucide="hand-coins" class="w-4 h-4"></i>
+                    Estimativa de valores a receber da clínica após a conferência
+                </div>
+                <div id="faturamentoFeeContent"></div>
+            </div>
+
             <!-- Faturamento: Tabela -->
             <div class="white-card rounded-2xl p-6 space-y-4" id="cardFaturamentoTable">
                 <div class="flex flex-wrap items-start justify-between gap-3">
@@ -1034,7 +1043,7 @@
                             <i data-lucide="clipboard-list" class="w-5 h-5 text-amber-600"></i>
                             Cirurgias Realizadas e Ainda Não Reportadas/Pagas
                         </h3>
-                        <p class="text-sm text-slate-700">Cada linha é um procedimento (1º ou 2º olho) com status "realizou" cuja aba correspondente ainda não tem o campo de trava preenchido</p>
+                        <p class="text-sm text-slate-700">Cada linha é um procedimento (1º ou 2º olho) com status "realizou" e ainda não foi encontrada no relatório financeiro da clínica. As cirurgias já trancadas aparecem no fim da lista.</p>
                     </div>
                     <div class="relative no-print shrink-0">
                         <button onclick="toggleExportMenu(event, 'menuFaturamento')" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold rounded-lg flex items-center gap-1.5 transition shadow-sm whitespace-nowrap">
@@ -1066,6 +1075,7 @@
                                 <th class="p-3">Procedimento</th>
                                 <th class="p-3">Data da Cirurgia</th>
                                 <th class="p-3">Médico</th>
+                                <th class="p-3">Situação</th>
                             </tr>
                         </thead>
                         <tbody id="faturamentoTableBody" class="divide-y divide-slate-100">
@@ -1075,7 +1085,7 @@
                 </div>
 
                 <div class="flex items-center justify-between pt-2 text-sm text-slate-700 font-medium no-print">
-                    <span id="faturamentoPaginationInfo">Mostrando 0 de 0 pendências</span>
+                    <span id="faturamentoPaginationInfo">Mostrando 0 de 0 cirurgias</span>
                     <div class="flex gap-2">
                         <button id="faturamentoPrevPageBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 disabled:opacity-40 border border-slate-200">Anterior</button>
                         <button id="faturamentoNextPageBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 disabled:opacity-40 border border-slate-200">Próximo</button>
@@ -1594,31 +1604,87 @@
         const SURGERY_ALIASES = ['especialidades', 'especialidade', 'Cirurgia'];
         const MEDICO_ALIASES = ['medicos', 'medico', 'Médico'];
 
-        // Pendências de faturamento: cada procedimento "realizou" (1º ou 2º olho) cuja
-        // trava (lock) DA MESMA ABA ainda está vazia — ou seja, ainda não foi reportado/pago.
-        function getPendingBillingRecords(data) {
+        // Cirurgias para conferência de repasse: cada procedimento "realizou" (1º ou 2º olho)
+        // vira uma linha, com `trancada` = trava (lock) DA MESMA ABA preenchida — ou seja,
+        // já reportada/paga. Desde 2026-09-24 a lista traz as trancadas também (no fim, ver
+        // sortBillingRecords); antes só entravam as pendentes.
+        function getBillingRecords(data) {
             const records = [];
             data.forEach(item => {
                 const slots = getProcedureSlots(item);
                 slots.forEach(sl => {
                     const isRealizou = sl.code === 'CIRURGIA_REALIZOU_1' || sl.code === 'CIRURGIA_REALIZOU_2';
-                    if (isRealizou && !sl.isLocked) {
-                        records.push({
-                            // ID do cliente no Farol: é por ele que a clínica
-                            // localiza o paciente para conferir o faturamento.
-                            id: getItemProp(item, ['clientes_id', 'id', 'ID']),
-                            paciente: getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']) || 'Sem Nome',
-                            clinica: getItemProp(item, CLINIC_ALIASES) || 'Sem Clínica',
-                            especialidade: getItemProp(item, SURGERY_ALIASES) || 'Não Especificado',
-                            medico: getItemProp(item, MEDICO_ALIASES) || '-',
-                            procedimento: sl.code === 'CIRURGIA_REALIZOU_1' ? '1º Olho' : '2º Olho',
-                            slot: sl.slot,
-                            data: sl.date
-                        });
-                    }
+                    if (!isRealizou) return;
+                    const clinicaRaw = getItemProp(item, CLINIC_ALIASES);
+                    const especialidadeRaw = getItemProp(item, SURGERY_ALIASES);
+                    records.push({
+                        // ID do cliente no Farol: é por ele que a clínica
+                        // localiza o paciente para conferir o faturamento.
+                        id: getItemProp(item, ['clientes_id', 'id', 'ID']),
+                        paciente: getItemProp(item, ['clientes', 'nome', 'paciente', 'Cliente']) || 'Sem Nome',
+                        clinica: clinicaRaw || 'Sem Clínica',
+                        especialidade: especialidadeRaw || 'Não Especificado',
+                        // Chave do valor base: tem de ser montada IGUAL à do Potencial de
+                        // Ganho (buildGanhoEspecialidadeStats/buildValorBaseCombos), inclusive
+                        // no fallback de campo vazio, senão getValorBase() não acha o preço.
+                        valorBaseClinica: clinicaRaw || 'Não identificada',
+                        valorBaseEspecialidade: especialidadeRaw || 'Não Especificado',
+                        medico: getItemProp(item, MEDICO_ALIASES) || '-',
+                        procedimento: sl.code === 'CIRURGIA_REALIZOU_1' ? '1º Olho' : '2º Olho',
+                        slot: sl.slot,
+                        data: sl.date,
+                        trancada: sl.isLocked
+                    });
                 });
             });
             return records;
+        }
+
+        // Ordem da lista de repasse (2026-09-24, pedido do usuário): pendentes (não
+        // trancadas) primeiro — são a prioridade da conferência —, trancadas no fim; dentro
+        // de cada grupo, da cirurgia mais antiga para a mais recente (é dinheiro parado há
+        // mais tempo). Sem data vai pro fim do próprio grupo. Fonte única da tela e das
+        // exportações (as duas leem faturamentoFilteredRecords, já ordenado).
+        function sortBillingRecords(records) {
+            return records.slice().sort((a, b) =>
+                (a.trancada - b.trancada)
+                || ((a.data ? 0 : 1) - (b.data ? 0 : 1))
+                || ((a.data && b.data) ? a.data - b.data : 0)
+            );
+        }
+
+        // FEE da central gestora = 25% do valor da cirurgia realizada (regra passada pelo
+        // usuário em 2026-09-24: cirurgia de R$ 100 → R$ 25 de FEE). O valor da cirurgia é
+        // o MESMO valor base configurado na página Potencial de Ganho, por (clínica,
+        // especialidade) — não há outra fonte de preço no painel.
+        const FEE_PERCENTUAL = 0.25;
+
+        // Estimativa a receber = FEE de cada cirurgia AINDA NÃO TRANCADA do filtro atual
+        // (trancada = já reportada e com FEE pago, então não é mais "a receber"). Cada
+        // olho é uma cirurgia, logo um FEE. Sem valor base configurado, a cirurgia fica
+        // fora da soma e vira aviso — nunca entra como R$ 0 em silêncio (mesma regra do
+        // Potencial de Ganho).
+        function buildFaturamentoFeeStats(records) {
+            const st = { pendentes: 0, semPreco: 0, feeEstimado: 0 };
+            records.forEach(rec => {
+                if (rec.trancada) return;
+                st.pendentes++;
+                const valor = getValorBase(rec.valorBaseClinica, rec.valorBaseEspecialidade);
+                if (valor === null) st.semPreco++;
+                else st.feeEstimado += valor * FEE_PERCENTUAL;
+            });
+            return st;
+        }
+
+        function renderFaturamentoFeeKpi() {
+            const el = document.getElementById('faturamentoFeeContent');
+            if (!el) return;
+            const st = buildFaturamentoFeeStats(faturamentoFilteredRecords);
+            el.innerHTML = `
+                <div class="text-3xl font-extrabold text-emerald-700">${formatBRL(st.feeEstimado)}</div>
+                <p class="text-base font-semibold text-slate-900">${st.pendentes} cirurgia(s) ainda não trancada(s) no filtro atual${st.semPreco > 0 ? ` — ${st.semPreco} sem valor base configurado (não somada(s) à estimativa)` : ''}.</p>
+                <p class="text-base font-semibold text-slate-900">Premissa: FEE de ${Math.round(FEE_PERCENTUAL * 100)}% sobre o valor base de cada cirurgia, o mesmo configurado por clínica e especialidade na página Potencial de Ganho. Considera só as cirurgias ainda não trancadas.</p>
+            `;
         }
 
         function collectUnknownStatuses(data) {
@@ -1670,23 +1736,25 @@
             const dateStart = document.getElementById('faturamentoDateStart').value;
             const dateEnd = document.getElementById('faturamentoDateEnd').value;
 
-            const allPending = getPendingBillingRecords(rawData);
-
-            faturamentoFilteredRecords = allPending.filter(rec => {
+            faturamentoFilteredRecords = sortBillingRecords(getBillingRecords(rawData).filter(rec => {
                 const matchClinic = matchesMultiSelect(clinics, rec.clinica);
                 const matchSurgery = matchesMultiSelect(surgeries, rec.especialidade);
                 const matchPeriod = isWithinPeriod(rec.data, dateStart, dateEnd);
                 return matchClinic && matchSurgery && matchPeriod;
-            });
+            }));
 
+            const pendentes = faturamentoFilteredRecords.filter(rec => !rec.trancada).length;
+            const trancadas = faturamentoFilteredRecords.length - pendentes;
             faturamentoCurrentPage = 1;
-            document.getElementById('faturamentoCountLabel').textContent = `${faturamentoFilteredRecords.length} pendência(s) no filtro`;
+            document.getElementById('faturamentoCountLabel').textContent = `${pendentes} pendência(s) · ${trancadas} trancada(s) no filtro`;
             renderFilterSummary('filterSummaryFaturamento', [
                 { label: 'Clínica', value: describeMultiSelectFilter('faturamentoFilterClinic', 'todas') },
                 { label: 'Especialidade', value: describeMultiSelectFilter('faturamentoFilterSurgery', 'todas') },
                 { label: 'Período da cirurgia', value: describePeriodFilter('faturamentoDateStart', 'faturamentoDateEnd') },
-                { label: 'Pendências no recorte', value: String(faturamentoFilteredRecords.length) }
+                { label: 'Pendências no recorte', value: String(pendentes) },
+                { label: 'Já trancadas no recorte', value: String(trancadas) }
             ]);
+            renderFaturamentoFeeKpi();
             renderFaturamentoTable();
         }
 
@@ -1730,13 +1798,19 @@
                     </td>
                     <td class="p-3 text-slate-600 font-medium">${rec.data ? rec.data.toLocaleDateString('pt-BR') : '-'}</td>
                     <td class="p-3 text-slate-600 text-sm font-medium">${escapeHtml(rec.medico)}</td>
+                    <td class="p-3">
+                        ${rec.trancada
+                            ? '<span class="badge-pill bg-emerald-100 text-emerald-800 border-emerald-300 whitespace-nowrap">Trancada</span>'
+                            : '<span class="badge-pill bg-red-100 text-red-700 border-red-300 whitespace-nowrap">Pendente</span>'}
+                    </td>
                 </tr>
-            `).join('') || '<tr><td colspan="7" class="p-4 text-center text-slate-600">Nenhuma pendência de faturamento encontrada no filtro atual.</td></tr>';
+            `).join('') || '<tr><td colspan="8" class="p-4 text-center text-slate-600">Nenhuma cirurgia realizada encontrada no filtro atual.</td></tr>';
 
-            document.getElementById('faturamentoPrintCount').textContent = `Relatório com ${p.totalRecords} pendência(s) — filtro atual aplicado no momento da exportação.`;
+            const pendentes = faturamentoFilteredRecords.filter(rec => !rec.trancada).length;
+            document.getElementById('faturamentoPrintCount').textContent = `Relatório com ${p.totalRecords} cirurgia(s) — ${pendentes} pendente(s) e ${p.totalRecords - pendentes} já trancada(s) — filtro atual aplicado no momento da exportação.`;
 
             if (exportAll) return;
-            updatePaginationFooter('faturamentoPaginationInfo', 'faturamentoPrevPageBtn', 'faturamentoNextPageBtn', p, 'pendência(s)');
+            updatePaginationFooter('faturamentoPaginationInfo', 'faturamentoPrevPageBtn', 'faturamentoNextPageBtn', p, 'cirurgia(s)');
         }
 
         // O antigo downloadFaturamentoReport() (botão "Baixar (.xlsx)" na barra de
@@ -5070,6 +5144,9 @@
             document.getElementById('tabGanho').classList.toggle('hidden', tab !== 'ganho');
             updateTabNav();
             updateStickyOffsets();
+            // O valor base é editado na página Potencial de Ganho: recalcula o FEE ao
+            // entrar no Faturamento para não mostrar a estimativa com preço antigo.
+            if (tab === 'faturamento') renderFaturamentoFeeKpi();
         }
 
         // Relatório completo da página = indicadores + insights + gráficos.
@@ -5480,7 +5557,7 @@
             patients: { build: () => buildPatientExportRows(), sheet: 'Pacientes', file: 'Lista_Detalhada_Pacientes', title: 'Lista Detalhada dos Pacientes' },
             clinicSummary: { build: () => buildClinicExportRows(), sheet: 'Consolidado Clínicas', file: 'Relatorio_Consolidado_Clinicas', title: 'Relatório Consolidado para Envio à Gestão das Clínicas' },
             nps: { build: () => buildNpsExportRows(), sheet: 'Avaliacoes NPS', file: 'Avaliacoes_NPS', title: 'Avaliações Detalhadas de NPS (Base para Envio à Clínica)' },
-            faturamento: { build: () => buildFaturamentoExportRows(), sheet: 'Pendencias Faturamento', file: 'Pendencias_Faturamento', title: 'Pendências de Faturamento — Cirurgias Realizadas e Não Reportadas' },
+            faturamento: { build: () => buildFaturamentoExportRows(), sheet: 'Pendencias Repasse', file: 'Pendencias_Repasse', title: 'Pendências de repasse — cirurgias no Farol ainda não trancadas (trancadas no fim)' },
             valorBase: { build: () => buildValorBaseExportRows(), sheet: 'Valor Base', file: 'Configuracao_Valor_Base', title: 'Configuração de Valor Base por Clínica e Especialidade' },
             ganhoPatients: { build: () => buildGanhoPatientExportRows(), sheet: 'Pacientes Convertiveis', file: 'Pacientes_Potencial_Ganho', title: 'Pacientes Convertíveis — Potencial de Ganho' },
         };
@@ -5593,7 +5670,8 @@
                 'Especialidade': rec.especialidade,
                 'Procedimento': rec.procedimento,
                 'Data da Cirurgia': rec.data ? rec.data.toLocaleDateString('pt-BR') : '',
-                'Médico': rec.medico
+                'Médico': rec.medico,
+                'Situação': rec.trancada ? 'Trancada' : 'Pendente'
             }));
         }
         function exportFaturamentoAsSpreadsheet() { exportAs('faturamento', 'spreadsheet'); }

@@ -31,7 +31,7 @@ Página principal — é aqui que você sobe a planilha de consultas. Mostra:
 Tem upload próprio (planilha separada de avaliações). Mostra a nota de satisfação geral e por clínica, o detalhamento por categoria avaliada (atendimento, acompanhamento, clínica, médico) e uma lista de destaques que precisam de atenção — comentários ou avaliações negativas, com telefone do paciente para contato.
 
 ### 3. Faturamento
-Usa a mesma planilha de Consultas (não precisa subir de novo). Lista as cirurgias já realizadas cuja cobrança ainda não foi reportada/paga pela clínica — para a conferência financeira mensal.
+Usa a mesma planilha de Consultas (não precisa subir de novo). Lista as cirurgias já realizadas para a conferência financeira mensal: primeiro as que ainda não foram trancadas (não localizadas no relatório financeiro da clínica), da mais antiga para a mais recente, e no fim as já trancadas. Mostra também a estimativa do repasse a receber dessas pendências (ver regra 6).
 
 ### 4. Potencial de Ganho
 Também usa a planilha de Consultas. Estima quanto ainda dá para faturar com os pacientes que não operaram e não estão "sem indicação cirúrgica". Você configura o valor da cirurgia por clínica e especialidade, e o painel multiplica pelo número de pacientes convertíveis — com uma lista de quem acompanhar.
@@ -84,6 +84,8 @@ Só se aplica a catarata: se a aba 1 é "realizou 1º olho" e nenhuma outra aba 
 
 **6. Faturamento — trava por aba**
 Cada aba de procedimento tem um campo de trava: preenchido = cirurgia já reportada no fechamento financeiro da clínica e a taxa já paga; vazio = pendente. A trava conferida é sempre a **da mesma aba** do procedimento realizado — nunca misturar abas. Por isso 1º e 2º olho aparecem como **duas linhas** de pendência, não uma: cada linha é um procedimento, não um paciente.
+
+A **estimativa a receber** é a taxa da central gestora — **25% do valor da cirurgia** — somada sobre cada cirurgia ainda **não trancada**. O valor da cirurgia é o mesmo valor base configurado por clínica e especialidade no Potencial de Ganho; cirurgia sem valor configurado fica fora da soma (e é sinalizada), nunca entra como zero.
 
 **7. Potencial de ganho — quem é "convertível"**
 Paciente que ainda não realizou a cirurgia e cujo status não é "sem indicação cirúrgica". **Inclui quem desistiu, de propósito**: desistência é tratada como reversível (pode ser financeira ou momentânea), enquanto "sem indicação" é motivo clínico real. O valor da cirurgia é negociado **por (clínica × especialidade)** — não é um valor único por especialidade —, é digitado manualmente (não existe na planilha) e fica salvo no navegador de quem usa. Combinação sem valor configurado **não entra na soma**, virando um aviso, em vez de ser contada como R$ 0 silenciosamente.
