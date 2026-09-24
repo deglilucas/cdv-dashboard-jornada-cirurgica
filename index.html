@@ -1390,6 +1390,37 @@
             return true;
         }
 
+        // Filtro de período já abre com a menor e a maior data do relatório carregado
+        // (2026-09-24, pedido do usuário: puxou consultas de 01/05 a 15/08, o filtro mostra
+        // 01/05 a 15/08). Cada página usa a data da SUA regra de filtro — consulta em
+        // Consultas/Ganho, cirurgia realizada no Faturamento, cirurgia no NPS. Os limites
+        // também viram min/max do campo, então não dá pra escolher data fora do relatório.
+        function toIsoDateLocal(d) {
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+        function setPeriodFilterBounds(startId, endId, dates) {
+            const valid = dates.filter(d => d && !isNaN(d.getTime()));
+            const bounds = valid.length
+                ? [toIsoDateLocal(new Date(Math.min(...valid))), toIsoDateLocal(new Date(Math.max(...valid)))]
+                : ['', ''];
+            [startId, endId].forEach((id, i) => {
+                const el = document.getElementById(id);
+                el.value = bounds[i];
+                el.min = bounds[0];
+                el.max = bounds[1];
+                el.dataset.reportBound = bounds[i];
+            });
+        }
+        // ⚠️ Valor do filtro de período para APLICAR: o limite igual ao do relatório conta
+        // como "sem limite". Sem isso, só de abrir com o período preenchido o
+        // isWithinPeriod() passaria a descartar todo registro SEM data (consulta sem data,
+        // cirurgia sem data...), e os números mudariam sem ninguém ter filtrado nada.
+        // Quando a pessoa aperta o período, vale a regra de sempre.
+        function getPeriodFilterValue(id) {
+            const el = document.getElementById(id);
+            return el.value && el.value !== el.dataset.reportBound ? el.value : '';
+        }
+
         // ================================================================
         // CLASSIFICAÇÃO OFICIAL DE STATUS (lista fechada do Farol)
         // Fonte: "Descrição de status pós consulta.pdf" — 12 status possíveis.
@@ -1738,13 +1769,16 @@
             });
             populateMultiSelect('faturamentoFilterClinic', Array.from(clinics).sort());
             populateMultiSelect('faturamentoFilterSurgery', Array.from(surgeries).sort());
+            // Mesma data que applyFaturamentoFilters() filtra: a da cirurgia realizada.
+            setPeriodFilterBounds('faturamentoDateStart', 'faturamentoDateEnd',
+                getBillingRecords(rawData).map(rec => rec.data));
         }
 
         function applyFaturamentoFilters() {
             const clinics = getMultiSelectValues('faturamentoFilterClinic');
             const surgeries = getMultiSelectValues('faturamentoFilterSurgery');
-            const dateStart = document.getElementById('faturamentoDateStart').value;
-            const dateEnd = document.getElementById('faturamentoDateEnd').value;
+            const dateStart = getPeriodFilterValue('faturamentoDateStart');
+            const dateEnd = getPeriodFilterValue('faturamentoDateEnd');
 
             faturamentoFilteredRecords = sortBillingRecords(getBillingRecords(rawData).filter(rec => {
                 const matchClinic = matchesMultiSelect(clinics, rec.clinica);
@@ -1908,6 +1942,9 @@
             populateMultiSelect('ganhoFilterClinic', Array.from(clinics).sort());
             populateMultiSelect('ganhoFilterSurgery', Array.from(surgeries).sort());
             populateMultiSelect('ganhoFilterStatus', buildJourneyStatusOptions(statuses));
+            // Mesma data que applyGanhoFilters() filtra: a da consulta.
+            setPeriodFilterBounds('ganhoDateStart', 'ganhoDateEnd',
+                rawData.map(item => parseFlexibleDate(getItemProp(item, ['agendamento_data', 'data', 'Data']))));
 
             // Pré-seleciona as primárias que existirem na planilha (nome exato pode variar
             // de acento/caixa, daí o normalizeSpecialtyKey). Nenhuma primária encontrada =
@@ -1929,8 +1966,8 @@
             const clinics = getMultiSelectValues('ganhoFilterClinic');
             const surgeries = getMultiSelectValues('ganhoFilterSurgery');
             const statuses = getMultiSelectValues('ganhoFilterStatus');
-            const dateStart = document.getElementById('ganhoDateStart').value;
-            const dateEnd = document.getElementById('ganhoDateEnd').value;
+            const dateStart = getPeriodFilterValue('ganhoDateStart');
+            const dateEnd = getPeriodFilterValue('ganhoDateEnd');
 
             ganhoFilteredData = rawData.filter(item => {
                 const c = getItemProp(item, CLINIC_ALIASES);
@@ -2506,6 +2543,9 @@
             populateMultiSelect('filterClinic', Array.from(clinics).sort());
             populateMultiSelect('filterSurgery', Array.from(surgeries).sort());
             populateMultiSelect('filterStatus', buildJourneyStatusOptions(statuses));
+            // Mesma data que applyFilters() filtra: a da consulta.
+            setPeriodFilterBounds('filterDateStart', 'filterDateEnd',
+                rawData.map(item => parseFlexibleDate(getItemProp(item, ['agendamento_data', 'data', 'Data']))));
         }
 
         function getItemProp(item, candidates) {
@@ -2620,8 +2660,8 @@
             const clinics = getMultiSelectValues('filterClinic');
             const surgeries = getMultiSelectValues('filterSurgery');
             const statuses = getMultiSelectValues('filterStatus');
-            const dateStart = document.getElementById('filterDateStart').value;
-            const dateEnd = document.getElementById('filterDateEnd').value;
+            const dateStart = getPeriodFilterValue('filterDateStart');
+            const dateEnd = getPeriodFilterValue('filterDateEnd');
 
             filteredData = rawData.filter(item => {
                 const c = getItemProp(item, CLINIC_ALIASES);
@@ -4506,13 +4546,16 @@
             });
             populateMultiSelect('npsFilterClinic', Array.from(clinics).sort());
             populateMultiSelect('npsFilterSurgery', Array.from(surgeries).sort());
+            // Mesma data que npsApplyFilters() filtra: a da cirurgia.
+            setPeriodFilterBounds('npsDateStart', 'npsDateEnd',
+                npsRawData.map(item => parseFlexibleDate(getItemProp(item, ['Data da Cirurgia']))));
         }
 
         function npsApplyFilters() {
             const clinics = getMultiSelectValues('npsFilterClinic');
             const surgeries = getMultiSelectValues('npsFilterSurgery');
-            const dateStart = document.getElementById('npsDateStart').value;
-            const dateEnd = document.getElementById('npsDateEnd').value;
+            const dateStart = getPeriodFilterValue('npsDateStart');
+            const dateEnd = getPeriodFilterValue('npsDateEnd');
 
             npsFilteredData = npsRawData.filter(item => {
                 const c = npsGetClinica(item);
