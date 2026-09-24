@@ -1032,7 +1032,7 @@
                     <i data-lucide="hand-coins" class="w-4 h-4"></i>
                     Estimativa de valores a receber da clínica após a conferência
                 </div>
-                <div id="faturamentoFeeContent"></div>
+                <div id="faturamentoFeeContent" class="space-y-3"></div>
             </div>
 
             <!-- Faturamento: Tabela -->
@@ -1680,10 +1680,20 @@
             const el = document.getElementById('faturamentoFeeContent');
             if (!el) return;
             const st = buildFaturamentoFeeStats(faturamentoFilteredRecords);
+            const pct = Math.round(FEE_PERCENTUAL * 100);
+            // Rótulo usa a SIGLA "CdV", nunca o nome da empresa por extenso: o repositório
+            // é público (regra do CLAUDE.md, 2026-09-22).
             el.innerHTML = `
-                <div class="text-3xl font-extrabold text-emerald-700">${formatBRL(st.feeEstimado)}</div>
-                <p class="text-base font-semibold text-slate-900">${st.pendentes} cirurgia(s) ainda não trancada(s) no filtro atual${st.semPreco > 0 ? ` — ${st.semPreco} sem valor base configurado (não somada(s) à estimativa)` : ''}.</p>
-                <p class="text-base font-semibold text-slate-900">Premissa: FEE de ${Math.round(FEE_PERCENTUAL * 100)}% sobre o valor base de cada cirurgia, o mesmo configurado por clínica e especialidade na página Potencial de Ganho. Considera só as cirurgias ainda não trancadas.</p>
+                <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <span class="text-base font-bold text-slate-900">FEE de ${pct}% da CdV:</span>
+                    <span class="text-3xl font-extrabold text-emerald-700">${formatBRL(st.feeEstimado)}</span>
+                </div>
+                <ul class="list-disc pl-5 space-y-1 text-base font-semibold text-slate-900">
+                    <li>${st.pendentes} cirurgia(s) ainda não trancada(s) no filtro atual.</li>
+                    ${st.semPreco > 0 ? `<li>${st.semPreco} sem valor base configurado (não somada(s) à estimativa).</li>` : ''}
+                </ul>
+                <p class="text-base font-semibold text-slate-900">Premissa: FEE de ${pct}% sobre o valor base de cada cirurgia, o mesmo configurado por clínica e especialidade na página Potencial de Ganho. Considera só as cirurgias ainda não trancadas.</p>
+                <p class="text-base font-semibold text-slate-900"><strong class="font-extrabold">Importante:</strong> o valor de repasse pode ser maior, caso o paciente tenha feito exames no período selecionado.</p>
             `;
         }
 
@@ -2043,18 +2053,30 @@
         // Mediana consulta → 1ª cirurgia da especialidade — mesmo cálculo e mesma régua de
         // SLA dos cartões de Insights (Consultas). Roda sobre TODOS os registros da
         // especialidade no filtro, não só os convertíveis: convertível, por definição,
-        // ainda não operou e não teria data de cirurgia. Terciárias não têm régua de SLA,
-        // então saem só com o número, sem sinalizador.
+        // ainda não operou e não teria data de cirurgia. Mini bloco próprio, e SÓ a cor do
+        // número indica o atingimento — sem texto do sinalizador ("dentro da meta" etc.),
+        // pedido do usuário em 2026-09-24. Terciárias não têm régua de SLA: número neutro.
         function buildGanhoMedianHtml(especialidade, items) {
             const result = computeMedianDaysToFirstSurgery(items);
-            if (!result) return 'Mediana consulta → 1ª cirurgia: <strong>sem dados suficientes</strong>';
-            const ruleKey = findSpecialtyRuleKey(especialidade);
-            const sla = (ruleKey ? SPECIALTY_RULES[ruleKey] : getSpecialtyRule(null)).sla;
-            const slaInfo = sla ? classifyMedianSLA(result.median, sla) : null;
-            const valor = slaInfo
-                ? `<strong class="text-${slaInfo.color}-700">${result.median}d</strong> (${slaInfo.label})`
-                : `<strong>${result.median}d</strong>`;
-            return `Mediana consulta → 1ª cirurgia: ${valor}`;
+            let valor;
+            if (!result) {
+                valor = '<span class="text-base font-semibold text-slate-700">sem dados suficientes</span>';
+            } else {
+                const ruleKey = findSpecialtyRuleKey(especialidade);
+                const sla = (ruleKey ? SPECIALTY_RULES[ruleKey] : getSpecialtyRule(null)).sla;
+                const slaInfo = sla ? classifyMedianSLA(result.median, sla) : null;
+                const cor = slaInfo ? `text-${slaInfo.color}-700` : 'text-slate-900';
+                valor = `<span class="text-2xl font-extrabold ${cor}">${result.median} dia${result.median !== 1 ? 's' : ''}</span>`;
+            }
+            return `
+                <div class="p-3 rounded-lg border border-slate-200 bg-white">
+                    <p class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="hourglass" class="w-4 h-4"></i>
+                        Mediana consulta → 1ª cirurgia
+                    </p>
+                    ${valor}
+                </div>
+            `;
         }
 
         // "Valor base calculado" do cartão (2026-09-24, pedido do usuário): o MESMO número
@@ -2082,9 +2104,9 @@
                     <div class="text-sm text-slate-800 font-medium space-y-1">
                         <p>Total de Pacientes convertíveis: <strong>${st.convertiveis}</strong></p>
                         <p>Valor base calculado: <strong>${describeValorBaseEspecialidade(especialidade, st.clinicas)}</strong></p>
-                        <p>${buildGanhoMedianHtml(especialidade, st.items)}</p>
                         ${st.semPreco > 0 ? `<p class="text-amber-800 font-semibold">${st.semPreco} paciente(s) sem valor base configurado (não somados ao ganho abaixo).</p>` : ''}
                     </div>
+                    ${buildGanhoMedianHtml(especialidade, st.items)}
                     <div class="p-3 rounded-lg border text-slate-900" style="background-color:${shade.bg};border-color:${shade.border}">
                         <p class="text-sm font-extrabold">GANHO POTENCIAL: <span class="inline-block px-2 py-0.5 rounded-md bg-white" style="color:${GANHO_PERDIDO_COLOR}">${formatBRLPerdido(st.ganhoPotencial)}</span></p>
                     </div>
