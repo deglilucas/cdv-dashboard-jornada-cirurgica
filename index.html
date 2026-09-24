@@ -1925,32 +1925,29 @@
         // claro (menos convertíveis) ao mais escuro (mais convertíveis) — o cartão fala de
         // valor perdido, então não pode parecer "bom". Cor inline porque é interpolada
         // (o Tailwind não gera classe para cor calculada em tempo de execução).
-        const GANHO_SHADE_LIGHT = [254, 226, 226]; // #FEE2E2
-        const GANHO_SHADE_DARK = [127, 29, 29];    // #7F1D1D
-        function relativeLuminance([r, g, b]) {
-            const lin = c => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
-            return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
-        }
+        // Paleta fechada com o usuário (2026-09-24), do tom mais forte ao mais claro —
+        // a 1ª versão ia até #7F1D1D e ficou escura demais. `bg` = fundo do cartão,
+        // `border` = o tom mais vivo do mesmo degrau. Todos são claros, então o texto
+        // é sempre escuro.
+        const GANHO_CARD_PALETTE = [
+            { bg: '#FFBBB9', border: '#FF5355' },
+            { bg: '#FFC7C5', border: '#FE7472' },
+            { bg: '#FED1D0', border: '#FF8B8B' },
+            { bg: '#FFD9D8', border: '#FEA1A0' },
+            { bg: '#FEE0DF', border: '#FEB2AD' },
+            { bg: '#FFE6E5', border: '#FFC0BF' }
+        ];
         // Escala por POSIÇÃO no ranking de convertíveis, não proporcional ao número: com
         // escala linear, uma especialidade muito maior (ex.: catarata 66 contra 14/15 das
-        // outras) deixava todas as demais com o mesmo rosa e o gradiente sumia. Empate
-        // recebe a mesma cor. `rankedValues` = contagens distintas, em ordem crescente.
+        // outras) deixava todas as demais com o mesmo tom e o gradiente sumia. Empate
+        // recebe a mesma cor; com mais de 6 contagens distintas, vizinhas dividem degrau.
+        // `rankedValues` = contagens distintas, em ordem crescente.
         function getGanhoCardShade(convertiveis, rankedValues) {
-            // Um valor só (1 especialidade, ou todas empatadas): tom mais escuro —
+            // Um valor só (1 especialidade, ou todas empatadas): tom mais forte —
             // não há "menos convertível" para clarear.
             const t = rankedValues.length > 1 ? rankedValues.indexOf(convertiveis) / (rankedValues.length - 1) : 1;
-            const rgb = GANHO_SHADE_LIGHT.map((c, i) => Math.round(c + (GANHO_SHADE_DARK[i] - c) * t));
-            // Texto branco ou escuro, o que der mais contraste com o fundo (WCAG).
-            const L = relativeLuminance(rgb);
-            const contrastWhite = 1.05 / (L + 0.05);
-            const contrastDark = (L + 0.05) / (relativeLuminance([15, 23, 42]) + 0.05); // slate-900
-            const onDark = contrastWhite > contrastDark;
-            return {
-                bg: `rgb(${rgb.join(',')})`,
-                border: onDark ? 'rgba(0,0,0,0.25)' : 'rgba(127,29,29,0.30)',
-                divider: onDark ? 'rgba(255,255,255,0.35)' : 'rgba(127,29,29,0.25)',
-                text: onDark ? '#FFFFFF' : '#0F172A'
-            };
+            const step = GANHO_CARD_PALETTE[Math.round((1 - t) * (GANHO_CARD_PALETTE.length - 1))];
+            return { bg: step.bg, border: step.border, divider: step.border, text: '#0F172A' };
         }
 
         function renderGanhoResumoCard(totalConvertiveis, totalGanho, totalSemPreco) {
