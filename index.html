@@ -2002,12 +2002,8 @@
                         <p>${buildGanhoMedianHtml(especialidade, st.items)}</p>
                         ${st.semPreco > 0 ? `<p class="text-amber-800 font-semibold">${st.semPreco} paciente(s) sem valor base configurado (não somados ao ganho abaixo).</p>` : ''}
                     </div>
-                    <div class="p-3 rounded-lg border space-y-2 text-slate-900" style="background-color:${shade.bg};border-color:${shade.border}">
+                    <div class="p-3 rounded-lg border text-slate-900" style="background-color:${shade.bg};border-color:${shade.border}">
                         <p class="text-sm font-extrabold">GANHO POTENCIAL: <span class="inline-block px-2 py-0.5 rounded-md bg-white" style="color:${GANHO_PERDIDO_COLOR}">${formatBRLPerdido(st.ganhoPotencial)}</span></p>
-                        <p class="text-sm font-bold flex items-center gap-1.5">
-                            <i data-lucide="zap" class="w-4 h-4 shrink-0"></i>
-                            Acompanhar ${st.convertiveis} paciente${st.convertiveis !== 1 ? 's' : ''} para agendamento de cirurgia.
-                        </p>
                     </div>
                     <p class="text-base font-semibold text-slate-900">Premissa: valor incluído está sendo baseado no procedimento mais barato da subespecialidade.</p>
                 </div>
