@@ -1886,10 +1886,13 @@
                 const group = statusGroup(classifyStatus(getItemProp(item, ['agendamento_cirg_status_clinica'])));
 
                 if (!bySpecialty[especialidade]) {
-                    bySpecialty[especialidade] = { total: 0, realizada: 0, semIndicacao: 0, convertiveis: 0, ganhoPotencial: 0, semPreco: 0, items: [] };
+                    bySpecialty[especialidade] = { total: 0, realizada: 0, semIndicacao: 0, convertiveis: 0, ganhoPotencial: 0, semPreco: 0, items: [], clinicas: new Set() };
                 }
                 const st = bySpecialty[especialidade];
                 st.total++;
+                // Mesmas clínicas que a tabela de Valor Base lista para esta especialidade
+                // (buildValorBaseCombos também usa todo registro do filtro, não só convertíveis).
+                st.clinicas.add(clinica);
                 // Registros crus da especialidade (inclusive quem já operou) — a mediana
                 // consulta → 1ª cirurgia precisa deles; ver renderGanhoEspecialidadeCard().
                 st.items.push(item);
@@ -1915,7 +1918,7 @@
         // Ganho potencial = dinheiro que DEIXAMOS DE GANHAR com quem não operou (pedido do
         // usuário em 2026-09-24): sai com "-" na frente e em vermelho escuro, em todo lugar
         // que mostra esse valor. Zero fica sem sinal ("-R$ 0" não significa nada).
-        // Só o GANHO leva o sinal: valor médio e valor base são PREÇO de referência.
+        // Só o GANHO leva o sinal: o valor base é PREÇO de referência, não perda.
         const GANHO_PERDIDO_COLOR = '#7F1D1D';
         function formatBRLPerdido(n) {
             return n > 0 ? `-${formatBRL(n)}` : formatBRL(0);
@@ -1980,12 +1983,18 @@
             return `Mediana consulta → 1ª cirurgia: ${valor}`;
         }
 
+        // "Valor base calculado" do cartão (2026-09-24, pedido do usuário): o MESMO número
+        // digitado na tabela de Valor Base, não uma média derivada do ganho. Como o valor é
+        // por (clínica, especialidade), clínicas com preços diferentes viram uma faixa.
+        function describeValorBaseEspecialidade(especialidade, clinicas) {
+            const valores = [...new Set([...clinicas].map(c => getValorBase(c, especialidade)).filter(v => v !== null))];
+            if (valores.length === 0) return 'não configurado';
+            if (valores.length === 1) return formatBRL(valores[0]);
+            return `${formatBRL(Math.min(...valores))} a ${formatBRL(Math.max(...valores))} (varia por clínica)`;
+        }
+
         function renderGanhoEspecialidadeCard(especialidade, st, shade) {
             const smallSample = st.total > 0 && st.total < MIN_SAMPLE_SIZE;
-            // Média só sobre quem TEM valor base: dividir pelos convertíveis sem preço
-            // puxaria a média pra baixo com zeros que não existem.
-            const comPreco = st.convertiveis - st.semPreco;
-            const valorMedio = comPreco > 0 ? st.ganhoPotencial / comPreco : 0;
 
             return `
                 <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between space-y-3">
@@ -1998,7 +2007,7 @@
                     </div>
                     <div class="text-sm text-slate-800 font-medium space-y-1">
                         <p>Total de Pacientes convertíveis: <strong>${st.convertiveis}</strong></p>
-                        <p>Valor Médio da Cirurgia: <strong>${formatBRL(valorMedio)}</strong></p>
+                        <p>Valor base calculado: <strong>${describeValorBaseEspecialidade(especialidade, st.clinicas)}</strong></p>
                         <p>${buildGanhoMedianHtml(especialidade, st.items)}</p>
                         ${st.semPreco > 0 ? `<p class="text-amber-800 font-semibold">${st.semPreco} paciente(s) sem valor base configurado (não somados ao ganho abaixo).</p>` : ''}
                     </div>
