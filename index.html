@@ -1886,10 +1886,13 @@
                 const group = statusGroup(classifyStatus(getItemProp(item, ['agendamento_cirg_status_clinica'])));
 
                 if (!bySpecialty[especialidade]) {
-                    bySpecialty[especialidade] = { total: 0, realizada: 0, semIndicacao: 0, convertiveis: 0, ganhoPotencial: 0, semPreco: 0 };
+                    bySpecialty[especialidade] = { total: 0, realizada: 0, semIndicacao: 0, convertiveis: 0, ganhoPotencial: 0, semPreco: 0, items: [] };
                 }
                 const st = bySpecialty[especialidade];
                 st.total++;
+                // Registros crus da especialidade (inclusive quem já operou) — a mediana
+                // consulta → 1ª cirurgia precisa deles; ver renderGanhoEspecialidadeCard().
+                st.items.push(item);
 
                 if (group === 'CIRURGIA_REALIZADA') {
                     st.realizada++;
@@ -1905,53 +1908,111 @@
             return bySpecialty;
         }
 
-        const GANHO_ACCENT_PALETTE = ['indigo', 'blue', 'pink', 'cyan', 'violet', 'teal', 'amber', 'rose', 'emerald', 'orange'];
-
         function formatBRL(n) {
             return (n || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
         }
 
+        // Ganho potencial = dinheiro que DEIXAMOS DE GANHAR com quem não operou (pedido do
+        // usuário em 2026-09-24): sai com "-" na frente e em vermelho escuro, em todo lugar
+        // que mostra esse valor. Zero fica sem sinal ("-R$ 0" não significa nada).
+        // Só o GANHO leva o sinal: valor médio e valor base são PREÇO de referência.
+        const GANHO_PERDIDO_COLOR = '#7F1D1D';
+        function formatBRLPerdido(n) {
+            return n > 0 ? `-${formatBRL(n)}` : formatBRL(0);
+        }
+
+        // Fundo dos cartões por especialidade (2026-09-24): gradiente de vermelho, do mais
+        // claro (menos convertíveis) ao mais escuro (mais convertíveis) — o cartão fala de
+        // valor perdido, então não pode parecer "bom". Cor inline porque é interpolada
+        // (o Tailwind não gera classe para cor calculada em tempo de execução).
+        const GANHO_SHADE_LIGHT = [254, 226, 226]; // #FEE2E2
+        const GANHO_SHADE_DARK = [127, 29, 29];    // #7F1D1D
+        function relativeLuminance([r, g, b]) {
+            const lin = c => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+            return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+        }
+        // Escala por POSIÇÃO no ranking de convertíveis, não proporcional ao número: com
+        // escala linear, uma especialidade muito maior (ex.: catarata 66 contra 14/15 das
+        // outras) deixava todas as demais com o mesmo rosa e o gradiente sumia. Empate
+        // recebe a mesma cor. `rankedValues` = contagens distintas, em ordem crescente.
+        function getGanhoCardShade(convertiveis, rankedValues) {
+            // Um valor só (1 especialidade, ou todas empatadas): tom mais escuro —
+            // não há "menos convertível" para clarear.
+            const t = rankedValues.length > 1 ? rankedValues.indexOf(convertiveis) / (rankedValues.length - 1) : 1;
+            const rgb = GANHO_SHADE_LIGHT.map((c, i) => Math.round(c + (GANHO_SHADE_DARK[i] - c) * t));
+            // Texto branco ou escuro, o que der mais contraste com o fundo (WCAG).
+            const L = relativeLuminance(rgb);
+            const contrastWhite = 1.05 / (L + 0.05);
+            const contrastDark = (L + 0.05) / (relativeLuminance([15, 23, 42]) + 0.05); // slate-900
+            const onDark = contrastWhite > contrastDark;
+            return {
+                bg: `rgb(${rgb.join(',')})`,
+                border: onDark ? 'rgba(0,0,0,0.25)' : 'rgba(127,29,29,0.30)',
+                divider: onDark ? 'rgba(255,255,255,0.35)' : 'rgba(127,29,29,0.25)',
+                text: onDark ? '#FFFFFF' : '#0F172A'
+            };
+        }
+
         function renderGanhoResumoCard(totalConvertiveis, totalGanho, totalSemPreco) {
             return `
-                <div class="col-span-full p-4 rounded-xl border border-emerald-300 bg-emerald-50 space-y-2">
-                    <div class="flex items-center gap-2 text-sm font-bold text-emerald-800">
+                <div class="col-span-full p-4 rounded-xl border border-red-300 bg-red-50 space-y-2">
+                    <div class="flex items-center gap-2 text-sm font-bold text-red-900">
                         <i data-lucide="circle-dollar-sign" class="w-4 h-4"></i>
                         GANHO POTENCIAL TOTAL — TODAS AS ESPECIALIDADES NO FILTRO ATUAL
                     </div>
-                    <div class="text-3xl font-extrabold text-emerald-700">${formatBRL(totalGanho)}</div>
+                    <div class="text-3xl font-extrabold" style="color:${GANHO_PERDIDO_COLOR}">${formatBRLPerdido(totalGanho)}</div>
                     <p class="text-sm text-slate-700 font-medium">${totalConvertiveis} paciente(s) convertível(is) no filtro atual${totalSemPreco > 0 ? ` — ${totalSemPreco} ainda sem valor base configurado` : ''}.</p>
                 </div>
             `;
         }
 
-        function renderGanhoEspecialidadeCard(especialidade, st, idx) {
-            const accent = GANHO_ACCENT_PALETTE[idx % GANHO_ACCENT_PALETTE.length];
+        // Mediana consulta → 1ª cirurgia da especialidade — mesmo cálculo e mesma régua de
+        // SLA dos cartões de Insights (Consultas). Roda sobre TODOS os registros da
+        // especialidade no filtro, não só os convertíveis: convertível, por definição,
+        // ainda não operou e não teria data de cirurgia. Terciárias não têm régua de SLA,
+        // então saem só com o número, sem sinalizador.
+        function buildGanhoMedianHtml(especialidade, items) {
+            const result = computeMedianDaysToFirstSurgery(items);
+            if (!result) return 'Mediana consulta → 1ª cirurgia: <strong>sem dados suficientes</strong>';
+            const ruleKey = findSpecialtyRuleKey(especialidade);
+            const sla = (ruleKey ? SPECIALTY_RULES[ruleKey] : getSpecialtyRule(null)).sla;
+            const slaInfo = sla ? classifyMedianSLA(result.median, sla) : null;
+            const valor = slaInfo
+                ? `<strong class="px-1.5 py-0.5 rounded bg-white text-${slaInfo.color}-700">${result.median}d</strong> (${slaInfo.label})`
+                : `<strong>${result.median}d</strong>`;
+            return `Mediana consulta → 1ª cirurgia: ${valor}`;
+        }
+
+        function renderGanhoEspecialidadeCard(especialidade, st, shade) {
             const smallSample = st.total > 0 && st.total < MIN_SAMPLE_SIZE;
-            const valorMedio = st.convertiveis > 0 ? st.ganhoPotencial / st.convertiveis : 0;
+            // Média só sobre quem TEM valor base: dividir pelos convertíveis sem preço
+            // puxaria a média pra baixo com zeros que não existem.
+            const comPreco = st.convertiveis - st.semPreco;
+            const valorMedio = comPreco > 0 ? st.ganhoPotencial / comPreco : 0;
 
             return `
-                <div class="p-4 rounded-xl border border-${accent}-200 bg-${accent}-50/40 flex flex-col justify-between space-y-2">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2 text-sm font-bold text-${accent}-800">
+                <div class="p-4 rounded-xl border flex flex-col justify-between space-y-2" style="background-color:${shade.bg};border-color:${shade.border};color:${shade.text}">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2 text-sm font-bold">
                             <i data-lucide="stethoscope" class="w-4 h-4"></i>
                             ${escapeHtml(especialidade.toUpperCase())}
                         </div>
-                        ${smallSample ? `<span class="text-sm font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full whitespace-nowrap">AMOSTRA PEQUENA</span>` : ''}
+                        ${smallSample ? `<span class="text-sm font-bold bg-white text-slate-700 px-2 py-0.5 rounded-full whitespace-nowrap">AMOSTRA PEQUENA</span>` : ''}
                     </div>
-                    <div class="text-sm text-slate-700 space-y-1">
-                        <p>Total de Pacientes: <strong>${st.total}</strong></p>
-                        <p>Total de Cirurgias Realizadas: <strong>${st.realizada}</strong></p>
-                        <p>Pacientes Convertíveis: <strong>${st.convertiveis}</strong></p>
+                    <div class="text-sm font-medium space-y-1">
+                        <p>Total de Pacientes convertíveis: <strong>${st.convertiveis}</strong></p>
                         <p>Valor Médio da Cirurgia: <strong>${formatBRL(valorMedio)}</strong></p>
-                        ${st.semPreco > 0 ? `<p class="text-amber-700 text-sm">${st.semPreco} paciente(s) sem valor base configurado (não somados ao ganho abaixo).</p>` : ''}
+                        <p>${buildGanhoMedianHtml(especialidade, st.items)}</p>
+                        ${st.semPreco > 0 ? `<p class="px-2 py-1 rounded-md bg-white text-amber-800 font-semibold">${st.semPreco} paciente(s) sem valor base configurado (não somados ao ganho abaixo).</p>` : ''}
                     </div>
-                    <div class="pt-2 border-t border-${accent}-200/60">
-                        <p class="text-sm font-extrabold text-${accent}-800">GANHO POTENCIAL: ${formatBRL(st.ganhoPotencial)}</p>
+                    <div class="pt-2 border-t" style="border-color:${shade.divider}">
+                        <p class="text-sm font-extrabold">GANHO POTENCIAL: <span class="inline-block px-2 py-0.5 rounded-md bg-white" style="color:${GANHO_PERDIDO_COLOR}">${formatBRLPerdido(st.ganhoPotencial)}</span></p>
                     </div>
-                    <div class="text-sm font-bold text-${accent}-900 flex items-center gap-1.5">
+                    <div class="text-sm font-bold flex items-center gap-1.5">
                         <i data-lucide="zap" class="w-4 h-4"></i>
                         Acompanhar ${st.convertiveis} paciente${st.convertiveis !== 1 ? 's' : ''} para agendamento de cirurgia.
                     </div>
+                    <p class="text-sm font-medium pt-2 border-t" style="border-color:${shade.divider}">Premissa: valor incluído está sendo baseado no procedimento mais barato da subespecialidade.</p>
                 </div>
             `;
         }
@@ -1977,8 +2038,12 @@
             const totalGanho = entries.reduce((sum, [, s]) => sum + s.ganhoPotencial, 0);
             const totalSemPreco = entries.reduce((sum, [, s]) => sum + s.semPreco, 0);
 
+            const rankedConv = [...new Set(entries.map(([, s]) => s.convertiveis))].sort((a, b) => a - b);
+
             let html = renderGanhoResumoCard(totalConvertiveis, totalGanho, totalSemPreco);
-            html += entries.map(([especialidade, st], idx) => renderGanhoEspecialidadeCard(especialidade, st, idx)).join('');
+            html += entries.map(([especialidade, st]) =>
+                renderGanhoEspecialidadeCard(especialidade, st, getGanhoCardShade(st.convertiveis, rankedConv))
+            ).join('');
             container.innerHTML = html || '<p class="col-span-full text-sm text-slate-600 text-center py-4">Nenhum paciente no filtro atual.</p>';
             lucide.createIcons();
         }
@@ -2631,9 +2696,14 @@
         function normalizeSpecialtyKey(s) {
             return (s || '').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
         }
-        function getSpecialtyTierOrder(especialidade) {
+        // Chave de SPECIALTY_RULES que casa com o texto cru da planilha (acento/caixa
+        // normalizados), ou null se a especialidade não está na lista oficial.
+        function findSpecialtyRuleKey(especialidade) {
             const key = normalizeSpecialtyKey(especialidade);
-            const found = Object.keys(SPECIALTY_RULES).find(k => key.includes(k));
+            return Object.keys(SPECIALTY_RULES).find(k => key.includes(k)) || null;
+        }
+        function getSpecialtyTierOrder(especialidade) {
+            const found = findSpecialtyRuleKey(especialidade);
             return found ? TIER_ORDER[SPECIALTY_RULES[found].tier] : 3;
         }
 
