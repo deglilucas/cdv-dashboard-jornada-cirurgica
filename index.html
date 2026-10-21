@@ -281,7 +281,7 @@
             <!-- Só aparece no PDF, no lugar dos campos de filtro (ver @media print). -->
             <p class="print-only text-sm font-semibold text-slate-700" id="filterSummaryConsultas"></p>
 
-            <div class="filter-controls grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+            <div class="filter-controls grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
                 <!-- Filtro Clínica (seleção múltipla) -->
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-0.5">Clínica</label>
@@ -294,6 +294,12 @@
                     <div class="multi-select relative" id="filterSurgery" data-placeholder="Todas as Especialidades" data-accent="indigo" data-onchange="applyFilters"></div>
                 </div>
 
+                <!-- Filtro Médico (seleção múltipla) — padrão fixo das 5 páginas: Clínica, Especialidade, Médico, [Status], Período -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-0.5">Médico</label>
+                    <div class="multi-select relative" id="filterMedico" data-placeholder="Todos os Médicos" data-accent="indigo" data-onchange="applyFilters"></div>
+                </div>
+
                 <!-- Filtro Status da Jornada (seleção múltipla) -->
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-0.5">Status da Jornada</label>
@@ -301,7 +307,7 @@
                 </div>
 
                 <!-- Filtro Período (Data da Consulta) -->
-                <div class="col-span-2 sm:col-span-1">
+                <div class="col-span-2 sm:col-span-3 lg:col-span-2">
                     <label class="block text-sm font-semibold text-slate-700 mb-0.5">Período (Consulta)</label>
                     <div class="flex items-center gap-1">
                         <input type="date" id="filterDateStart" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition">
@@ -683,22 +689,26 @@
 
             <p class="print-only text-sm font-semibold text-slate-700" id="filterSummaryNps"></p>
 
-            <div class="filter-controls grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div class="filter-controls grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-0.5">Clínica</label>
                     <div class="multi-select relative" id="npsFilterClinic" data-placeholder="Todas as Clínicas" data-accent="teal" data-onchange="npsApplyFilters"></div>
                 </div>
                 <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-0.5">Especialidade</label>
+                    <div class="multi-select relative" id="npsFilterSurgery" data-placeholder="Todas as Especialidades" data-accent="teal" data-onchange="npsApplyFilters"></div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-0.5">Médico</label>
+                    <div class="multi-select relative" id="npsFilterMedico" data-placeholder="Todos os Médicos" data-accent="teal" data-onchange="npsApplyFilters"></div>
+                </div>
+                <div class="col-span-2 sm:col-span-3 lg:col-span-2">
                     <label class="block text-sm font-semibold text-slate-700 mb-0.5">Período (Cirurgia)</label>
                     <div class="flex items-center gap-1">
                         <input type="date" id="npsDateStart" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition">
                         <span class="text-slate-600 text-sm shrink-0">até</span>
                         <input type="date" id="npsDateEnd" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition">
                     </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-0.5">Especialidade</label>
-                    <div class="multi-select relative" id="npsFilterSurgery" data-placeholder="Todas as Especialidades" data-accent="teal" data-onchange="npsApplyFilters"></div>
                 </div>
             </div>
         </div>
@@ -1010,7 +1020,7 @@
 
                 <p class="print-only text-sm font-semibold text-slate-700" id="filterSummaryFaturamento"></p>
 
-                <div class="filter-controls grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div class="filter-controls grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-0.5">Clínica</label>
                         <div class="multi-select relative" id="faturamentoFilterClinic" data-placeholder="Todas as Clínicas" data-accent="amber" data-onchange="applyFaturamentoFilters"></div>
@@ -1019,7 +1029,11 @@
                         <label class="block text-sm font-semibold text-slate-700 mb-0.5">Especialidade</label>
                         <div class="multi-select relative" id="faturamentoFilterSurgery" data-placeholder="Todas as Especialidades" data-accent="amber" data-onchange="applyFaturamentoFilters"></div>
                     </div>
-                    <div class="col-span-2 sm:col-span-2">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-0.5">Médico</label>
+                        <div class="multi-select relative" id="faturamentoFilterMedico" data-placeholder="Todos os Médicos" data-accent="amber" data-onchange="applyFaturamentoFilters"></div>
+                    </div>
+                    <div class="col-span-2 sm:col-span-3 lg:col-span-2">
                         <label class="block text-sm font-semibold text-slate-700 mb-0.5">Período (Cirurgia Realizada)</label>
                         <div class="flex items-center gap-1">
                             <input type="date" id="faturamentoDateStart" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-amber-500 focus:bg-white outline-none transition">
@@ -1123,7 +1137,7 @@
 
             <p class="print-only text-sm font-semibold text-slate-700" id="filterSummaryGanho"></p>
 
-            <div class="filter-controls grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div class="filter-controls grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-0.5">Clínica</label>
                     <div class="multi-select relative" id="ganhoFilterClinic" data-placeholder="Todas as Clínicas" data-accent="emerald" data-onchange="applyGanhoFilters"></div>
@@ -1133,10 +1147,14 @@
                     <div class="multi-select relative" id="ganhoFilterSurgery" data-placeholder="Todas as Especialidades" data-accent="emerald" data-onchange="applyGanhoFilters"></div>
                 </div>
                 <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-0.5">Médico</label>
+                    <div class="multi-select relative" id="ganhoFilterMedico" data-placeholder="Todos os Médicos" data-accent="emerald" data-onchange="applyGanhoFilters"></div>
+                </div>
+                <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-0.5">Status da Jornada</label>
                     <div class="multi-select relative" id="ganhoFilterStatus" data-placeholder="Todos os Status" data-accent="emerald" data-onchange="applyGanhoFilters"></div>
                 </div>
-                <div>
+                <div class="col-span-2 sm:col-span-3 lg:col-span-2">
                     <label class="block text-sm font-semibold text-slate-700 mb-0.5">Período (Consulta)</label>
                     <div class="flex items-center gap-1">
                         <input type="date" id="ganhoDateStart" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition">
@@ -1317,12 +1335,20 @@
 
             <p class="print-only text-sm font-semibold text-slate-700" id="filterSummaryBenchmark"></p>
 
-            <div class="filter-controls grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <div class="col-span-2">
+            <div class="filter-controls grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-0.5">Clínica</label>
-                    <div class="multi-select relative" id="benchmarkFilterClinic" data-placeholder="Todas as Clínicas (média da rede)" data-accent="violet" data-onchange="applyBenchmarkFilters"></div>
+                    <div class="multi-select relative" id="benchmarkFilterClinic" data-placeholder="Todas (média da rede)" data-accent="violet" data-onchange="applyBenchmarkFilters"></div>
                 </div>
-                <div class="col-span-2">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-0.5">Especialidade</label>
+                    <div class="multi-select relative" id="benchmarkFilterSurgery" data-placeholder="Todas as Especialidades" data-accent="violet" data-onchange="applyBenchmarkFilters"></div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-0.5">Médico</label>
+                    <div class="multi-select relative" id="benchmarkFilterMedico" data-placeholder="Todos os Médicos" data-accent="violet" data-onchange="applyBenchmarkFilters"></div>
+                </div>
+                <div class="col-span-2 sm:col-span-3 lg:col-span-2">
                     <label class="block text-sm font-semibold text-slate-700 mb-0.5">Período (Consulta)</label>
                     <div class="flex items-center gap-1">
                         <input type="date" id="benchmarkDateStart" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-violet-500 focus:bg-white outline-none transition">
@@ -1363,6 +1389,38 @@
             </div>
 
             <div id="benchmarkContent" class="space-y-5"></div>
+        </div>
+
+        <!-- Benchmark: KPI separado — médicos que mais e que menos converteram -->
+        <div class="white-card rounded-2xl p-6 border-l-4 border-l-violet-600 space-y-5" id="cardBenchmarkMedicos">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-violet-600 text-white flex items-center justify-center shadow-md shadow-violet-600/20">
+                        <i data-lucide="stethoscope" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Médicos que mais e que menos converteram</h3>
+                        <p class="text-base font-medium text-slate-900">Comparação entre os médicos da clínica filtrada (ou da base, sem filtro de clínica)</p>
+                    </div>
+                </div>
+                <div class="relative no-print">
+                    <button onclick="toggleExportMenu(event, 'menuBenchmarkMedicos')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-sm font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        Exportar como...
+                        <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                    </button>
+                    <div id="menuBenchmarkMedicos" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
+                        <button onclick="exportSectionAsPdf('cardBenchmarkMedicos','Benchmark_Medicos')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
+                        </button>
+                        <button onclick="exportSectionAsJpeg('cardBenchmarkMedicos','Benchmark_Medicos')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                            <i data-lucide="image" class="w-3.5 h-3.5 text-indigo-500"></i> Exportar como JPEG
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="benchmarkMedicosContent" class="space-y-5"></div>
         </div>
 
         </div>
@@ -1714,6 +1772,33 @@
         const SURGERY_ALIASES = ['especialidades', 'especialidade', 'Cirurgia'];
         const MEDICO_ALIASES = ['medicos', 'medico', 'Médico'];
 
+        // ================================================================
+        // FILTRO DE MÉDICO — padrão fixo das 5 páginas (2026-10-21, pedido do usuário)
+        // ----------------------------------------------------------------
+        // ⚠️ O campo de médico da planilha vem SUJO: o Farol mistura o nome com anotação de
+        // campanha/equipe ("Dr. Fulano - CAMPANHA DE MOBILIZAÇÃO", "Dr. Fulano - equipe Dr.
+        // Ciclano", "Dr. Fulano - Consulta oftalmológica."), com ponto final e espaço
+        // sobrando. Na base conferida eram 191 textos para ~155 médicos. Filtrar pelo texto
+        // cru faria a lista ter o mesmo médico várias vezes, e marcar um deixaria os outros
+        // registros dele de fora. Por isso FILTRO e RANKING usam o nome canônico: o que vem
+        // antes do 1º " - " (ou " | "), sem ponto/espaço no fim, e acento/caixa/ponto
+        // ignorados para casar variações. Tabelas e exportações continuam mostrando o texto
+        // cru da planilha. Nome do médico NUNCA é lido direto por getItemProp no filtro.
+        // ================================================================
+        const medicoCanonicalByKey = new Map();
+        function canonicalMedico(raw) {
+            if (!raw || raw === '-') return '';
+            const name = String(raw).split(/\s+[-–|]\s+/)[0].replace(/\s+/g, ' ').replace(/[\s.,;]+$/, '').trim();
+            if (!name) return '';
+            const key = normalizeSpecialtyKey(name).replace(/\./g, '').replace(/\s+/g, ' ');
+            if (!medicoCanonicalByKey.has(key)) medicoCanonicalByKey.set(key, name);
+            return medicoCanonicalByKey.get(key);
+        }
+        function getMedicoName(item) { return canonicalMedico(getItemProp(item, MEDICO_ALIASES)); }
+        function collectMedicoOptions(items, getter = getMedicoName) {
+            return Array.from(new Set(items.map(getter).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        }
+
         // Cirurgias para conferência de repasse: cada procedimento "realizou" (1º ou 2º olho)
         // vira uma linha, com `trancada` = trava (lock) DA MESMA ABA preenchida — ou seja,
         // já reportada/paga. Desde 2026-09-24 a lista traz as trancadas também (no fim, ver
@@ -1848,6 +1933,7 @@
             });
             populateMultiSelect('faturamentoFilterClinic', Array.from(clinics).sort());
             populateMultiSelect('faturamentoFilterSurgery', Array.from(surgeries).sort());
+            populateMultiSelect('faturamentoFilterMedico', collectMedicoOptions(rawData));
             // Mesma data que applyFaturamentoFilters() filtra: a da cirurgia realizada.
             setPeriodFilterBounds('faturamentoDateStart', 'faturamentoDateEnd',
                 getBillingRecords(rawData).map(rec => rec.data));
@@ -1856,14 +1942,16 @@
         function applyFaturamentoFilters() {
             const clinics = getMultiSelectValues('faturamentoFilterClinic');
             const surgeries = getMultiSelectValues('faturamentoFilterSurgery');
+            const medicos = getMultiSelectValues('faturamentoFilterMedico');
             const dateStart = getPeriodFilterValue('faturamentoDateStart');
             const dateEnd = getPeriodFilterValue('faturamentoDateEnd');
 
             faturamentoFilteredRecords = sortBillingRecords(getBillingRecords(rawData).filter(rec => {
                 const matchClinic = matchesMultiSelect(clinics, rec.clinica);
                 const matchSurgery = matchesMultiSelect(surgeries, rec.especialidade);
+                const matchMedico = matchesMultiSelect(medicos, canonicalMedico(rec.medico));
                 const matchPeriod = isWithinPeriod(rec.data, dateStart, dateEnd);
-                return matchClinic && matchSurgery && matchPeriod;
+                return matchClinic && matchSurgery && matchMedico && matchPeriod;
             }));
 
             const pendentes = faturamentoFilteredRecords.filter(rec => !rec.trancada).length;
@@ -1873,6 +1961,7 @@
             renderFilterSummary('filterSummaryFaturamento', [
                 { label: 'Clínica', value: describeMultiSelectFilter('faturamentoFilterClinic', 'todas') },
                 { label: 'Especialidade', value: describeMultiSelectFilter('faturamentoFilterSurgery', 'todas') },
+                { label: 'Médico', value: describeMultiSelectFilter('faturamentoFilterMedico', 'todos') },
                 { label: 'Período da cirurgia', value: describePeriodFilter('faturamentoDateStart', 'faturamentoDateEnd') },
                 { label: 'Pendências no recorte', value: String(pendentes) },
                 { label: 'Já trancadas no recorte', value: String(trancadas) }
@@ -2020,6 +2109,7 @@
             });
             populateMultiSelect('ganhoFilterClinic', Array.from(clinics).sort());
             populateMultiSelect('ganhoFilterSurgery', Array.from(surgeries).sort());
+            populateMultiSelect('ganhoFilterMedico', collectMedicoOptions(rawData));
             populateMultiSelect('ganhoFilterStatus', buildJourneyStatusOptions(statuses));
             // Mesma data que applyGanhoFilters() filtra: a da consulta.
             setPeriodFilterBounds('ganhoDateStart', 'ganhoDateEnd',
@@ -2045,6 +2135,7 @@
             const clinics = getMultiSelectValues('ganhoFilterClinic');
             const surgeries = getMultiSelectValues('ganhoFilterSurgery');
             const statuses = getMultiSelectValues('ganhoFilterStatus');
+            const medicos = getMultiSelectValues('ganhoFilterMedico');
             const dateStart = getPeriodFilterValue('ganhoDateStart');
             const dateEnd = getPeriodFilterValue('ganhoDateEnd');
 
@@ -2058,12 +2149,14 @@
                 const matchSurgery = matchesMultiSelect(surgeries, s);
                 const matchStatus = matchesMultiSelect(statuses, st);
                 const matchPeriod = isWithinPeriod(d, dateStart, dateEnd);
-                return matchClinic && matchSurgery && matchStatus && matchPeriod;
+                const matchMedico = matchesMultiSelect(medicos, getMedicoName(item));
+                return matchClinic && matchSurgery && matchMedico && matchStatus && matchPeriod;
             });
 
             renderFilterSummary('filterSummaryGanho', [
                 { label: 'Clínica', value: describeMultiSelectFilter('ganhoFilterClinic', 'todas') },
                 { label: 'Especialidade', value: describeMultiSelectFilter('ganhoFilterSurgery', 'todas') },
+                { label: 'Médico', value: describeMultiSelectFilter('ganhoFilterMedico', 'todos') },
                 { label: 'Status da Jornada', value: describeMultiSelectFilter('ganhoFilterStatus', 'todos') },
                 { label: 'Período da consulta', value: describePeriodFilter('ganhoDateStart', 'ganhoDateEnd') },
                 { label: 'Pacientes no recorte', value: String(ganhoFilteredData.length) }
@@ -2622,6 +2715,7 @@
 
             populateMultiSelect('filterClinic', Array.from(clinics).sort());
             populateMultiSelect('filterSurgery', Array.from(surgeries).sort());
+            populateMultiSelect('filterMedico', collectMedicoOptions(rawData));
             populateMultiSelect('filterStatus', buildJourneyStatusOptions(statuses));
             // Mesma data que applyFilters() filtra: a da consulta.
             setPeriodFilterBounds('filterDateStart', 'filterDateEnd',
@@ -2714,6 +2808,7 @@
             ['ganhoDateStart', 'ganhoDateEnd'].forEach(id => {
                 document.getElementById(id).addEventListener('change', applyGanhoFilters);
             });
+            document.getElementById('benchmarkMedicosContent').addEventListener('click', handleBenchmarkMedicosToggle);
             // Benchmark: Clínica é múltipla (data-onchange); só o período precisa de listener.
             ['benchmarkDateStart', 'benchmarkDateEnd'].forEach(id => {
                 document.getElementById(id).addEventListener('change', applyBenchmarkFilters);
@@ -2744,6 +2839,7 @@
             const clinics = getMultiSelectValues('filterClinic');
             const surgeries = getMultiSelectValues('filterSurgery');
             const statuses = getMultiSelectValues('filterStatus');
+            const medicos = getMultiSelectValues('filterMedico');
             const dateStart = getPeriodFilterValue('filterDateStart');
             const dateEnd = getPeriodFilterValue('filterDateEnd');
 
@@ -2756,8 +2852,9 @@
                 const matchClinic = matchesMultiSelect(clinics, c);
                 const matchSurgery = matchesMultiSelect(surgeries, s);
                 const matchStatus = matchesMultiSelect(statuses, st);
+                const matchMedico = matchesMultiSelect(medicos, getMedicoName(item));
                 const matchPeriod = isWithinPeriod(d, dateStart, dateEnd);
-                return matchClinic && matchSurgery && matchStatus && matchPeriod;
+                return matchClinic && matchSurgery && matchMedico && matchStatus && matchPeriod;
             });
 
             currentPage = 1;
@@ -2797,6 +2894,7 @@
             renderFilterSummary('filterSummaryConsultas', [
                 { label: 'Clínica', value: describeMultiSelectFilter('filterClinic', 'todas') },
                 { label: 'Especialidade', value: describeMultiSelectFilter('filterSurgery', 'todas') },
+                { label: 'Médico', value: describeMultiSelectFilter('filterMedico', 'todos') },
                 { label: 'Status da Jornada', value: describeMultiSelectFilter('filterStatus', 'todos') },
                 { label: 'Período da consulta', value: describePeriodFilter('filterDateStart', 'filterDateEnd') },
                 { label: 'Pacientes no recorte', value: pacientesNoFiltro !== filteredData.length
@@ -4636,6 +4734,7 @@
             });
             populateMultiSelect('npsFilterClinic', Array.from(clinics).sort());
             populateMultiSelect('npsFilterSurgery', Array.from(surgeries).sort());
+            populateMultiSelect('npsFilterMedico', collectMedicoOptions(npsRawData, item => canonicalMedico(npsGetMedico(item))));
             // Mesma data que npsApplyFilters() filtra: a da cirurgia.
             setPeriodFilterBounds('npsDateStart', 'npsDateEnd',
                 npsRawData.map(item => parseFlexibleDate(getItemProp(item, ['Data da Cirurgia']))));
@@ -4644,6 +4743,7 @@
         function npsApplyFilters() {
             const clinics = getMultiSelectValues('npsFilterClinic');
             const surgeries = getMultiSelectValues('npsFilterSurgery');
+            const medicos = getMultiSelectValues('npsFilterMedico');
             const dateStart = getPeriodFilterValue('npsDateStart');
             const dateEnd = getPeriodFilterValue('npsDateEnd');
 
@@ -4654,8 +4754,9 @@
 
                 const matchClinic = matchesMultiSelect(clinics, c);
                 const matchSurgery = matchesMultiSelect(surgeries, s);
+                const matchMedico = matchesMultiSelect(medicos, canonicalMedico(npsGetMedico(item)));
                 const matchPeriod = isWithinPeriod(d, dateStart, dateEnd);
-                return matchClinic && matchSurgery && matchPeriod;
+                return matchClinic && matchSurgery && matchMedico && matchPeriod;
             });
 
             npsCurrentPage = 1;
@@ -4742,6 +4843,7 @@
             renderFilterSummary('filterSummaryNps', [
                 { label: 'Clínica', value: describeMultiSelectFilter('npsFilterClinic', 'todas') },
                 { label: 'Especialidade', value: describeMultiSelectFilter('npsFilterSurgery', 'todas') },
+                { label: 'Médico', value: describeMultiSelectFilter('npsFilterMedico', 'todos') },
                 { label: 'Período da cirurgia', value: describePeriodFilter('npsDateStart', 'npsDateEnd') },
                 { label: 'Avaliações no recorte', value: String(npsFilteredData.length) }
             ]);
@@ -5292,11 +5394,16 @@
 
         function populateBenchmarkFilters() {
             const clinics = new Set();
+            const surgeries = new Set();
             rawData.forEach(item => {
                 const c = getItemProp(item, CLINIC_ALIASES);
+                const s = getItemProp(item, SURGERY_ALIASES);
                 if (c) clinics.add(c);
+                if (s) surgeries.add(s);
             });
             populateMultiSelect('benchmarkFilterClinic', Array.from(clinics).sort());
+            populateMultiSelect('benchmarkFilterSurgery', Array.from(surgeries).sort());
+            populateMultiSelect('benchmarkFilterMedico', collectMedicoOptions(rawData));
             // Mesma data que applyBenchmarkFilters() filtra: a da consulta.
             setPeriodFilterBounds('benchmarkDateStart', 'benchmarkDateEnd', rawData.map(getBenchmarkConsultaDate));
         }
@@ -5314,10 +5421,19 @@
             };
         }
 
-        function computeBenchmarkRows(clinicsSel, dateStart, dateEnd) {
-            const inPeriod = rawData.filter(item => isWithinPeriod(getBenchmarkConsultaDate(item), dateStart, dateEnd));
-            const mine = inPeriod.filter(item => matchesMultiSelect(clinicsSel, getItemProp(item, CLINIC_ALIASES)));
+        // `sel` = { clinics, specialties, medicos } (listas do filtro; vazia = sem filtro).
+        // Quem entra em cada lado:
+        //  - ESPECIALIDADE e PERÍODO filtram os DOIS lados: a especialidade é a própria
+        //    dimensão da comparação, e a linha "Conversão total" tem de comparar o mesmo
+        //    conjunto de especialidades nos dois lados.
+        //  - CLÍNICA e MÉDICO filtram só a seleção ("a sua"): a melhor clínica da base
+        //    continua sendo a melhor entre TODAS as clínicas.
+        function computeBenchmarkRows(sel, dateStart, dateEnd) {
             const specOf = item => getItemProp(item, SURGERY_ALIASES) || 'Sem especialidade';
+            const inPeriod = rawData.filter(item => isWithinPeriod(getBenchmarkConsultaDate(item), dateStart, dateEnd)
+                && matchesMultiSelect(sel.specialties, specOf(item)));
+            const mine = inPeriod.filter(item => matchesMultiSelect(sel.clinics, getItemProp(item, CLINIC_ALIASES))
+                && matchesMultiSelect(sel.medicos, getMedicoName(item)));
 
             // Clínica -> consultas, e clínica -> especialidade -> consultas. Consulta sem
             // clínica informada não é uma clínica de verdade, então não concorre.
@@ -5436,23 +5552,354 @@
             }
         };
 
+        // ---- KPI separado: médicos que mais e que menos converteram ----
+        // Dois níveis (pedido do usuário, 2026-10-21):
+        //  1) CONSOLIDADO — mistura as especialidades do recorte; as pontas (5 que mais e 5 que
+        //     menos converteram) e, a pedido, o ranking completo.
+        //  2) POR ESPECIALIDADE — um bloco por especialidade com a conversão do médico DENTRO
+        //     dela (a mistura do consolidado favorece quem opera especialidade de conversão alta,
+        //     ex.: Catarata contra Refrativa). Cada bloco mostra os 10 primeiros e, se houver
+        //     mais, um botão abre a lista completa (do 11º em diante só aparece ao clicar).
+        // ESCOPO: a base INTEIRA, filtrada por Especialidade e Período. Os filtros de Clínica e
+        // de Médico NÃO restringem o ranking: a clínica filtrada só define quem aparece com
+        // nome completo (é o benchmark: os médicos da clínica contra os da rede).
+        // ⚠️ NOMES (decisão do usuário, 2026-10-21, que substituiu a regra anterior de esconder
+        // o nome): médico que atende na clínica filtrada = nome completo e selo "sua clínica";
+        // médico de FORA = só o primeiro nome ("Dr. Fábio"). Sem filtro de clínica (ou com todas
+        // marcadas) todos pertencem à seleção, então todos saem com nome completo.
+        // Só entra médico com BENCHMARK_MIN_PACIENTES pacientes (no escopo e, nos blocos, na
+        // especialidade), pelo mesmo motivo da melhor clínica (1 paciente com 2 olhos operados =
+        // 200%). Médico = nome canônico (canonicalMedico), somando clínicas se atende em mais de
+        // uma. EXPORTAÇÃO/IMPRESSÃO: listas recolhidas somem do DOM, então imprimir ou exportar
+        // PDF/JPEG expande tudo antes (setBenchmarkPrintMode) — mesmo padrão dos Insights.
+        const BENCHMARK_MEDICOS_POR_LISTA = 5;
+        const BENCHMARK_MEDICOS_VISIVEIS = 10;
+        let benchmarkClinicFilterActive = false;
+        // PADRÃO (pedido do usuário, 2026-10-21): com clínica filtrada o ranking traz SÓ os
+        // médicos dela e as especialidades dela. O botão "Mostrar médicos de outras clínicas"
+        // (decisão do gestor, que é quem decide enviar ou não esse detalhe) inclui os de fora,
+        // que aparecem só com o primeiro nome. Sem filtro de clínica o botão nem aparece.
+        let benchmarkIncludeOtherClinics = false;
+        let benchmarkLastQuery = null;
+        let benchmarkMedicosData = null;
+        const benchmarkMedicosExpanded = new Set();
+        let benchmarkMedicosExpandAll = false;
+
+        function medicoFirstName(name) {
+            const t = name.split(' ');
+            return /^(dr|dra|prof|profa|doutor|doutora)\.?$/i.test(t[0]) && t[1] ? `${t[0]} ${t[1]}` : t[0];
+        }
+
+        function getMedicoScopeItems(sel, dateStart, dateEnd) {
+            const specOf = item => getItemProp(item, SURGERY_ALIASES) || 'Sem especialidade';
+            const soDaClinica = benchmarkClinicFilterActive && !benchmarkIncludeOtherClinics;
+            return rawData.filter(item => isWithinPeriod(getBenchmarkConsultaDate(item), dateStart, dateEnd)
+                && matchesMultiSelect(sel.specialties, specOf(item))
+                && (!soDaClinica || matchesMultiSelect(sel.clinics, getItemProp(item, CLINIC_ALIASES)))
+                && getMedicoName(item) !== '');
+        }
+
+        // Médicos elegíveis (amostra mínima) de um conjunto de consultas, do que mais ao que
+        // menos converteu. `own` = atende na clínica filtrada (sem filtro de clínica, todos).
+        // `totalMedicos` conta também os que ficaram de fora por amostra.
+        function rankMedicos(items, sel) {
+            const byMedico = new Map();
+            items.forEach(item => {
+                const name = getMedicoName(item);
+                if (!byMedico.has(name)) byMedico.set(name, { items: [], own: false });
+                const entry = byMedico.get(name);
+                entry.items.push(item);
+                if (matchesMultiSelect(sel.clinics, getItemProp(item, CLINIC_ALIASES))) entry.own = true;
+            });
+            const eligible = [];
+            byMedico.forEach((entry, name) => {
+                const conv = computeConversion(entry.items);
+                if (conv.pacientes >= BENCHMARK_MIN_PACIENTES) eligible.push({ name, own: entry.own, ...conv });
+            });
+            eligible.sort((a, b) => b.ratio - a.ratio || b.pacientes - a.pacientes || a.name.localeCompare(b.name, 'pt-BR'));
+            return { totalMedicos: byMedico.size, eligible };
+        }
+
+        // Com até 2×perList médicos a lista sai COMPLETA, sem pular posição (um ranking que
+        // mostra só o 1º e o 3º deixa a pergunta "e o 2º?" — bug relatado em 2026-10-21 com 3
+        // médicos): os de cima ficam com a metade maior. Acima disso, os perList de cada ponta.
+        function splitTopBottom(eligible, perList) {
+            const n = eligible.length;
+            const kTop = Math.min(perList, Math.ceil(n / 2));
+            const kBottom = Math.min(perList, n - kTop);
+            return {
+                top: eligible.slice(0, kTop),
+                bottom: kBottom ? eligible.slice(n - kBottom).reverse() : []
+            };
+        }
+
+        function computeMedicoRanking(sel, dateStart, dateEnd) {
+            const { totalMedicos, eligible } = rankMedicos(getMedicoScopeItems(sel, dateStart, dateEnd), sel);
+            const n = eligible.length;
+            return {
+                totalMedicos,
+                eligible: n,
+                all: eligible,
+                ...splitTopBottom(eligible, BENCHMARK_MEDICOS_POR_LISTA),
+                spread: n >= 2 ? eligible[0].taxa - eligible[n - 1].taxa : null,
+                best: n ? eligible[0] : null,
+                worst: n >= 2 ? eligible[n - 1] : null
+            };
+        }
+
+        // Um bloco por especialidade do escopo (ordem: nível e prioridade, como no resto do
+        // painel). Especialidade sem nenhum médico com amostra mínima vira só uma nota.
+        function computeMedicoRankingBySpecialty(sel, dateStart, dateEnd) {
+            const specOf = item => getItemProp(item, SURGERY_ALIASES) || 'Sem especialidade';
+            const bySpec = new Map();
+            getMedicoScopeItems(sel, dateStart, dateEnd).forEach(item => {
+                const sp = specOf(item);
+                if (!bySpec.has(sp)) bySpec.set(sp, []);
+                bySpec.get(sp).push(item);
+            });
+            const specs = Array.from(bySpec.keys()).sort((a, b) =>
+                getSpecialtyTierOrder(a) - getSpecialtyTierOrder(b)
+                || getSpecialtyPriorityOrder(a) - getSpecialtyPriorityOrder(b)
+                || a.localeCompare(b, 'pt-BR'));
+            const blocks = [];
+            const semAmostra = [];
+            specs.forEach(sp => {
+                const { totalMedicos, eligible } = rankMedicos(bySpec.get(sp), sel);
+                if (!eligible.length) { semAmostra.push(sp); return; }
+                blocks.push({ spec: sp, totalMedicos, eligible });
+            });
+            return { blocks, semAmostra };
+        }
+
+        // Nome mostrado: completo para quem atende na clínica filtrada (com selo quando há
+        // filtro de clínica), só o primeiro nome para quem é de fora. Sem `title` com o nome
+        // completo de propósito: o hover revelaria o que se quer esconder.
+        function medicoLabel(m) {
+            const badge = benchmarkClinicFilterActive && benchmarkIncludeOtherClinics && m.own
+                ? ' <span class="ml-1 text-sm font-semibold text-violet-700 bg-violet-50 border border-violet-200 rounded px-1.5 whitespace-nowrap">sua clínica</span>' : '';
+            return escapeHtml(m.own ? m.name : medicoFirstName(m.name)) + badge;
+        }
+
+        function medicoTone(i, n) {
+            if (n === 1) return ['#64748B', 'text-slate-700'];
+            const k = Math.max(1, Math.floor(n / 3));
+            return i < k ? ['#059669', 'text-emerald-700'] : i >= n - k ? ['#dc2626', 'text-red-600'] : ['#64748B', 'text-slate-700'];
+        }
+
+        function medicoBarRow(rank, m, scale, color, textColor) {
+            return `
+                <div>
+                    <div class="flex items-baseline justify-between gap-3">
+                        <span class="text-sm font-semibold text-slate-900">${rank}º ${medicoLabel(m)}</span>
+                        <span class="text-base font-extrabold ${textColor}">${m.taxa}%</span>
+                    </div>
+                    <div class="h-3 rounded-full bg-slate-100 overflow-hidden mt-1">
+                        <div class="h-full rounded-full" style="width:${Math.max(2, Math.round(m.taxa / scale * 100))}%;background:${color}"></div>
+                    </div>
+                </div>`;
+        }
+
+        // Linha compacta (uma por médico) das listas completas, com a posição real — um
+        // ranking cortado ("só o 1º e o último") não deixa saber quem é o 2º. Sem `truncate`:
+        // nome cortado some do PDF/JPEG.
+        function medicoCompactRow(rank, m, scale, color, textColor) {
+            return `
+                <div class="flex items-center gap-3">
+                    <span class="w-9 shrink-0 text-right text-sm font-bold text-slate-600">${rank}º</span>
+                    <span class="flex-1 min-w-0 text-sm font-semibold text-slate-900 break-words">${medicoLabel(m)}</span>
+                    <div class="w-28 shrink-0 h-2.5 rounded-full bg-slate-100 overflow-hidden">
+                        <div class="h-full rounded-full" style="width:${Math.max(2, Math.round(m.taxa / scale * 100))}%;background:${color}"></div>
+                    </div>
+                    <span class="w-14 shrink-0 text-right text-sm font-extrabold ${textColor}">${m.taxa}%</span>
+                </div>`;
+        }
+
+        function medicoRows(list, offset = 0) {
+            const n = benchmarkMedicosCurrentN;
+            const sc = Math.max(100, ...list.map(m => m.taxa));
+            return list.map((m, i) => {
+                const [color, text] = medicoTone(offset + i, n);
+                return medicoCompactRow(offset + i + 1, m, sc, color, text);
+            }).join('');
+        }
+        let benchmarkMedicosCurrentN = 0; // total do ranking que está sendo desenhado (para as cores por terço)
+
+        function medicoToggleButton(key, label) {
+            return `<button type="button" data-bm-toggle="${escapeHtml(key)}" class="no-print px-3 py-1.5 bg-white hover:bg-slate-50 text-violet-700 text-sm font-bold rounded-lg border border-violet-200 transition">${label}</button>`;
+        }
+
+        function renderBenchmarkMedicos() {
+            const box = document.getElementById('benchmarkMedicosContent');
+            if (!rawData.length || !benchmarkMedicosData) { box.innerHTML = '<p class="text-base font-medium text-slate-900">Carregue a planilha de Consultas para ver o ranking.</p>'; return; }
+            const { ranking, bySpec } = benchmarkMedicosData;
+            if (!ranking.eligible) {
+                box.innerHTML = `<p class="text-base font-medium text-slate-900">Nenhum médico com ${BENCHMARK_MIN_PACIENTES} ou mais pacientes no filtro atual.</p>`;
+                return;
+            }
+            const isOpen = key => benchmarkMedicosExpandAll || benchmarkMedicosExpanded.has(key);
+
+            // ---- 1) Consolidado ----
+            const shown = ranking.top.concat(ranking.bottom);
+            const scale = Math.max(100, ...shown.map(m => m.taxa));
+            const list = (title, items, startRank, color, textColor) => `
+                <div class="space-y-3">
+                    <h4 class="text-base font-bold ${textColor}">${title}</h4>
+                    ${items.map((m, i) => medicoBarRow(startRank + i, m, scale, color, textColor)).join('')}
+                </div>`;
+            const kpi = (label, value, sub, cls) => `
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 flex flex-col">
+                    <div class="text-sm font-bold text-slate-700 uppercase tracking-wider">${label}</div>
+                    <div class="text-3xl font-extrabold mt-1 ${cls}">${value}</div>
+                    <div class="text-sm font-medium text-slate-700 mt-auto pt-1">${sub}</div>
+                </div>`;
+            const kpis = ranking.eligible >= 2 ? `
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    ${kpi('Maior conversão', `${ranking.best.taxa}%`, medicoLabel(ranking.best), 'text-emerald-700')}
+                    ${kpi('Menor conversão', `${ranking.worst.taxa}%`, medicoLabel(ranking.worst), 'text-red-600')}
+                    ${kpi('Distância entre eles', `${ranking.spread} p.p.`, `${ranking.eligible} médico(s) comparado(s)`, 'text-slate-900')}
+                </div>` : `
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    ${kpi('Único médico comparável', `${ranking.best.taxa}%`, medicoLabel(ranking.best), 'text-slate-900')}
+                </div>`;
+            const cols = ranking.eligible >= 2
+                ? `<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                       ${list('Mais converteram (todas as especialidades do recorte)', ranking.top, 1, '#059669', 'text-emerald-700')}
+                       ${list('Menos converteram (todas as especialidades do recorte)', ranking.bottom.slice().reverse(), ranking.eligible - ranking.bottom.length + 1, '#dc2626', 'text-red-600')}
+                   </div>` : '';
+            const meio = ranking.eligible - shown.length;
+            let completo = '';
+            if (meio > 0) {
+                benchmarkMedicosCurrentN = ranking.eligible;
+                completo = isOpen('consolidado')
+                    ? `<div class="space-y-2">
+                           <div class="flex flex-wrap items-center justify-between gap-3">
+                               <h4 class="text-base font-bold text-slate-900">Ranking completo (todas as especialidades do recorte)</h4>
+                               ${benchmarkMedicosExpandAll ? '' : medicoToggleButton('consolidado', 'Recolher lista')}
+                           </div>
+                           ${medicoRows(ranking.all)}
+                       </div>`
+                    : `<div>${medicoToggleButton('consolidado', `Ver ranking completo (${ranking.eligible} médicos)`)}</div>`;
+            }
+
+            // ---- 2) Por especialidade: 10 primeiros + botão para a lista completa ----
+            const specBlock = b => {
+                const n = b.eligible.length;
+                const key = 'spec:' + b.spec;
+                const open = isOpen(key);
+                benchmarkMedicosCurrentN = n;
+                const visible = open ? b.eligible : b.eligible.slice(0, BENCHMARK_MEDICOS_VISIVEIS);
+                const scaleAll = Math.max(100, ...b.eligible.map(m => m.taxa));
+                const rows = visible.map((m, i) => {
+                    const [color, text] = medicoTone(i, n);
+                    return medicoCompactRow(i + 1, m, scaleAll, color, text);
+                }).join('');
+                const spread = n >= 2 ? `${b.eligible[0].taxa - b.eligible[n - 1].taxa} p.p. entre o primeiro e o último` : 'só 1 médico com amostra mínima';
+                const toggle = n > BENCHMARK_MEDICOS_VISIVEIS && !benchmarkMedicosExpandAll
+                    ? `<div>${medicoToggleButton(key, open ? 'Mostrar só os 10 primeiros' : `Ver lista completa (${n} médicos)`)}</div>` : '';
+                return `
+                    <div class="rounded-xl border border-slate-200 p-4 space-y-3">
+                        <div>
+                            <h5 class="text-base font-bold text-slate-900">${escapeHtml(b.spec)}</h5>
+                            <p class="text-sm font-medium text-slate-700">${n} médico(s) comparado(s) · ${spread}</p>
+                        </div>
+                        <div class="space-y-2">${rows}</div>
+                        ${toggle}
+                    </div>`;
+            };
+            const porEspecialidade = bySpec && bySpec.blocks.length ? `
+                <div class="border-t border-slate-100 pt-5 space-y-4">
+                    <div>
+                        <h4 class="text-base font-bold text-slate-900">Por especialidade</h4>
+                        <p class="text-sm font-medium text-slate-700">Conversão do médico dentro de cada especialidade (só entra quem tem ${BENCHMARK_MIN_PACIENTES} ou mais pacientes nela). Cada bloco mostra os ${BENCHMARK_MEDICOS_VISIVEIS} primeiros; quando há mais médicos, o botão abre a lista completa, com a posição de cada um.</p>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">${bySpec.blocks.map(specBlock).join('')}</div>
+                    ${bySpec.semAmostra.length ? `<p class="text-sm font-medium text-slate-700">Sem médico com amostra mínima em: ${bySpec.semAmostra.map(escapeHtml).join(', ')}.</p>` : ''}
+                </div>` : '';
+
+            // Botão do gestor: só existe com clínica filtrada, e fica fora da imagem/PDF (no-print).
+            const outras = benchmarkClinicFilterActive && !benchmarkMedicosExpandAll ? `
+                <div class="no-print flex flex-wrap items-center gap-3">
+                    <button type="button" data-bm-others class="px-3 py-1.5 bg-white hover:bg-slate-50 text-violet-700 text-sm font-bold rounded-lg border border-violet-200 transition">${benchmarkIncludeOtherClinics ? 'Ocultar médicos de outras clínicas' : 'Mostrar médicos de outras clínicas'}</button>
+                    <span class="text-sm font-medium text-slate-700">${benchmarkIncludeOtherClinics
+                        ? 'Os médicos de outras clínicas aparecem só com o primeiro nome.'
+                        : 'Mostrando só os médicos da clínica filtrada.'}</span>
+                </div>` : '';
+
+            box.innerHTML = outras + kpis + cols + completo + porEspecialidade + `
+                <ul class="text-sm font-medium text-slate-700 space-y-1 list-disc pl-5">
+                    <li>${!benchmarkClinicFilterActive
+                        ? 'Sem clínica filtrada, o ranking considera os médicos de todas as clínicas da base, com o nome completo.'
+                        : benchmarkIncludeOtherClinics
+                            ? 'O ranking inclui médicos de outras clínicas da base: os da clínica filtrada aparecem com o nome completo e o selo “sua clínica”; os de outras clínicas, só com o primeiro nome.'
+                            : 'O ranking traz só os médicos (e as especialidades) da clínica filtrada.'} Os filtros de Especialidade e Período valem; o de Médico não restringe o ranking. Entram médicos com ${BENCHMARK_MIN_PACIENTES} ou mais pacientes.</li>
+                    <li>O bloco consolidado mistura as especialidades do recorte; os blocos por especialidade comparam o mesmo tipo de cirurgia.</li>
+                    <li>${ranking.totalMedicos - ranking.eligible > 0 ? `${ranking.totalMedicos - ranking.eligible} médico(s) ficaram de fora do consolidado por terem menos de ${BENCHMARK_MIN_PACIENTES} pacientes. ` : ''}O nome do médico é o que vem antes do primeiro " - " no campo da planilha.</li>
+                </ul>`;
+        }
+
+        // Clique nos botões "Ver lista completa" / "Recolher" (listener delegado: o conteúdo
+        // é redesenhado a cada render).
+        function handleBenchmarkMedicosToggle(e) {
+            if (e.target.closest('[data-bm-others]')) {
+                benchmarkIncludeOtherClinics = !benchmarkIncludeOtherClinics;
+                refreshBenchmarkMedicos();
+                return;
+            }
+            const btn = e.target.closest('[data-bm-toggle]');
+            if (!btn) return;
+            const key = btn.dataset.bmToggle;
+            if (benchmarkMedicosExpanded.has(key)) benchmarkMedicosExpanded.delete(key); else benchmarkMedicosExpanded.add(key);
+            renderBenchmarkMedicos();
+        }
+
+        // Imprimir/exportar: as listas recolhidas não estão no DOM, então expande tudo
+        // enquanto a captura/impressão acontece e volta ao estado do usuário depois.
+        function setBenchmarkPrintMode(expandAll) {
+            if (activeTab !== 'benchmark') return;
+            benchmarkMedicosExpandAll = expandAll;
+            renderBenchmarkMedicos();
+        }
+
+        // Recalcula só o ranking de médicos (o botão "médicos de outras clínicas" muda o
+        // escopo dele sem mexer no gráfico/tabela de clínicas).
+        function refreshBenchmarkMedicos() {
+            const q = benchmarkLastQuery;
+            benchmarkMedicosData = rawData.length && q
+                ? { ranking: computeMedicoRanking(q.sel, q.dateStart, q.dateEnd), bySpec: computeMedicoRankingBySpecialty(q.sel, q.dateStart, q.dateEnd) }
+                : null;
+            renderBenchmarkMedicos();
+        }
+
         function applyBenchmarkFilters() {
-            const clinics = getMultiSelectValues('benchmarkFilterClinic');
+            const sel = {
+                clinics: getMultiSelectValues('benchmarkFilterClinic'),
+                specialties: getMultiSelectValues('benchmarkFilterSurgery'),
+                medicos: getMultiSelectValues('benchmarkFilterMedico')
+            };
             const dateStart = getPeriodFilterValue('benchmarkDateStart');
             const dateEnd = getPeriodFilterValue('benchmarkDateEnd');
             // Marcar TODAS as clínicas equivale a não filtrar: o mesmo recorte tem que dar o
             // mesmo resultado (a conta nem usa a lista, só o texto de "é a própria seleção").
-            benchmarkSelectionSize = clinics.length >= multiSelectState['benchmarkFilterClinic'].options.length ? 0 : clinics.length;
-            benchmarkRows = rawData.length ? computeBenchmarkRows(clinics, dateStart, dateEnd) : [];
+            // Médico filtrado troca o texto para "seleção filtrada": já não é a clínica nem a rede.
+            benchmarkSelectionSize = sel.medicos.length ? -1
+                : sel.clinics.length >= multiSelectState['benchmarkFilterClinic'].options.length ? 0 : sel.clinics.length;
+            benchmarkRows = rawData.length ? computeBenchmarkRows(sel, dateStart, dateEnd) : [];
             const total = benchmarkRows[0];
 
             document.getElementById('benchmarkCountLabel').textContent = `${total ? total.mine.pacientes : 0} paciente(s) no filtro`;
             renderFilterSummary('filterSummaryBenchmark', [
                 { label: 'Clínica', value: describeMultiSelectFilter('benchmarkFilterClinic', 'todas (média da rede)') },
+                { label: 'Especialidade', value: describeMultiSelectFilter('benchmarkFilterSurgery', 'todas') },
+                { label: 'Médico', value: describeMultiSelectFilter('benchmarkFilterMedico', 'todos') },
                 { label: 'Período da consulta', value: describePeriodFilter('benchmarkDateStart', 'benchmarkDateEnd') },
                 { label: 'Pacientes no recorte', value: String(total ? total.mine.pacientes : 0) }
             ]);
             renderBenchmark();
+            // Selo "sua clínica" e nome completo só valem com filtro de Clínica ativo (nem vazio,
+            // nem todas marcadas — ver o comentário do ranking de médicos).
+            benchmarkClinicFilterActive = sel.clinics.length > 0 && sel.clinics.length < multiSelectState['benchmarkFilterClinic'].options.length;
+            benchmarkLastQuery = { sel, dateStart, dateEnd };
+            refreshBenchmarkMedicos();
         }
 
         function renderBenchmark() {
@@ -5469,7 +5916,8 @@
 
             // Texto quando a própria seleção é a referência (ninguém com amostra mínima a supera).
             const benchmarkSelfLabel = benchmarkSelectionSize === 0 ? 'é a própria média da rede'
-                : benchmarkSelectionSize === 1 ? 'é a própria clínica filtrada' : 'é o próprio conjunto filtrado';
+                : benchmarkSelectionSize === 1 ? 'é a própria clínica filtrada'
+                : benchmarkSelectionSize === -1 ? 'é a própria seleção filtrada' : 'é o próprio conjunto filtrado';
             const bestTitle = r => (r.best && !BENCHMARK_NOME_MELHOR_VISIVEL) ? ` title="${escapeHtml(r.best.clinic)}"` : '';
             const bestName = r => (r.best && BENCHMARK_NOME_MELHOR_VISIVEL)
                 ? `<div class="text-sm font-medium text-slate-600">${escapeHtml(r.best.clinic)}</div>` : '';
@@ -5538,6 +5986,7 @@
                 <ul class="text-sm font-medium text-slate-700 space-y-1 list-disc pl-5">
                     <li>Conversão = cirurgias realizadas ÷ pacientes atendidos. Cada olho/cirurgia conta, então a conversão pode passar de 100% (a linha tracejada marca 1 cirurgia por paciente).</li>
                     <li>A melhor clínica considera todas as clínicas da planilha no mesmo período, sem o filtro de clínica, e só entre as que têm ${BENCHMARK_MIN_PACIENTES} ou mais pacientes na linha. Se a seleção filtrada superar todas elas (por exemplo, uma clínica com poucos pacientes e conversão alta), ela mesma passa a ser a referência e a diferença fica em 0 p.p., com o aviso "amostra pequena" quando for o caso. A melhor de cada linha pode ser uma clínica diferente. Marcar todas as clínicas equivale a não filtrar.</li>
+                    <li>O filtro de Especialidade vale para os dois lados. Os filtros de Clínica e de Médico valem só para a seleção: a melhor clínica continua sendo a melhor entre todas.</li>
                     <li>Sem clínica selecionada, a conversão mostrada é a média da rede.</li>
                 </ul>`;
 
@@ -5680,8 +6129,8 @@
             renderAIInsights();
         }
 
-        window.addEventListener('beforeprint', () => { setTablesPrintMode(true); setInsightsPrintMode(true); });
-        window.addEventListener('afterprint', () => { setTablesPrintMode(false); setInsightsPrintMode(false); }); // volta à visualização paginada/recolhida em tela
+        window.addEventListener('beforeprint', () => { setTablesPrintMode(true); setInsightsPrintMode(true); setBenchmarkPrintMode(true); });
+        window.addEventListener('afterprint', () => { setTablesPrintMode(false); setInsightsPrintMode(false); setBenchmarkPrintMode(false); }); // volta à visualização paginada/recolhida em tela
 
         // ================================================================
         // EXPORTAÇÃO GRANULAR POR SEÇÃO
@@ -5745,6 +6194,9 @@
             // específica e desfaz no final, mesmo se a captura der erro.
             const isInsights = elementId === 'cardInsights';
             if (isInsights) setInsightsPrintMode(true);
+            // Ranking de médicos: listas recolhidas (11º em diante) também precisam sair na imagem/PDF.
+            const isMedicos = elementId === 'cardBenchmarkMedicos';
+            if (isMedicos) setBenchmarkPrintMode(true);
 
             try {
                 // Seção sem dimensão = está dentro de uma aba oculta (display:none).
@@ -5795,6 +6247,7 @@
                 });
             } finally {
                 if (isInsights) setInsightsPrintMode(false);
+                if (isMedicos) setBenchmarkPrintMode(false);
             }
         }
 
