@@ -1367,7 +1367,7 @@
                         <i data-lucide="trophy" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <h3 class="text-base font-bold text-slate-900">Benchmark de Conversão Cirúrgica</h3>
+                        <h3 class="text-base font-bold text-slate-900">Benchmark de Conversão Cirúrgica por Comparecimento</h3>
                         <p class="text-base font-medium text-slate-900">Conversão da(s) clínica(s) filtrada(s) comparada à melhor clínica da base inteira</p>
                     </div>
                 </div>
@@ -1389,6 +1389,38 @@
             </div>
 
             <div id="benchmarkContent" class="space-y-5"></div>
+        </div>
+
+        <!-- Benchmark: mediana de dias até a 1ª cirurgia — melhor clínica x clínica do filtro -->
+        <div class="white-card rounded-2xl p-6 border-l-4 border-l-violet-600 space-y-5" id="cardBenchmarkMediana">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-violet-600 text-white flex items-center justify-center shadow-md shadow-violet-600/20">
+                        <i data-lucide="clock" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Benchmark de Mediana: dias até a 1ª cirurgia</h3>
+                        <p class="text-base font-medium text-slate-900">Mediana da clínica filtrada comparada à melhor clínica da base, nas principais especialidades</p>
+                    </div>
+                </div>
+                <div class="relative no-print">
+                    <button onclick="toggleExportMenu(event, 'menuBenchmarkMediana')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-sm font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        Exportar como...
+                        <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                    </button>
+                    <div id="menuBenchmarkMediana" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
+                        <button onclick="exportSectionAsPdf('cardBenchmarkMediana','Benchmark_Mediana')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
+                        </button>
+                        <button onclick="exportSectionAsJpeg('cardBenchmarkMediana','Benchmark_Mediana')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                            <i data-lucide="image" class="w-3.5 h-3.5 text-indigo-500"></i> Exportar como JPEG
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="benchmarkMedianaContent" class="space-y-5"></div>
         </div>
 
         <!-- Benchmark: KPI separado — médicos que mais e que menos converteram -->
@@ -1799,6 +1831,42 @@
             return Array.from(new Set(items.map(getter).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'pt-BR'));
         }
 
+        // ================================================================
+        // OPÇÕES EM CASCATA PELA CLÍNICA — padrão fixo das 5 páginas (2026-10-21, pedido do
+        // usuário: "selecionei uma clínica e aparece no filtro todos os médicos da base; seria
+        // bom aparecer só o médico da clínica, pra ficar mais fácil de filtrar e mandar pra
+        // clínica"). Com clínica(s) marcada(s), as listas de Especialidade e de Médico mostram
+        // só o que existe nessa(s) clínica(s); sem clínica (ou com todas) mostram a base toda.
+        // Só a CLÍNICA comanda a cascata — Especialidade e Médico não se filtram entre si.
+        // Roda no começo de cada apply*Filters() (antes de ler as seleções, porque uma seleção
+        // que saiu da lista é descartada por populateMultiSelect) e no fim de cada
+        // populate*Filters() (planilha nova com clínica já marcada). Se as opções não mudaram
+        // não mexe em nada, para não redesenhar a lista que a pessoa está usando.
+        // Página nova com filtro de clínica precisa entrar em CLINIC_DEPENDENT_FILTERS.
+        // ================================================================
+        function syncClinicDependentFilters(cfg) {
+            const clinics = getMultiSelectValues(cfg.clinicId);
+            const all = cfg.items();
+            const subset = clinics.length ? all.filter(i => matchesMultiSelect(clinics, cfg.clinic(i))) : all;
+            const surgeries = Array.from(new Set(subset.map(cfg.surgery).filter(Boolean))).sort();
+            const medicos = collectMedicoOptions(subset, cfg.medico);
+            [[cfg.surgeryId, surgeries], [cfg.medicoId, medicos]].forEach(([id, opts]) => {
+                const st = multiSelectState[id];
+                if (!st) return;
+                if (st.options.length === opts.length && st.options.every((v, i) => v === opts[i])) return;
+                populateMultiSelect(id, opts);
+            });
+        }
+        const clinicOf = i => getItemProp(i, CLINIC_ALIASES);
+        const surgeryOf = i => getItemProp(i, SURGERY_ALIASES);
+        const CLINIC_DEPENDENT_FILTERS = {
+            consultas: { clinicId: 'filterClinic', surgeryId: 'filterSurgery', medicoId: 'filterMedico', items: () => rawData, clinic: clinicOf, surgery: surgeryOf, medico: getMedicoName },
+            ganho: { clinicId: 'ganhoFilterClinic', surgeryId: 'ganhoFilterSurgery', medicoId: 'ganhoFilterMedico', items: () => rawData, clinic: clinicOf, surgery: surgeryOf, medico: getMedicoName },
+            faturamento: { clinicId: 'faturamentoFilterClinic', surgeryId: 'faturamentoFilterSurgery', medicoId: 'faturamentoFilterMedico', items: () => rawData, clinic: clinicOf, surgery: surgeryOf, medico: getMedicoName },
+            benchmark: { clinicId: 'benchmarkFilterClinic', surgeryId: 'benchmarkFilterSurgery', medicoId: 'benchmarkFilterMedico', items: () => rawData, clinic: clinicOf, surgery: surgeryOf, medico: getMedicoName },
+            nps: { clinicId: 'npsFilterClinic', surgeryId: 'npsFilterSurgery', medicoId: 'npsFilterMedico', items: () => npsRawData, clinic: i => npsGetClinica(i), surgery: i => npsGetEspecialidade(i), medico: i => canonicalMedico(npsGetMedico(i)) }
+        };
+
         // Cirurgias para conferência de repasse: cada procedimento "realizou" (1º ou 2º olho)
         // vira uma linha, com `trancada` = trava (lock) DA MESMA ABA preenchida — ou seja,
         // já reportada/paga. Desde 2026-09-24 a lista traz as trancadas também (no fim, ver
@@ -1937,9 +2005,11 @@
             // Mesma data que applyFaturamentoFilters() filtra: a da cirurgia realizada.
             setPeriodFilterBounds('faturamentoDateStart', 'faturamentoDateEnd',
                 getBillingRecords(rawData).map(rec => rec.data));
+            syncClinicDependentFilters(CLINIC_DEPENDENT_FILTERS.faturamento);
         }
 
         function applyFaturamentoFilters() {
+            syncClinicDependentFilters(CLINIC_DEPENDENT_FILTERS.faturamento);
             const clinics = getMultiSelectValues('faturamentoFilterClinic');
             const surgeries = getMultiSelectValues('faturamentoFilterSurgery');
             const medicos = getMultiSelectValues('faturamentoFilterMedico');
@@ -2129,9 +2199,11 @@
                 renderMultiSelectOptions('ganhoFilterSurgery');
                 updateMultiSelectLabel('ganhoFilterSurgery');
             }
+            syncClinicDependentFilters(CLINIC_DEPENDENT_FILTERS.ganho);
         }
 
         function applyGanhoFilters() {
+            syncClinicDependentFilters(CLINIC_DEPENDENT_FILTERS.ganho);
             const clinics = getMultiSelectValues('ganhoFilterClinic');
             const surgeries = getMultiSelectValues('ganhoFilterSurgery');
             const statuses = getMultiSelectValues('ganhoFilterStatus');
@@ -2720,6 +2792,7 @@
             // Mesma data que applyFilters() filtra: a da consulta.
             setPeriodFilterBounds('filterDateStart', 'filterDateEnd',
                 rawData.map(item => parseFlexibleDate(getItemProp(item, ['agendamento_data', 'data', 'Data']))));
+            syncClinicDependentFilters(CLINIC_DEPENDENT_FILTERS.consultas);
         }
 
         function getItemProp(item, candidates) {
@@ -2836,6 +2909,7 @@
         }
 
         function applyFilters() {
+            syncClinicDependentFilters(CLINIC_DEPENDENT_FILTERS.consultas);
             const clinics = getMultiSelectValues('filterClinic');
             const surgeries = getMultiSelectValues('filterSurgery');
             const statuses = getMultiSelectValues('filterStatus');
@@ -4738,9 +4812,11 @@
             // Mesma data que npsApplyFilters() filtra: a da cirurgia.
             setPeriodFilterBounds('npsDateStart', 'npsDateEnd',
                 npsRawData.map(item => parseFlexibleDate(getItemProp(item, ['Data da Cirurgia']))));
+            syncClinicDependentFilters(CLINIC_DEPENDENT_FILTERS.nps);
         }
 
         function npsApplyFilters() {
+            syncClinicDependentFilters(CLINIC_DEPENDENT_FILTERS.nps);
             const clinics = getMultiSelectValues('npsFilterClinic');
             const surgeries = getMultiSelectValues('npsFilterSurgery');
             const medicos = getMultiSelectValues('npsFilterMedico');
@@ -5383,6 +5459,7 @@
         //    entra na imagem/PDF). Para mostrar sempre, BENCHMARK_NOME_MELHOR_VISIVEL = true.
         // ================================================================
         const BENCHMARK_MIN_PACIENTES = 10;
+        const BENCHMARK_MIN_CIRURGIAS_MEDIANA = 5; // cirurgias com data para a mediana de uma clínica valer como referência
         const BENCHMARK_NOME_MELHOR_VISIVEL = false;
         let chartBenchmarkInstance = null;
         let benchmarkRows = [];
@@ -5406,6 +5483,7 @@
             populateMultiSelect('benchmarkFilterMedico', collectMedicoOptions(rawData));
             // Mesma data que applyBenchmarkFilters() filtra: a da consulta.
             setPeriodFilterBounds('benchmarkDateStart', 'benchmarkDateEnd', rawData.map(getBenchmarkConsultaDate));
+            syncClinicDependentFilters(CLINIC_DEPENDENT_FILTERS.benchmark);
         }
 
         // Conversão de um conjunto de consultas — delega a buildGroupStats (fonte única
@@ -5469,6 +5547,23 @@
                 return best;
             }
 
+            // Melhor MEDIANA = a MENOR (menos dias da consulta até a 1ª cirurgia) entre as
+            // clínicas com amostra mínima de pacientes E de cirurgias com data (uma mediana de 1
+            // ou 2 casos não diz nada). Não é necessariamente a mesma clínica da melhor conversão.
+            function findBestMedian(pickItems) {
+                let best = null;
+                byClinic.forEach((_, cl) => {
+                    const items = pickItems(cl);
+                    if (!items || !items.length || countDistinctPatients(items) < BENCHMARK_MIN_PACIENTES) return;
+                    const med = computeMedianDaysToFirstSurgery(items);
+                    if (!med || med.count < BENCHMARK_MIN_CIRURGIAS_MEDIANA) return;
+                    if (!best || med.median < best.median || (med.median === best.median && med.count > best.count)) {
+                        best = { median: med.median, count: med.count, isSelf: false };
+                    }
+                });
+                return best;
+            }
+
             const specs = Array.from(new Set(mine.map(specOf))).sort((a, b) =>
                 getSpecialtyTierOrder(a) - getSpecialtyTierOrder(b)
                 || getSpecialtyPriorityOrder(a) - getSpecialtyPriorityOrder(b)
@@ -5489,8 +5584,17 @@
                 if (best && mineConv.ratio !== null && mineConv.ratio > best.ratio) {
                     best = { clinic: 'Clínica(s) filtrada(s)', isSelf: true, ...mineConv };
                 }
+                // Mediana de dias até a 1ª cirurgia: seleção x melhor clínica (menor mediana). Se a
+                // seleção é mais rápida que todas as clínicas elegíveis, ela vira a referência
+                // (diferença 0), como na conversão; sem clínica elegível = sem referência.
+                const mineMedRaw = computeMedianDaysToFirstSurgery(mineItems);
+                const mineMed = mineMedRaw ? { median: mineMedRaw.median, count: mineMedRaw.count } : null;
+                let bestMed = findBestMedian(cl => cat.isTotal ? byClinic.get(cl) : byClinicSpec.get(cl).get(cat.key));
+                if (bestMed && mineMed && mineMed.median < bestMed.median) bestMed = { ...mineMed, isSelf: true };
                 return {
                     ...cat,
+                    mineMed,
+                    bestMed,
                     mine: mineConv,
                     best,
                     // Diferença em pontos percentuais entre os valores JÁ arredondados que a
@@ -5551,6 +5655,104 @@
                 ctx.restore();
             }
         };
+
+        // Texto quando a própria seleção é a referência (ninguém com amostra mínima a supera).
+        function benchmarkSelfLabelText() {
+            return benchmarkSelectionSize === 0 ? 'é a própria média da rede'
+                : benchmarkSelectionSize === 1 ? 'é a própria clínica filtrada'
+                : benchmarkSelectionSize === -1 ? 'é a própria seleção filtrada' : 'é o próprio conjunto filtrado';
+        }
+
+        // ---- Mediana de dias até a 1ª cirurgia: clínica do filtro x melhor clínica ----
+        // Pedido do usuário (2026-10-21): "comparativo de medianas, a melhor clínica nas
+        // principais subs filtradas VS a clínica do filtro". Mesmas regras do benchmark de
+        // conversão: a melhor ignora o filtro de clínica/médico e respeita período e
+        // especialidade; só concorre com amostra mínima; se a seleção é mais rápida que todas,
+        // ela vira a referência. "Melhor" aqui = MENOR mediana (menos dias), que pode ser outra
+        // clínica que a de melhor conversão. "Principais" = o total e as especialidades
+        // primárias (Catarata, Refrativa, Blefaroplastia, Retina); com Especialidade filtrada,
+        // as filtradas. Mostra só dias, nunca volume nem nome de outra clínica.
+        function renderBenchmarkMediana() {
+            const box = document.getElementById('benchmarkMedianaContent');
+            const sel = benchmarkLastQuery ? benchmarkLastQuery.sel : { specialties: [] };
+            const total = benchmarkRows[0];
+            if (!total || total.mine.pacientes === 0) {
+                box.innerHTML = `<p class="text-base font-medium text-slate-900">${rawData.length ? 'Nenhum paciente no filtro atual.' : 'Carregue a planilha de Consultas para ver a mediana.'}</p>`;
+                return;
+            }
+            const principal = r => {
+                if (r.isTotal || sel.specialties.length > 0) return true;
+                const k = findSpecialtyRuleKey(r.label);
+                return !!k && SPECIALTY_RULES[k].tier === 'primaria';
+            };
+            const rows = benchmarkRows.filter(r => principal(r) && (r.mineMed || r.bestMed));
+            const selfLabel = benchmarkSelfLabelText();
+            const diasTxt = n => `${n} dia${n === 1 ? '' : 's'}`;
+            const diffInfo = r => {
+                if (!r.mineMed) return { txt: '—', sub: 'sem cirurgias com data', cls: 'text-slate-600' };
+                if (!r.bestMed) return { txt: '—', sub: 'sem referência', cls: 'text-slate-600' };
+                const d = r.mineMed.median - r.bestMed.median;
+                if (d <= 0) return { txt: '0 dia', sub: r.bestMed.isSelf ? selfLabel : 'igual à melhor', cls: 'text-emerald-700' };
+                return { txt: `+${diasTxt(d)}`, sub: 'mais dias que a melhor', cls: 'text-red-600' };
+            };
+            const scale = Math.max(1, ...rows.flatMap(r => [r.mineMed ? r.mineMed.median : 0, r.bestMed ? r.bestMed.median : 0]));
+            const bar = (v, color) => v === null ? '' : `<div class="h-2.5 rounded-full bg-slate-100 overflow-hidden mt-1"><div class="h-full rounded-full" style="width:${Math.max(2, Math.round(v / scale * 100))}%;background:${color}"></div></div>`;
+            const small = m => m && m.count < BENCHMARK_MIN_CIRURGIAS_MEDIANA
+                ? ' <span class="text-sm font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 whitespace-nowrap">amostra pequena</span>' : '';
+            const kpi = (label, value, sub, cls) => `
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 flex flex-col">
+                    <div class="text-sm font-bold text-slate-700 uppercase tracking-wider">${label}</div>
+                    <div class="text-3xl font-extrabold mt-1 ${cls}">${value}</div>
+                    <div class="text-sm font-medium text-slate-700 mt-auto pt-1">${sub}</div>
+                </div>`;
+            const t = total;
+            const td = diffInfo(t);
+            const kpis = `
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    ${kpi('Mediana da(s) clínica(s)', t.mineMed ? diasTxt(t.mineMed.median) : '—', 'da consulta até a 1ª cirurgia', 'text-violet-700')}
+                    ${kpi('Melhor mediana da base', t.bestMed ? diasTxt(t.bestMed.median) : '—', t.bestMed ? (t.bestMed.isSelf ? selfLabel : 'menos dias entre todas as clínicas da base') : 'nenhuma clínica com amostra mínima', 'text-emerald-700')}
+                    ${kpi('Diferença', td.txt, td.sub, td.cls)}
+                </div>`;
+            const body = rows.map(r => {
+                const d = diffInfo(r);
+                return `
+                    <tr class="${r.isTotal ? 'bg-violet-50 font-bold' : ''}">
+                        <td class="p-3 font-semibold text-slate-900">${r.isTotal ? 'Total (todas as especialidades)' : escapeHtml(r.label)}</td>
+                        <td class="p-3">
+                            <div class="font-bold text-violet-700">${r.mineMed ? diasTxt(r.mineMed.median) : '—'}${small(r.mineMed)}</div>
+                            ${bar(r.mineMed ? r.mineMed.median : null, '#7c3aed')}
+                        </td>
+                        <td class="p-3">
+                            <div class="font-bold text-emerald-700">${r.bestMed ? diasTxt(r.bestMed.median) : 'sem referência'}${r.bestMed ? small(r.bestMed) : ''}</div>
+                            ${r.bestMed && r.bestMed.isSelf ? `<div class="text-sm font-medium text-slate-600">${selfLabel}</div>` : ''}
+                            ${bar(r.bestMed ? r.bestMed.median : null, '#059669')}
+                        </td>
+                        <td class="p-3 text-center">
+                            <div class="font-bold ${d.cls}">${d.txt}</div>
+                            <div class="text-sm font-medium text-slate-600">${d.sub}</div>
+                        </td>
+                    </tr>`;
+            }).join('');
+            box.innerHTML = kpis + `
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left text-sm text-slate-700">
+                        <thead class="bg-slate-100 text-slate-600 uppercase text-sm tracking-wider border-b border-slate-200">
+                            <tr>
+                                <th class="p-3">Especialidade</th>
+                                <th class="p-3">Clínica(s) filtrada(s)</th>
+                                <th class="p-3">Melhor da base</th>
+                                <th class="p-3 text-center">Diferença</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">${body}</tbody>
+                    </table>
+                </div>
+                <ul class="text-sm font-medium text-slate-700 space-y-1 list-disc pl-5">
+                    <li>Mediana = dias, na mediana, entre a consulta e a 1ª cirurgia dos pacientes que já operaram (com data registrada). Menos dias é melhor.</li>
+                    <li>A melhor é a menor mediana entre todas as clínicas da base, no mesmo período e na mesma especialidade, só entre as que têm ${BENCHMARK_MIN_PACIENTES} ou mais pacientes e ${BENCHMARK_MIN_CIRURGIAS_MEDIANA} ou mais cirurgias com data. Pode ser outra clínica que a de melhor conversão.</li>
+                    <li>Se a seleção filtrada for mais rápida que todas elas, ela mesma passa a ser a referência. Aparecem o total e as especialidades principais (ou as filtradas); linhas sem cirurgias com data ficam de fora.</li>
+                </ul>`;
+        }
 
         // ---- KPI separado: médicos que mais e que menos converteram ----
         // Dois níveis (pedido do usuário, 2026-10-21):
@@ -5614,7 +5816,10 @@
             const eligible = [];
             byMedico.forEach((entry, name) => {
                 const conv = computeConversion(entry.items);
-                if (conv.pacientes >= BENCHMARK_MIN_PACIENTES) eligible.push({ name, own: entry.own, ...conv });
+                // Mediana de dias da consulta até a 1ª cirurgia DO MÉDICO (mesma conta e mesma
+                // fonte da mediana dos Insights/Ganho); null se nenhuma cirurgia tem data.
+                const med = computeMedianDaysToFirstSurgery(entry.items);
+                if (conv.pacientes >= BENCHMARK_MIN_PACIENTES) eligible.push({ name, own: entry.own, ...conv, mediana: med ? med.median : null });
             });
             eligible.sort((a, b) => b.ratio - a.ratio || b.pacientes - a.pacientes || a.name.localeCompare(b.name, 'pt-BR'));
             return { totalMedicos: byMedico.size, eligible };
@@ -5686,12 +5891,21 @@
             return i < k ? ['#059669', 'text-emerald-700'] : i >= n - k ? ['#dc2626', 'text-red-600'] : ['#64748B', 'text-slate-700'];
         }
 
+        // Texto simples logo abaixo da porcentagem (pedido do usuário, 2026-10-21): mediana de
+        // dias da consulta até a 1ª cirurgia do médico.
+        function medicoMedianaText(m) {
+            return m.mediana === null ? 'Mediana: sem dados' : `Mediana: ${m.mediana} dia${m.mediana === 1 ? '' : 's'}`;
+        }
+
         function medicoBarRow(rank, m, scale, color, textColor) {
             return `
                 <div>
-                    <div class="flex items-baseline justify-between gap-3">
+                    <div class="flex items-start justify-between gap-3">
                         <span class="text-sm font-semibold text-slate-900">${rank}º ${medicoLabel(m)}</span>
-                        <span class="text-base font-extrabold ${textColor}">${m.taxa}%</span>
+                        <div class="text-right shrink-0">
+                            <div class="text-base font-extrabold ${textColor}">${m.taxa}%</div>
+                            <div class="text-sm font-medium text-slate-600 whitespace-nowrap">${medicoMedianaText(m)}</div>
+                        </div>
                     </div>
                     <div class="h-3 rounded-full bg-slate-100 overflow-hidden mt-1">
                         <div class="h-full rounded-full" style="width:${Math.max(2, Math.round(m.taxa / scale * 100))}%;background:${color}"></div>
@@ -5710,7 +5924,10 @@
                     <div class="w-28 shrink-0 h-2.5 rounded-full bg-slate-100 overflow-hidden">
                         <div class="h-full rounded-full" style="width:${Math.max(2, Math.round(m.taxa / scale * 100))}%;background:${color}"></div>
                     </div>
-                    <span class="w-14 shrink-0 text-right text-sm font-extrabold ${textColor}">${m.taxa}%</span>
+                    <div class="w-36 shrink-0 text-right">
+                        <div class="text-sm font-extrabold ${textColor}">${m.taxa}%</div>
+                        <div class="text-sm font-medium text-slate-600 whitespace-nowrap">${medicoMedianaText(m)}</div>
+                    </div>
                 </div>`;
         }
 
@@ -5746,20 +5963,22 @@
                     <h4 class="text-base font-bold ${textColor}">${title}</h4>
                     ${items.map((m, i) => medicoBarRow(startRank + i, m, scale, color, textColor)).join('')}
                 </div>`;
-            const kpi = (label, value, sub, cls) => `
+            // `mid` = texto simples logo abaixo da porcentagem (a mediana do médico).
+            const kpi = (label, value, sub, cls, mid = '') => `
                 <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 flex flex-col">
                     <div class="text-sm font-bold text-slate-700 uppercase tracking-wider">${label}</div>
                     <div class="text-3xl font-extrabold mt-1 ${cls}">${value}</div>
+                    ${mid ? `<div class="text-sm font-medium text-slate-700">${mid}</div>` : ''}
                     <div class="text-sm font-medium text-slate-700 mt-auto pt-1">${sub}</div>
                 </div>`;
             const kpis = ranking.eligible >= 2 ? `
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    ${kpi('Maior conversão', `${ranking.best.taxa}%`, medicoLabel(ranking.best), 'text-emerald-700')}
-                    ${kpi('Menor conversão', `${ranking.worst.taxa}%`, medicoLabel(ranking.worst), 'text-red-600')}
+                    ${kpi('Maior conversão', `${ranking.best.taxa}%`, medicoLabel(ranking.best), 'text-emerald-700', medicoMedianaText(ranking.best))}
+                    ${kpi('Menor conversão', `${ranking.worst.taxa}%`, medicoLabel(ranking.worst), 'text-red-600', medicoMedianaText(ranking.worst))}
                     ${kpi('Distância entre eles', `${ranking.spread} p.p.`, `${ranking.eligible} médico(s) comparado(s)`, 'text-slate-900')}
                 </div>` : `
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    ${kpi('Único médico comparável', `${ranking.best.taxa}%`, medicoLabel(ranking.best), 'text-slate-900')}
+                    ${kpi('Único médico comparável', `${ranking.best.taxa}%`, medicoLabel(ranking.best), 'text-slate-900', medicoMedianaText(ranking.best))}
                 </div>`;
             const cols = ranking.eligible >= 2
                 ? `<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -5832,6 +6051,7 @@
                         : benchmarkIncludeOtherClinics
                             ? 'O ranking inclui médicos de outras clínicas da base: os da clínica filtrada aparecem com o nome completo e o selo “sua clínica”; os de outras clínicas, só com o primeiro nome.'
                             : 'O ranking traz só os médicos (e as especialidades) da clínica filtrada.'} Os filtros de Especialidade e Período valem; o de Médico não restringe o ranking. Entram médicos com ${BENCHMARK_MIN_PACIENTES} ou mais pacientes.</li>
+                    <li>Mediana = dias, na mediana, entre a consulta e a 1ª cirurgia dos pacientes do médico (só conta quem já operou, com data registrada).</li>
                     <li>O bloco consolidado mistura as especialidades do recorte; os blocos por especialidade comparam o mesmo tipo de cirurgia.</li>
                     <li>${ranking.totalMedicos - ranking.eligible > 0 ? `${ranking.totalMedicos - ranking.eligible} médico(s) ficaram de fora do consolidado por terem menos de ${BENCHMARK_MIN_PACIENTES} pacientes. ` : ''}O nome do médico é o que vem antes do primeiro " - " no campo da planilha.</li>
                 </ul>`;
@@ -5871,6 +6091,7 @@
         }
 
         function applyBenchmarkFilters() {
+            syncClinicDependentFilters(CLINIC_DEPENDENT_FILTERS.benchmark);
             const sel = {
                 clinics: getMultiSelectValues('benchmarkFilterClinic'),
                 specialties: getMultiSelectValues('benchmarkFilterSurgery'),
@@ -5899,6 +6120,7 @@
             // nem todas marcadas — ver o comentário do ranking de médicos).
             benchmarkClinicFilterActive = sel.clinics.length > 0 && sel.clinics.length < multiSelectState['benchmarkFilterClinic'].options.length;
             benchmarkLastQuery = { sel, dateStart, dateEnd };
+            renderBenchmarkMediana();
             refreshBenchmarkMedicos();
         }
 
@@ -5915,9 +6137,7 @@
             }
 
             // Texto quando a própria seleção é a referência (ninguém com amostra mínima a supera).
-            const benchmarkSelfLabel = benchmarkSelectionSize === 0 ? 'é a própria média da rede'
-                : benchmarkSelectionSize === 1 ? 'é a própria clínica filtrada'
-                : benchmarkSelectionSize === -1 ? 'é a própria seleção filtrada' : 'é o próprio conjunto filtrado';
+            const benchmarkSelfLabel = benchmarkSelfLabelText();
             const bestTitle = r => (r.best && !BENCHMARK_NOME_MELHOR_VISIVEL) ? ` title="${escapeHtml(r.best.clinic)}"` : '';
             const bestName = r => (r.best && BENCHMARK_NOME_MELHOR_VISIVEL)
                 ? `<div class="text-sm font-medium text-slate-600">${escapeHtml(r.best.clinic)}</div>` : '';
