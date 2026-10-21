@@ -18,7 +18,7 @@ O repositório é público (necessário para a hospedagem gratuita), e por isso 
 
 A exportação de NPS inclui o telefone (para a clínica poder contatar o paciente), mas deliberadamente **não** inclui e-mail nem endereço — essa base é enviada a clínicas parceiras.
 
-## As 4 páginas
+## As 5 páginas
 
 ### 1. Consultas
 Página principal — é aqui que você sobe a planilha de consultas. Mostra:
@@ -35,6 +35,9 @@ Usa a mesma planilha de Consultas (não precisa subir de novo). Lista as cirurgi
 
 ### 4. Potencial de Ganho
 Também usa a planilha de Consultas. Estima quanto ainda dá para faturar com os pacientes que não operaram e não estão "sem indicação cirúrgica". Você configura o valor da cirurgia por clínica e especialidade, e o painel multiplica pelo número de pacientes convertíveis — com uma lista de quem acompanhar.
+
+### 5. Benchmark
+Também usa a planilha de Consultas. Compara a conversão cirúrgica (cirurgias realizadas ÷ pacientes atendidos) da(s) clínica(s) filtrada(s) com a **melhor clínica da base inteira**, no total e por especialidade, em gráfico e tabela. Como cada olho operado conta como uma cirurgia, a conversão pode passar de 100%. A melhor clínica ignora o filtro de clínica e respeita o período. Só concorre quem tem 10 ou mais pacientes na categoria; se a seleção filtrada superar todas elas (por exemplo, uma clínica pequena com conversão alta), ela mesma vira a referência, com aviso de "amostra pequena", então a referência nunca fica abaixo dela. Marcar todas as clínicas equivale a não filtrar. Sem nenhuma clínica elegível, a linha aparece como "sem referência". O nome da clínica de referência não aparece escrito (só ao passar o mouse na tela), porque a página é impressa e exportada para as clínicas parceiras.
 
 ## Requisitos mínimos da planilha
 

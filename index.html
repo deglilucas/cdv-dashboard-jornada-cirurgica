@@ -244,6 +244,10 @@
                 <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>
                 Potencial de Ganho
             </button>
+            <button id="navTabBenchmark" onclick="switchTab('benchmark')" class="px-3 py-1.5 rounded-lg text-sm font-bold transition flex items-center gap-1.5">
+                <i data-lucide="trophy" class="w-3.5 h-3.5"></i>
+                Benchmark
+            </button>
             <button id="navTabFaturamento" onclick="switchTab('faturamento')" class="px-3 py-1.5 rounded-lg text-sm font-bold transition flex items-center gap-1.5">
                 <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
                 Faturamento
@@ -1291,6 +1295,79 @@
         </div>
         <!-- FIM PÁGINA 4 -->
 
+        <!-- ================================================================ -->
+        <!-- PÁGINA 5: BENCHMARK DE CONVERSÃO — mesma base de Consultas        -->
+        <!-- ================================================================ -->
+        <div id="tabBenchmark" class="space-y-6 hidden">
+
+        <!-- Benchmark: Filtros (fixos logo abaixo da navegação de páginas) -->
+        <div class="white-card rounded-2xl p-3 space-y-2 border-violet-200 sticky z-30" style="top: calc(var(--header-h, 0px) + var(--tabnav-h, 0px));">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <i data-lucide="filter" class="w-3.5 h-3.5 text-violet-600"></i>
+                    Filtros de Benchmark
+                </h3>
+                <div class="flex items-center gap-2 no-print">
+                    <div class="flex items-center gap-1.5 text-sm text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-medium">
+                        <i data-lucide="database" class="w-3 h-3 text-violet-600"></i>
+                        <span id="benchmarkCountLabel">0 paciente(s) no filtro</span>
+                    </div>
+                </div>
+            </div>
+
+            <p class="print-only text-sm font-semibold text-slate-700" id="filterSummaryBenchmark"></p>
+
+            <div class="filter-controls grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div class="col-span-2">
+                    <label class="block text-sm font-semibold text-slate-700 mb-0.5">Clínica</label>
+                    <div class="multi-select relative" id="benchmarkFilterClinic" data-placeholder="Todas as Clínicas (média da rede)" data-accent="violet" data-onchange="applyBenchmarkFilters"></div>
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-sm font-semibold text-slate-700 mb-0.5">Período (Consulta)</label>
+                    <div class="flex items-center gap-1">
+                        <input type="date" id="benchmarkDateStart" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-violet-500 focus:bg-white outline-none transition">
+                        <span class="text-slate-600 text-sm shrink-0">até</span>
+                        <input type="date" id="benchmarkDateEnd" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-violet-500 focus:bg-white outline-none transition">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Benchmark: gráfico + tabela (indicador — entra no Imprimir Painel) -->
+        <div class="white-card rounded-2xl p-6 border-l-4 border-l-violet-600 space-y-5" id="cardBenchmark">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-violet-600 text-white flex items-center justify-center shadow-md shadow-violet-600/20">
+                        <i data-lucide="trophy" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Benchmark de Conversão Cirúrgica</h3>
+                        <p class="text-base font-medium text-slate-900">Conversão da(s) clínica(s) filtrada(s) comparada à melhor clínica da base inteira</p>
+                    </div>
+                </div>
+                <div class="relative no-print">
+                    <button onclick="toggleExportMenu(event, 'menuBenchmark')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-sm font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        Exportar como...
+                        <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                    </button>
+                    <div id="menuBenchmark" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
+                        <button onclick="exportSectionAsPdf('cardBenchmark','Benchmark_Conversao')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
+                        </button>
+                        <button onclick="exportSectionAsJpeg('cardBenchmark','Benchmark_Conversao')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                            <i data-lucide="image" class="w-3.5 h-3.5 text-indigo-500"></i> Exportar como JPEG
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="benchmarkContent" class="space-y-5"></div>
+        </div>
+
+        </div>
+        <!-- FIM PÁGINA 5 -->
+
     </main>
 
     <!-- Botão flutuante "voltar ao topo" — visível em todas as páginas -->
@@ -1351,6 +1428,8 @@
             loadValorBaseConfig();
             populateGanhoFilters();
             applyGanhoFilters();
+            populateBenchmarkFilters();
+            applyBenchmarkFilters();
             updateTabNav();
             updateStickyOffsets();
             window.addEventListener('resize', updateStickyOffsets);
@@ -2332,7 +2411,8 @@
             indigo:  { ring: 'focus:ring-indigo-500',  text: 'text-indigo-700',  badge: 'bg-indigo-50 border-indigo-200 text-indigo-700',   check: 'accent-indigo-600' },
             teal:    { ring: 'focus:ring-teal-500',    text: 'text-teal-700',    badge: 'bg-teal-50 border-teal-200 text-teal-700',         check: 'accent-teal-600' },
             amber:   { ring: 'focus:ring-amber-500',   text: 'text-amber-700',   badge: 'bg-amber-50 border-amber-200 text-amber-700',      check: 'accent-amber-600' },
-            emerald: { ring: 'focus:ring-emerald-500', text: 'text-emerald-700', badge: 'bg-emerald-50 border-emerald-200 text-emerald-700', check: 'accent-emerald-600' }
+            emerald: { ring: 'focus:ring-emerald-500', text: 'text-emerald-700', badge: 'bg-emerald-50 border-emerald-200 text-emerald-700', check: 'accent-emerald-600' },
+            violet:  { ring: 'focus:ring-violet-500',  text: 'text-violet-700',  badge: 'bg-violet-50 border-violet-200 text-violet-700',   check: 'accent-violet-600' }
         };
 
         // id do filtro -> { options, selected, placeholder, onChange, accent }
@@ -2633,6 +2713,10 @@
             // via data-onchange (ver initMultiSelects).
             ['ganhoDateStart', 'ganhoDateEnd'].forEach(id => {
                 document.getElementById(id).addEventListener('change', applyGanhoFilters);
+            });
+            // Benchmark: Clínica é múltipla (data-onchange); só o período precisa de listener.
+            ['benchmarkDateStart', 'benchmarkDateEnd'].forEach(id => {
+                document.getElementById(id).addEventListener('change', applyBenchmarkFilters);
             });
             // Um único listener delegado cobre todos os inputs de valor base, mesmo
             // depois que a tabela é re-renderizada (os elementos originais são trocados).
@@ -4459,6 +4543,8 @@
                         applyFaturamentoFilters();
                         populateGanhoFilters();
                         applyGanhoFilters();
+                        populateBenchmarkFilters();
+                        applyBenchmarkFilters();
 
                         let msg = `Planilha carregada com sucesso! ${parsedRecords.length} linha(s) lida(s).`;
                         if (records.length !== parsedRecords.length) {
@@ -5172,6 +5258,341 @@
         }
 
         // ================================================================
+        // PÁGINA 5: BENCHMARK DE CONVERSÃO CIRÚRGICA (2026-10-21, pedido do usuário)
+        // ----------------------------------------------------------------
+        // Compara a conversão (cirurgias ÷ pacientes atendidos) da(s) clínica(s) do filtro
+        // com a MELHOR clínica da base inteira — no total e por especialidade. Usa a mesma
+        // base (rawData) de Consultas, sem upload próprio. Decisões:
+        //  - A conversão é a MESMA régua do resto do painel (buildGroupStats: cada olho/
+        //    cirurgia conta, pacientes distintos no denominador), então pode passar de 100%.
+        //  - "Melhor clínica da base" ignora o filtro de Clínica (senão compararia a clínica
+        //    com ela mesma), mas respeita o PERÍODO: comparar um trimestre com a melhor
+        //    clínica do ano inteiro não seria comparação justa. A melhor de cada linha pode
+        //    ser uma clínica diferente (a melhor em Catarata não é necessariamente a melhor
+        //    em Retina).
+        //  - Amostra mínima: só concorre quem tem BENCHMARK_MIN_PACIENTES pacientes na
+        //    categoria/período. Sem isso, 1 paciente com 2 olhos operados viraria "200%" e
+        //    seria a melhor clínica da base. É a mesma linha de corte do "AMOSTRA PEQUENA"
+        //    dos Insights. Nenhuma clínica elegível = linha sem referência, nunca um número
+        //    inventado.
+        //  - O nome da clínica de referência NÃO aparece escrito: a página é impressa/
+        //    exportada para clínicas parceiras e expor a identidade de uma concorrente seria
+        //    decisão de negócio, não de código. Fica só no tooltip/hover na tela (que não
+        //    entra na imagem/PDF). Para mostrar sempre, BENCHMARK_NOME_MELHOR_VISIVEL = true.
+        // ================================================================
+        const BENCHMARK_MIN_PACIENTES = 10;
+        const BENCHMARK_NOME_MELHOR_VISIVEL = false;
+        let chartBenchmarkInstance = null;
+        let benchmarkRows = [];
+        let benchmarkSelectionSize = 0;
+
+        function getBenchmarkConsultaDate(item) {
+            return parseFlexibleDate(getItemProp(item, ['agendamento_data', 'data', 'Data']));
+        }
+
+        function populateBenchmarkFilters() {
+            const clinics = new Set();
+            rawData.forEach(item => {
+                const c = getItemProp(item, CLINIC_ALIASES);
+                if (c) clinics.add(c);
+            });
+            populateMultiSelect('benchmarkFilterClinic', Array.from(clinics).sort());
+            // Mesma data que applyBenchmarkFilters() filtra: a da consulta.
+            setPeriodFilterBounds('benchmarkDateStart', 'benchmarkDateEnd', rawData.map(getBenchmarkConsultaDate));
+        }
+
+        // Conversão de um conjunto de consultas — delega a buildGroupStats (fonte única
+        // da regra de "realizada") em vez de recontar aqui. `ratio` (sem arredondar) serve
+        // para escolher a melhor clínica sem empate falso causado pelo arredondamento.
+        function computeConversion(items) {
+            const st = buildGroupStats(items);
+            return {
+                pacientes: st.total,
+                cirurgias: st.realizada,
+                taxa: st.conversionRate,
+                ratio: st.total ? st.realizada / st.total : null
+            };
+        }
+
+        function computeBenchmarkRows(clinicsSel, dateStart, dateEnd) {
+            const inPeriod = rawData.filter(item => isWithinPeriod(getBenchmarkConsultaDate(item), dateStart, dateEnd));
+            const mine = inPeriod.filter(item => matchesMultiSelect(clinicsSel, getItemProp(item, CLINIC_ALIASES)));
+            const specOf = item => getItemProp(item, SURGERY_ALIASES) || 'Sem especialidade';
+
+            // Clínica -> consultas, e clínica -> especialidade -> consultas. Consulta sem
+            // clínica informada não é uma clínica de verdade, então não concorre.
+            const byClinic = new Map();
+            const byClinicSpec = new Map();
+            inPeriod.forEach(item => {
+                const cl = getItemProp(item, CLINIC_ALIASES);
+                if (!cl) return;
+                if (!byClinic.has(cl)) { byClinic.set(cl, []); byClinicSpec.set(cl, new Map()); }
+                byClinic.get(cl).push(item);
+                const sp = specOf(item);
+                const specMap = byClinicSpec.get(cl);
+                if (!specMap.has(sp)) specMap.set(sp, []);
+                specMap.get(sp).push(item);
+            });
+
+            function findBest(pickItems) {
+                let best = null;
+                byClinic.forEach((_, cl) => {
+                    const items = pickItems(cl);
+                    if (!items || !items.length) return;
+                    const conv = computeConversion(items);
+                    // Concorre só quem tem amostra mínima — a SELEÇÃO do filtro não muda quem
+                    // concorre (ver o fechamento por `isSelf` logo abaixo). Uma 1ª tentativa
+                    // fazia a clínica filtrada sempre concorrer, e marcar as 46 clínicas
+                    // dava 167% (clínica de 3 pacientes) contra 67% sem filtro nenhum:
+                    // "todas marcadas" e "sem filtro" têm que ser a mesma informação.
+                    if (conv.pacientes < BENCHMARK_MIN_PACIENTES) return;
+                    if (!best || conv.ratio > best.ratio || (conv.ratio === best.ratio && conv.pacientes > best.pacientes)) {
+                        best = { clinic: cl, isSelf: false, ...conv };
+                    }
+                });
+                return best;
+            }
+
+            const specs = Array.from(new Set(mine.map(specOf))).sort((a, b) =>
+                getSpecialtyTierOrder(a) - getSpecialtyTierOrder(b)
+                || getSpecialtyPriorityOrder(a) - getSpecialtyPriorityOrder(b)
+                || a.localeCompare(b, 'pt-BR'));
+
+            const categories = [{ key: '__total__', label: 'Conversão total', isTotal: true }]
+                .concat(specs.map(sp => ({ key: sp, label: sp, isTotal: false })));
+
+            return categories.map(cat => {
+                const mineItems = cat.isTotal ? mine : mine.filter(item => specOf(item) === cat.key);
+                const mineConv = computeConversion(mineItems);
+                let best = findBest(cl => cat.isTotal ? byClinic.get(cl) : byClinicSpec.get(cl).get(cat.key));
+                // A "melhor da base" nunca pode ficar ABAIXO do que está sendo comparado a
+                // ela. Quando a seleção filtrada (uma clínica pequena com 100%, ou a média de
+                // um grupo/da rede) supera a melhor clínica com amostra mínima, a própria
+                // seleção passa a ser a referência (diferença 0). Sem nenhuma clínica
+                // elegível (best null) continua "sem referência": não há base de comparação.
+                if (best && mineConv.ratio !== null && mineConv.ratio > best.ratio) {
+                    best = { clinic: 'Clínica(s) filtrada(s)', isSelf: true, ...mineConv };
+                }
+                return {
+                    ...cat,
+                    mine: mineConv,
+                    best,
+                    // Diferença em pontos percentuais entre os valores JÁ arredondados que a
+                    // tela mostra, para a conta fechar a olho nu.
+                    gap: best && mineConv.taxa !== null ? mineConv.taxa - best.taxa : null
+                };
+            });
+        }
+
+        function formatGapPP(gap) {
+            if (gap === null) return '—';
+            if (gap === 0) return '0 p.p.';
+            return `${gap > 0 ? '+' : '−'}${Math.abs(gap)} p.p.`;
+        }
+        function gapColorClass(gap) {
+            if (gap === null) return 'text-slate-600';
+            return gap >= 0 ? 'text-emerald-700' : 'text-red-600';
+        }
+
+        // Linha tracejada em 100% (1 cirurgia por paciente) + valor ao lado de cada barra.
+        // Sem plugin de datalabels no projeto, desenhar aqui é mais barato que mais uma
+        // biblioteca via CDN. O rótulo da barra "sem referência" mostra o motivo no lugar.
+        const benchmarkOverlayPlugin = {
+            id: 'benchmarkOverlay',
+            afterDatasetsDraw(chart) {
+                const { ctx, chartArea, scales } = chart;
+                ctx.save();
+                const x100 = scales.x.getPixelForValue(100);
+                if (x100 >= chartArea.left && x100 <= chartArea.right) {
+                    ctx.strokeStyle = '#64748b';
+                    ctx.lineWidth = 1.5;
+                    ctx.setLineDash([5, 4]);
+                    ctx.beginPath();
+                    ctx.moveTo(x100, chartArea.top);
+                    ctx.lineTo(x100, chartArea.bottom);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    ctx.fillStyle = '#475569';
+                    ctx.font = '700 12px "Plus Jakarta Sans", sans-serif';
+                    ctx.textBaseline = 'top';
+                    ctx.fillText('100%', x100 + 4, chartArea.top + 2);
+                }
+                ctx.textBaseline = 'middle';
+                chart.data.datasets.forEach((ds, i) => {
+                    chart.getDatasetMeta(i).data.forEach((bar, idx) => {
+                        const v = ds.data[idx];
+                        if (v === null || v === undefined) {
+                            ctx.font = '600 13px "Plus Jakarta Sans", sans-serif';
+                            ctx.fillStyle = '#475569';
+                            ctx.fillText('sem referência', scales.x.getPixelForValue(0) + 6, bar.y);
+                            return;
+                        }
+                        ctx.font = '700 13px "Plus Jakarta Sans", sans-serif';
+                        ctx.fillStyle = '#0f172a';
+                        ctx.fillText(`${v}%`, bar.x + 6, bar.y);
+                    });
+                });
+                ctx.restore();
+            }
+        };
+
+        function applyBenchmarkFilters() {
+            const clinics = getMultiSelectValues('benchmarkFilterClinic');
+            const dateStart = getPeriodFilterValue('benchmarkDateStart');
+            const dateEnd = getPeriodFilterValue('benchmarkDateEnd');
+            // Marcar TODAS as clínicas equivale a não filtrar: o mesmo recorte tem que dar o
+            // mesmo resultado (a conta nem usa a lista, só o texto de "é a própria seleção").
+            benchmarkSelectionSize = clinics.length >= multiSelectState['benchmarkFilterClinic'].options.length ? 0 : clinics.length;
+            benchmarkRows = rawData.length ? computeBenchmarkRows(clinics, dateStart, dateEnd) : [];
+            const total = benchmarkRows[0];
+
+            document.getElementById('benchmarkCountLabel').textContent = `${total ? total.mine.pacientes : 0} paciente(s) no filtro`;
+            renderFilterSummary('filterSummaryBenchmark', [
+                { label: 'Clínica', value: describeMultiSelectFilter('benchmarkFilterClinic', 'todas (média da rede)') },
+                { label: 'Período da consulta', value: describePeriodFilter('benchmarkDateStart', 'benchmarkDateEnd') },
+                { label: 'Pacientes no recorte', value: String(total ? total.mine.pacientes : 0) }
+            ]);
+            renderBenchmark();
+        }
+
+        function renderBenchmark() {
+            const container = document.getElementById('benchmarkContent');
+            if (chartBenchmarkInstance) { chartBenchmarkInstance.destroy(); chartBenchmarkInstance = null; }
+
+            const total = benchmarkRows[0];
+            if (!total || total.mine.pacientes === 0) {
+                container.innerHTML = `<p class="text-base font-medium text-slate-900">${rawData.length
+                    ? 'Nenhum paciente no filtro atual.'
+                    : 'Carregue a planilha de Consultas para ver o benchmark.'}</p>`;
+                return;
+            }
+
+            // Texto quando a própria seleção é a referência (ninguém com amostra mínima a supera).
+            const benchmarkSelfLabel = benchmarkSelectionSize === 0 ? 'é a própria média da rede'
+                : benchmarkSelectionSize === 1 ? 'é a própria clínica filtrada' : 'é o próprio conjunto filtrado';
+            const bestTitle = r => (r.best && !BENCHMARK_NOME_MELHOR_VISIVEL) ? ` title="${escapeHtml(r.best.clinic)}"` : '';
+            const bestName = r => (r.best && BENCHMARK_NOME_MELHOR_VISIVEL)
+                ? `<div class="text-sm font-medium text-slate-600">${escapeHtml(r.best.clinic)}</div>` : '';
+            const smallBadge = '<span class="ml-2 text-sm font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 whitespace-nowrap">amostra pequena</span>';
+            const smallSample = r => r.mine.pacientes < BENCHMARK_MIN_PACIENTES ? smallBadge : '';
+            // Quando a própria clínica filtrada é a referência, a célula diz isso (sem expor
+            // nome de outra clínica) e avisa se a conversão vem de amostra pequena.
+            const bestTag = r => !r.best ? '' : (
+                (r.best.isSelf ? `<div class="text-sm font-medium text-slate-600">${benchmarkSelfLabel}</div>` : '')
+                + (r.best.pacientes < BENCHMARK_MIN_PACIENTES ? `<div>${smallBadge.replace('ml-2 ', '')}</div>` : ''));
+
+            const kpi = (label, value, sub, valueClass = 'text-slate-900') => `
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 flex flex-col">
+                    <div class="text-sm font-bold text-slate-700 uppercase tracking-wider">${label}</div>
+                    <div class="text-3xl font-extrabold mt-1 ${valueClass}">${value}</div>
+                    <div class="text-sm font-medium text-slate-700 mt-auto pt-1">${sub}</div>
+                </div>`;
+
+            const kpisHtml = `
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    ${kpi('Conversão da(s) clínica(s)', `${total.mine.taxa}%`,
+                        `${total.mine.pacientes} paciente(s) atendido(s)`, 'text-violet-700')}
+                    ${total.best
+                        ? kpi('Melhor clínica da base', `${total.best.taxa}%`,
+                            total.best.isSelf ? benchmarkSelfLabel : 'referência entre todas as clínicas da base', 'text-emerald-700')
+                        : kpi('Melhor clínica da base', '—', `nenhuma clínica com ${BENCHMARK_MIN_PACIENTES}+ pacientes no período`)}
+                    ${kpi('Diferença', formatGapPP(total.gap),
+                        total.gap === null ? 'sem referência para comparar'
+                            : total.gap >= 0 ? 'igual ou acima da melhor clínica' : 'abaixo da melhor clínica',
+                        gapColorClass(total.gap))}
+                </div>`;
+
+            const chartHeight = Math.max(260, benchmarkRows.length * 48 + 70);
+            const chartHtml = `<div class="relative" style="height:${chartHeight}px"><canvas id="chartBenchmark"></canvas></div>`;
+
+            const rowsHtml = benchmarkRows.map(r => `
+                <tr class="${r.isTotal ? 'bg-violet-50 font-bold' : ''}">
+                    <td class="p-3 font-semibold text-slate-900">${escapeHtml(r.label)}${smallSample(r)}</td>
+                    <td class="p-3 text-center">${r.mine.pacientes}</td>
+                    <td class="p-3 text-center">${r.mine.cirurgias}</td>
+                    <td class="p-3 text-center font-bold text-violet-700">${r.mine.taxa}%</td>
+                    <td class="p-3 text-center"${bestTitle(r)}>${r.best
+                        ? `<span class="font-bold text-emerald-700">${r.best.taxa}%</span>${bestName(r)}${bestTag(r)}`
+                        : '<span class="font-medium text-slate-600">sem referência</span>'}</td>
+                    <td class="p-3 text-center font-bold ${gapColorClass(r.gap)}">${formatGapPP(r.gap)}</td>
+                </tr>`).join('');
+
+            const tableHtml = `
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left text-sm text-slate-700">
+                        <thead class="bg-slate-100 text-slate-600 uppercase text-sm tracking-wider border-b border-slate-200">
+                            <tr>
+                                <th class="p-3">Especialidade</th>
+                                <th class="p-3 text-center">Pacientes</th>
+                                <th class="p-3 text-center">Cirurgias</th>
+                                <th class="p-3 text-center">Conversão</th>
+                                <th class="p-3 text-center">Melhor da base</th>
+                                <th class="p-3 text-center">Diferença</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">${rowsHtml}</tbody>
+                    </table>
+                </div>`;
+
+            const notesHtml = `
+                <ul class="text-sm font-medium text-slate-700 space-y-1 list-disc pl-5">
+                    <li>Conversão = cirurgias realizadas ÷ pacientes atendidos. Cada olho/cirurgia conta, então a conversão pode passar de 100% (a linha tracejada marca 1 cirurgia por paciente).</li>
+                    <li>A melhor clínica considera todas as clínicas da planilha no mesmo período, sem o filtro de clínica, e só entre as que têm ${BENCHMARK_MIN_PACIENTES} ou mais pacientes na linha. Se a seleção filtrada superar todas elas (por exemplo, uma clínica com poucos pacientes e conversão alta), ela mesma passa a ser a referência e a diferença fica em 0 p.p., com o aviso "amostra pequena" quando for o caso. A melhor de cada linha pode ser uma clínica diferente. Marcar todas as clínicas equivale a não filtrar.</li>
+                    <li>Sem clínica selecionada, a conversão mostrada é a média da rede.</li>
+                </ul>`;
+
+            container.innerHTML = kpisHtml + chartHtml + tableHtml + notesHtml;
+
+            const labels = benchmarkRows.map(r => r.label.length > 30 ? r.label.substring(0, 30) + '...' : r.label);
+            const mineData = benchmarkRows.map(r => r.mine.taxa);
+            const bestData = benchmarkRows.map(r => r.best ? r.best.taxa : null);
+            const maxVal = Math.max(...mineData, ...bestData.filter(v => v !== null), 0);
+
+            chartBenchmarkInstance = new Chart(document.getElementById('chartBenchmark'), {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'Clínica(s) filtrada(s)', data: mineData, backgroundColor: '#7c3aed', borderRadius: 6 },
+                        { label: 'Melhor clínica da base', data: bestData, backgroundColor: '#059669', borderRadius: 6 }
+                    ]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { right: 90 } },
+                    plugins: {
+                        legend: { position: 'top', labels: { color: '#334155', font: { size: 13, weight: 600 } } },
+                        tooltip: {
+                            callbacks: {
+                                label(ctx) {
+                                    const r = benchmarkRows[ctx.dataIndex];
+                                    if (ctx.datasetIndex === 0) {
+                                        return `${ctx.dataset.label}: ${r.mine.taxa}% (${r.mine.cirurgias} cirurgia(s) / ${r.mine.pacientes} paciente(s))`;
+                                    }
+                                    if (!r.best) return `${ctx.dataset.label}: sem referência`;
+                                    // Nome só aqui, no hover da tela — não entra na imagem/PDF exportado.
+                                    return `${r.best.clinic}: ${r.best.taxa}% (${r.best.cirurgias} cirurgia(s) / ${r.best.pacientes} paciente(s))`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            suggestedMax: Math.ceil((maxVal * 1.12) / 10) * 10,
+                            ticks: { color: '#475569', callback: v => `${v}%` },
+                            grid: { color: '#f1f5f9' }
+                        },
+                        y: { ticks: { color: '#334155', font: { size: 12, weight: 600 } }, grid: { display: false } }
+                    }
+                },
+                plugins: [benchmarkOverlayPlugin]
+            });
+        }
+
+        // ================================================================
         // NAVEGAÇÃO POR PÁGINA (Consultas / NPS) + EXPORTAÇÃO/IMPRESSÃO
         // ================================================================
         let activeTab = 'consultas';
@@ -5180,7 +5601,8 @@
             consultas: 'Imprimir Painel de Consultas',
             nps: 'Imprimir Painel de NPS',
             faturamento: '', // ver updateTabNav(): o botão não aparece aqui
-            ganho: 'Imprimir Painel de Potencial de Ganho'
+            ganho: 'Imprimir Painel de Potencial de Ganho',
+            benchmark: 'Imprimir Painel de Benchmark'
         };
 
         function updateTabNav() {
@@ -5189,6 +5611,7 @@
             document.getElementById('navTabNps').className = `${base} ${activeTab === 'nps' ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
             document.getElementById('navTabFaturamento').className = `${base} ${activeTab === 'faturamento' ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
             document.getElementById('navTabGanho').className = `${base} ${activeTab === 'ganho' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
+            document.getElementById('navTabBenchmark').className = `${base} ${activeTab === 'benchmark' ? 'bg-violet-600 text-white shadow-md shadow-violet-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
             document.getElementById('exportBtnLabel').textContent = TAB_LABELS[activeTab];
 
             // O relatório completo é só de gráficos/indicadores, e Faturamento
@@ -5211,8 +5634,11 @@
             document.getElementById('tabNps').classList.toggle('hidden', tab !== 'nps');
             document.getElementById('tabFaturamento').classList.toggle('hidden', tab !== 'faturamento');
             document.getElementById('tabGanho').classList.toggle('hidden', tab !== 'ganho');
+            document.getElementById('tabBenchmark').classList.toggle('hidden', tab !== 'benchmark');
             updateTabNav();
             updateStickyOffsets();
+            // O gráfico foi desenhado com a aba oculta (largura 0): reajusta ao mostrar.
+            if (tab === 'benchmark' && chartBenchmarkInstance) chartBenchmarkInstance.resize();
             // O valor base é editado na página Potencial de Ganho: recalcula o FEE ao
             // entrar no Faturamento para não mostrar a estimativa com preço antigo.
             if (tab === 'faturamento') renderFaturamentoFeeKpi();
