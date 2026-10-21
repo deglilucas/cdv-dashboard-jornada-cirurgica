@@ -461,7 +461,7 @@
                     <canvas id="chartStatus"></canvas>
                     <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                         <span class="text-4xl font-extrabold text-slate-900" id="statusDonutTotal">0</span>
-                        <span class="text-sm font-semibold text-slate-600 uppercase tracking-wider mt-1">Pacientes</span>
+                        <span class="text-sm font-semibold text-slate-600 uppercase tracking-wider mt-1">Consultas</span>
                     </div>
                 </div>
                 <div class="w-full flex-1 space-y-2.5" id="statusLegendContainer">
@@ -3575,7 +3575,7 @@
                 data: {
                     labels: Object.keys(surgCounts),
                     datasets: [{
-                        label: 'Quantidade de Pacientes',
+                        label: 'Quantidade de Consultas',
                         data: Object.values(surgCounts),
                         backgroundColor: '#6366f1',
                         borderRadius: 6
@@ -3593,11 +3593,15 @@
             });
 
             // Clinics Chart (Top 10 Clinics)
-            const clinicCounts = {};
+            // Paciente distinto por clínica (getPatientKey), igual à coluna "Total
+            // Pacientes" do Relatório Consolidado — contar linha aqui fazia o gráfico
+            // dizer "pacientes" com número de consultas.
+            const clinicPatients = {};
             filteredData.forEach(item => {
                 const cl = getItemProp(item, CLINIC_ALIASES) || 'Sem Clínica';
-                clinicCounts[cl] = (clinicCounts[cl] || 0) + 1;
+                (clinicPatients[cl] = clinicPatients[cl] || new Set()).add(getPatientKey(item));
             });
+            const clinicCounts = Object.fromEntries(Object.entries(clinicPatients).map(([cl, s]) => [cl, s.size]));
 
             const sortedClinics = Object.entries(clinicCounts)
                 .sort((a, b) => b[1] - a[1])
