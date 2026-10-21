@@ -60,6 +60,16 @@
             border: 1px solid #e2e8f0;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
         }
+        /* Página Benchmark (e só ela): neutros puxados para o navy e sombra fria do design
+           system da Central da Visão — text-strong #203B5A, body #333C47, borda #E8ECF1. */
+        #tabBenchmark .white-card { border-color: #E8ECF1; box-shadow: 0 2px 6px rgba(32, 59, 90, 0.08); }
+        #tabBenchmark .text-slate-900, #tabBenchmark .text-slate-800 { color: #203B5A; }
+        #tabBenchmark .text-slate-700 { color: #333C47; }
+        #tabBenchmark .text-slate-600 { color: #4C5663; }
+        #tabBenchmark .bg-slate-50 { background-color: #F4F6F8; }
+        #tabBenchmark .bg-slate-100 { background-color: #E8ECF1; }
+        #tabBenchmark .border-slate-200, #tabBenchmark .border-slate-100 { border-color: #E8ECF1; }
+        #tabBenchmark .border-slate-300 { border-color: #D5DBE3; }
         .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -1319,15 +1329,15 @@
         <div id="tabBenchmark" class="space-y-6 hidden">
 
         <!-- Benchmark: Filtros (fixos logo abaixo da navegação de páginas) -->
-        <div class="white-card rounded-2xl p-3 space-y-2 border-violet-200 sticky z-30" style="top: calc(var(--header-h, 0px) + var(--tabnav-h, 0px));">
+        <div class="white-card rounded-2xl p-3 space-y-2 border-[#B5CDE5] sticky z-30" style="top: calc(var(--header-h, 0px) + var(--tabnav-h, 0px));">
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <i data-lucide="filter" class="w-3.5 h-3.5 text-violet-600"></i>
+                    <i data-lucide="filter" class="w-3.5 h-3.5 text-[#3874AF]"></i>
                     Filtros de Benchmark
                 </h3>
                 <div class="flex items-center gap-2 no-print">
                     <div class="flex items-center gap-1.5 text-sm text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-medium">
-                        <i data-lucide="database" class="w-3 h-3 text-violet-600"></i>
+                        <i data-lucide="database" class="w-3 h-3 text-[#3874AF]"></i>
                         <span id="benchmarkCountLabel">0 paciente(s) no filtro</span>
                     </div>
                 </div>
@@ -1351,24 +1361,24 @@
                 <div class="col-span-2 sm:col-span-3 lg:col-span-2">
                     <label class="block text-sm font-semibold text-slate-700 mb-0.5">Período (Consulta)</label>
                     <div class="flex items-center gap-1">
-                        <input type="date" id="benchmarkDateStart" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-violet-500 focus:bg-white outline-none transition">
+                        <input type="date" id="benchmarkDateStart" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-[#00A4D0] focus:bg-white outline-none transition">
                         <span class="text-slate-600 text-sm shrink-0">até</span>
-                        <input type="date" id="benchmarkDateEnd" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-violet-500 focus:bg-white outline-none transition">
+                        <input type="date" id="benchmarkDateEnd" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-[#00A4D0] focus:bg-white outline-none transition">
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Benchmark: gráfico + tabela (indicador — entra no Imprimir Painel) -->
-        <div class="white-card rounded-2xl p-6 border-l-4 border-l-violet-600 space-y-5" id="cardBenchmark">
+        <div class="white-card rounded-2xl p-6 border-l-4 border-l-[#3874AF] space-y-5" id="cardBenchmark">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-violet-600 text-white flex items-center justify-center shadow-md shadow-violet-600/20">
+                    <div class="w-9 h-9 rounded-xl bg-[#3874AF] text-white flex items-center justify-center shadow-md shadow-[#3874AF]/20">
                         <i data-lucide="trophy" class="w-5 h-5"></i>
                     </div>
                     <div>
                         <h3 class="text-base font-bold text-slate-900">Benchmark de Conversão Cirúrgica por Comparecimento</h3>
-                        <p class="text-base font-medium text-slate-900">Conversão da(s) clínica(s) filtrada(s) comparada à melhor clínica da base inteira</p>
+                        <p class="text-base font-medium text-slate-900">Conversão da(s) clínica(s) filtrada(s) comparada ao benchmark no período (clínicas com melhor performance)</p>
                     </div>
                 </div>
                 <div class="relative no-print">
@@ -1392,15 +1402,15 @@
         </div>
 
         <!-- Benchmark: mediana de dias até a 1ª cirurgia — melhor clínica x clínica do filtro -->
-        <div class="white-card rounded-2xl p-6 border-l-4 border-l-violet-600 space-y-5" id="cardBenchmarkMediana">
+        <div class="white-card rounded-2xl p-6 border-l-4 border-l-[#3874AF] space-y-5" id="cardBenchmarkMediana">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-violet-600 text-white flex items-center justify-center shadow-md shadow-violet-600/20">
+                    <div class="w-9 h-9 rounded-xl bg-[#3874AF] text-white flex items-center justify-center shadow-md shadow-[#3874AF]/20">
                         <i data-lucide="clock" class="w-5 h-5"></i>
                     </div>
                     <div>
                         <h3 class="text-base font-bold text-slate-900">Benchmark de Mediana: dias até a 1ª cirurgia</h3>
-                        <p class="text-base font-medium text-slate-900">Mediana da clínica filtrada comparada à melhor clínica da base, nas principais especialidades</p>
+                        <p class="text-base font-medium text-slate-900">Mediana da clínica filtrada comparada ao benchmark no período, nas principais especialidades</p>
                     </div>
                 </div>
                 <div class="relative no-print">
@@ -1424,10 +1434,10 @@
         </div>
 
         <!-- Benchmark: KPI separado — médicos que mais e que menos converteram -->
-        <div class="white-card rounded-2xl p-6 border-l-4 border-l-violet-600 space-y-5" id="cardBenchmarkMedicos">
+        <div class="white-card rounded-2xl p-6 border-l-4 border-l-[#3874AF] space-y-5" id="cardBenchmarkMedicos">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-violet-600 text-white flex items-center justify-center shadow-md shadow-violet-600/20">
+                    <div class="w-9 h-9 rounded-xl bg-[#3874AF] text-white flex items-center justify-center shadow-md shadow-[#3874AF]/20">
                         <i data-lucide="stethoscope" class="w-5 h-5"></i>
                     </div>
                     <div>
@@ -2577,7 +2587,7 @@
             teal:    { ring: 'focus:ring-teal-500',    text: 'text-teal-700',    badge: 'bg-teal-50 border-teal-200 text-teal-700',         check: 'accent-teal-600' },
             amber:   { ring: 'focus:ring-amber-500',   text: 'text-amber-700',   badge: 'bg-amber-50 border-amber-200 text-amber-700',      check: 'accent-amber-600' },
             emerald: { ring: 'focus:ring-emerald-500', text: 'text-emerald-700', badge: 'bg-emerald-50 border-emerald-200 text-emerald-700', check: 'accent-emerald-600' },
-            violet:  { ring: 'focus:ring-violet-500',  text: 'text-violet-700',  badge: 'bg-violet-50 border-violet-200 text-violet-700',   check: 'accent-violet-600' }
+            violet:  { ring: 'focus:ring-[#00A4D0]',  text: 'text-[#2F6296]',  badge: 'bg-[#EFF5FA] border-[#B5CDE5] text-[#2F6296]',   check: 'accent-[#3874AF]' }
         };
 
         // id do filtro -> { options, selected, placeholder, onChange, accent }
@@ -2882,6 +2892,11 @@
                 document.getElementById(id).addEventListener('change', applyGanhoFilters);
             });
             document.getElementById('benchmarkMedicosContent').addEventListener('click', handleBenchmarkMedicosToggle);
+            document.getElementById('benchmarkContent').addEventListener('click', e => {
+                if (!e.target.closest('[data-bm-specs]')) return;
+                benchmarkSpecsExpanded = !benchmarkSpecsExpanded;
+                renderBenchmark();
+            });
             // Benchmark: Clínica é múltipla (data-onchange); só o período precisa de listener.
             ['benchmarkDateStart', 'benchmarkDateEnd'].forEach(id => {
                 document.getElementById(id).addEventListener('change', applyBenchmarkFilters);
@@ -3369,7 +3384,7 @@
         // Classifica a mediana de dias contra a régua de SLA da especialidade.
         function classifyMedianSLA(days, sla) {
             if (days === null || days === undefined) return null;
-            if (days <= sla.excelenteMax) return { level: 'excelente', label: 'melhor que o esperado', color: 'emerald' };
+            if (days <= sla.excelenteMax) return { level: 'excelente', label: 'acima do esperado', color: 'emerald' };
             if (days <= sla.metaMax) return { level: 'meta', label: 'dentro da meta', color: 'emerald' };
             if (days < sla.atencaoMin) return { level: 'aceitavel', label: 'aceitável', color: 'slate' };
             if (days < sla.criticoMin) return { level: 'atencao', label: 'ponto de atenção', color: 'orange' };
@@ -5458,6 +5473,18 @@
         //    decisão de negócio, não de código. Fica só no tooltip/hover na tela (que não
         //    entra na imagem/PDF). Para mostrar sempre, BENCHMARK_NOME_MELHOR_VISIVEL = true.
         // ================================================================
+        // Paleta da página Benchmark = design system da Central da Visão (pedido do usuário,
+        // 2026-10-21; SÓ esta página): azul da marca para "a sua clínica", salmão (a "faixa de
+        // comparação" do sistema) para o benchmark do período, verde/vermelho de status só
+        // para bom/ruim. Laranja de CTA (#F9623E) não é usado: no sistema ele é só botão.
+        const BM = {
+            primary: '#3874AF', primaryDark: '#2F6296', navy: '#203B5A',
+            benchmark: '#FC8D66', benchmarkText: '#DE4B29',
+            good: '#1E8A5F', bad: '#C63B2A', neutral: '#8A95A3',
+            text: '#333C47', muted: '#4C5663', border: '#E8ECF1', axis: '#67727F'
+        };
+        const BENCHMARK_ESPECIALIDADES_PRINCIPAIS = ['CATARATA', 'REFRATIVA', 'BLEFAROPLASTIA', 'RETINA'];
+        let benchmarkSpecsExpanded = false;
         const BENCHMARK_MIN_PACIENTES = 10;
         const BENCHMARK_MIN_CIRURGIAS_MEDIANA = 5; // cirurgias com data para a mediana de uma clínica valer como referência
         const BENCHMARK_NOME_MELHOR_VISIVEL = false;
@@ -5611,50 +5638,66 @@
         }
         function gapColorClass(gap) {
             if (gap === null) return 'text-slate-600';
-            return gap >= 0 ? 'text-emerald-700' : 'text-red-600';
+            return gap >= 0 ? 'text-[#1E8A5F]' : 'text-[#C63B2A]';
         }
 
-        // Linha tracejada em 100% (1 cirurgia por paciente) + valor ao lado de cada barra.
+        // Linha tracejada em 100% (1 cirurgia por paciente) + valor no topo de cada coluna.
         // Sem plugin de datalabels no projeto, desenhar aqui é mais barato que mais uma
-        // biblioteca via CDN. O rótulo da barra "sem referência" mostra o motivo no lugar.
+        // biblioteca via CDN. A coluna "sem referência" mostra o motivo no lugar do valor.
         const benchmarkOverlayPlugin = {
             id: 'benchmarkOverlay',
             afterDatasetsDraw(chart) {
                 const { ctx, chartArea, scales } = chart;
                 ctx.save();
-                const x100 = scales.x.getPixelForValue(100);
-                if (x100 >= chartArea.left && x100 <= chartArea.right) {
-                    ctx.strokeStyle = '#64748b';
+                const y100 = scales.y.getPixelForValue(100);
+                if (y100 >= chartArea.top && y100 <= chartArea.bottom) {
+                    ctx.strokeStyle = BM.axis;
                     ctx.lineWidth = 1.5;
                     ctx.setLineDash([5, 4]);
                     ctx.beginPath();
-                    ctx.moveTo(x100, chartArea.top);
-                    ctx.lineTo(x100, chartArea.bottom);
+                    ctx.moveTo(chartArea.left, y100);
+                    ctx.lineTo(chartArea.right, y100);
                     ctx.stroke();
                     ctx.setLineDash([]);
-                    ctx.fillStyle = '#475569';
+                    ctx.fillStyle = BM.muted;
                     ctx.font = '700 12px "Plus Jakarta Sans", sans-serif';
-                    ctx.textBaseline = 'top';
-                    ctx.fillText('100%', x100 + 4, chartArea.top + 2);
+                    ctx.textAlign = 'right';
+                    ctx.textBaseline = 'bottom';
+                    ctx.fillText('100%', chartArea.right, y100 - 3);
                 }
-                ctx.textBaseline = 'middle';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                const base = scales.y.getPixelForValue(0);
                 chart.data.datasets.forEach((ds, i) => {
                     chart.getDatasetMeta(i).data.forEach((bar, idx) => {
                         const v = ds.data[idx];
                         if (v === null || v === undefined) {
-                            ctx.font = '600 13px "Plus Jakarta Sans", sans-serif';
-                            ctx.fillStyle = '#475569';
-                            ctx.fillText('sem referência', scales.x.getPixelForValue(0) + 6, bar.y);
+                            ctx.font = '600 12px "Plus Jakarta Sans", sans-serif';
+                            ctx.fillStyle = BM.muted;
+                            ctx.fillText('sem', bar.x, base - 18);
+                            ctx.fillText('referência', bar.x, base - 4);
                             return;
                         }
                         ctx.font = '700 13px "Plus Jakarta Sans", sans-serif';
-                        ctx.fillStyle = '#0f172a';
-                        ctx.fillText(`${v}%`, bar.x + 6, bar.y);
+                        ctx.fillStyle = BM.navy;
+                        ctx.fillText(`${v}%`, bar.x, bar.y - 5);
                     });
                 });
                 ctx.restore();
             }
         };
+
+        // Quebra o rótulo do eixo em até 3 linhas (colunas verticais têm pouco espaço lateral).
+        function wrapChartLabel(s, max = 13) {
+            const lines = [];
+            let cur = '';
+            s.split(' ').forEach(w => {
+                if (cur && (cur + ' ' + w).length > max) { lines.push(cur); cur = w; } else cur = cur ? cur + ' ' + w : w;
+            });
+            if (cur) lines.push(cur);
+            if (lines.length > 3) { lines.length = 3; lines[2] = lines[2].replace(/.{0,2}$/, '…'); }
+            return lines;
+        }
 
         // Texto quando a própria seleção é a referência (ninguém com amostra mínima a supera).
         function benchmarkSelfLabelText() {
@@ -5692,8 +5735,8 @@
                 if (!r.mineMed) return { txt: '—', sub: 'sem cirurgias com data', cls: 'text-slate-600' };
                 if (!r.bestMed) return { txt: '—', sub: 'sem referência', cls: 'text-slate-600' };
                 const d = r.mineMed.median - r.bestMed.median;
-                if (d <= 0) return { txt: '0 dia', sub: r.bestMed.isSelf ? selfLabel : 'igual à melhor', cls: 'text-emerald-700' };
-                return { txt: `+${diasTxt(d)}`, sub: 'mais dias que a melhor', cls: 'text-red-600' };
+                if (d <= 0) return { txt: '0 dia', sub: r.bestMed.isSelf ? selfLabel : 'igual ao benchmark', cls: 'text-[#1E8A5F]' };
+                return { txt: `+${diasTxt(d)}`, sub: 'mais dias que o benchmark', cls: 'text-[#C63B2A]' };
             };
             const scale = Math.max(1, ...rows.flatMap(r => [r.mineMed ? r.mineMed.median : 0, r.bestMed ? r.bestMed.median : 0]));
             const bar = (v, color) => v === null ? '' : `<div class="h-2.5 rounded-full bg-slate-100 overflow-hidden mt-1"><div class="h-full rounded-full" style="width:${Math.max(2, Math.round(v / scale * 100))}%;background:${color}"></div></div>`;
@@ -5709,23 +5752,23 @@
             const td = diffInfo(t);
             const kpis = `
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    ${kpi('Mediana da(s) clínica(s)', t.mineMed ? diasTxt(t.mineMed.median) : '—', 'da consulta até a 1ª cirurgia', 'text-violet-700')}
-                    ${kpi('Melhor mediana da base', t.bestMed ? diasTxt(t.bestMed.median) : '—', t.bestMed ? (t.bestMed.isSelf ? selfLabel : 'menos dias entre todas as clínicas da base') : 'nenhuma clínica com amostra mínima', 'text-emerald-700')}
+                    ${kpi('Mediana da(s) clínica(s)', t.mineMed ? diasTxt(t.mineMed.median) : '—', 'da consulta até a 1ª cirurgia', 'text-[#2F6296]')}
+                    ${kpi('Benchmark de mediana no período', t.bestMed ? diasTxt(t.bestMed.median) : '—', t.bestMed ? (t.bestMed.isSelf ? selfLabel : 'menor mediana entre as clínicas da base') : 'nenhuma clínica com amostra mínima', 'text-[#DE4B29]')}
                     ${kpi('Diferença', td.txt, td.sub, td.cls)}
                 </div>`;
             const body = rows.map(r => {
                 const d = diffInfo(r);
                 return `
-                    <tr class="${r.isTotal ? 'bg-violet-50 font-bold' : ''}">
+                    <tr class="${r.isTotal ? 'bg-[#EFF5FA] font-bold' : ''}">
                         <td class="p-3 font-semibold text-slate-900">${r.isTotal ? 'Total (todas as especialidades)' : escapeHtml(r.label)}</td>
                         <td class="p-3">
-                            <div class="font-bold text-violet-700">${r.mineMed ? diasTxt(r.mineMed.median) : '—'}${small(r.mineMed)}</div>
-                            ${bar(r.mineMed ? r.mineMed.median : null, '#7c3aed')}
+                            <div class="font-bold text-[#2F6296]">${r.mineMed ? diasTxt(r.mineMed.median) : '—'}${small(r.mineMed)}</div>
+                            ${bar(r.mineMed ? r.mineMed.median : null, BM.primary)}
                         </td>
                         <td class="p-3">
-                            <div class="font-bold text-emerald-700">${r.bestMed ? diasTxt(r.bestMed.median) : 'sem referência'}${r.bestMed ? small(r.bestMed) : ''}</div>
+                            <div class="font-bold text-[#203B5A]">${r.bestMed ? diasTxt(r.bestMed.median) : 'sem referência'}${r.bestMed ? small(r.bestMed) : ''}</div>
                             ${r.bestMed && r.bestMed.isSelf ? `<div class="text-sm font-medium text-slate-600">${selfLabel}</div>` : ''}
-                            ${bar(r.bestMed ? r.bestMed.median : null, '#059669')}
+                            ${bar(r.bestMed ? r.bestMed.median : null, BM.benchmark)}
                         </td>
                         <td class="p-3 text-center">
                             <div class="font-bold ${d.cls}">${d.txt}</div>
@@ -5740,7 +5783,7 @@
                             <tr>
                                 <th class="p-3">Especialidade</th>
                                 <th class="p-3">Clínica(s) filtrada(s)</th>
-                                <th class="p-3">Melhor da base</th>
+                                <th class="p-3">Benchmark no período</th>
                                 <th class="p-3 text-center">Diferença</th>
                             </tr>
                         </thead>
@@ -5748,8 +5791,8 @@
                     </table>
                 </div>
                 <ul class="text-sm font-medium text-slate-700 space-y-1 list-disc pl-5">
-                    <li>Mediana = dias, na mediana, entre a consulta e a 1ª cirurgia dos pacientes que já operaram (com data registrada). Menos dias é melhor.</li>
-                    <li>A melhor é a menor mediana entre todas as clínicas da base, no mesmo período e na mesma especialidade, só entre as que têm ${BENCHMARK_MIN_PACIENTES} ou mais pacientes e ${BENCHMARK_MIN_CIRURGIAS_MEDIANA} ou mais cirurgias com data. Pode ser outra clínica que a de melhor conversão.</li>
+                    <li>Mediana = dias, na mediana, entre a consulta e a 1ª cirurgia dos pacientes que já operaram (com data registrada). Menos dias significa cirurgia mais rápida.</li>
+                    <li>O benchmark é a menor mediana entre todas as clínicas da base, no mesmo período e na mesma especialidade, só entre as que têm ${BENCHMARK_MIN_PACIENTES} ou mais pacientes e ${BENCHMARK_MIN_CIRURGIAS_MEDIANA} ou mais cirurgias com data. Pode ser outra clínica que a de maior conversão.</li>
                     <li>Se a seleção filtrada for mais rápida que todas elas, ela mesma passa a ser a referência. Aparecem o total e as especialidades principais (ou as filtradas); linhas sem cirurgias com data ficam de fora.</li>
                 </ul>`;
         }
@@ -5881,14 +5924,14 @@
         // completo de propósito: o hover revelaria o que se quer esconder.
         function medicoLabel(m) {
             const badge = benchmarkClinicFilterActive && benchmarkIncludeOtherClinics && m.own
-                ? ' <span class="ml-1 text-sm font-semibold text-violet-700 bg-violet-50 border border-violet-200 rounded px-1.5 whitespace-nowrap">sua clínica</span>' : '';
+                ? ' <span class="ml-1 text-sm font-semibold text-[#2F6296] bg-[#EFF5FA] border border-[#B5CDE5] rounded px-1.5 whitespace-nowrap">sua clínica</span>' : '';
             return escapeHtml(m.own ? m.name : medicoFirstName(m.name)) + badge;
         }
 
         function medicoTone(i, n) {
-            if (n === 1) return ['#64748B', 'text-slate-700'];
+            if (n === 1) return [BM.neutral, 'text-slate-700'];
             const k = Math.max(1, Math.floor(n / 3));
-            return i < k ? ['#059669', 'text-emerald-700'] : i >= n - k ? ['#dc2626', 'text-red-600'] : ['#64748B', 'text-slate-700'];
+            return i < k ? [BM.good, 'text-[#1E8A5F]'] : i >= n - k ? [BM.bad, 'text-[#C63B2A]'] : [BM.neutral, 'text-slate-700'];
         }
 
         // Texto simples logo abaixo da porcentagem (pedido do usuário, 2026-10-21): mediana de
@@ -5942,7 +5985,7 @@
         let benchmarkMedicosCurrentN = 0; // total do ranking que está sendo desenhado (para as cores por terço)
 
         function medicoToggleButton(key, label) {
-            return `<button type="button" data-bm-toggle="${escapeHtml(key)}" class="no-print px-3 py-1.5 bg-white hover:bg-slate-50 text-violet-700 text-sm font-bold rounded-lg border border-violet-200 transition">${label}</button>`;
+            return `<button type="button" data-bm-toggle="${escapeHtml(key)}" class="no-print px-3 py-1.5 bg-white hover:bg-slate-50 text-[#2F6296] text-sm font-bold rounded-lg border border-[#B5CDE5] transition">${label}</button>`;
         }
 
         function renderBenchmarkMedicos() {
@@ -5973,8 +6016,8 @@
                 </div>`;
             const kpis = ranking.eligible >= 2 ? `
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    ${kpi('Maior conversão', `${ranking.best.taxa}%`, medicoLabel(ranking.best), 'text-emerald-700', medicoMedianaText(ranking.best))}
-                    ${kpi('Menor conversão', `${ranking.worst.taxa}%`, medicoLabel(ranking.worst), 'text-red-600', medicoMedianaText(ranking.worst))}
+                    ${kpi('Maior conversão', `${ranking.best.taxa}%`, medicoLabel(ranking.best), 'text-[#1E8A5F]', medicoMedianaText(ranking.best))}
+                    ${kpi('Menor conversão', `${ranking.worst.taxa}%`, medicoLabel(ranking.worst), 'text-[#C63B2A]', medicoMedianaText(ranking.worst))}
                     ${kpi('Distância entre eles', `${ranking.spread} p.p.`, `${ranking.eligible} médico(s) comparado(s)`, 'text-slate-900')}
                 </div>` : `
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -5982,8 +6025,8 @@
                 </div>`;
             const cols = ranking.eligible >= 2
                 ? `<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                       ${list('Mais converteram (todas as especialidades do recorte)', ranking.top, 1, '#059669', 'text-emerald-700')}
-                       ${list('Menos converteram (todas as especialidades do recorte)', ranking.bottom.slice().reverse(), ranking.eligible - ranking.bottom.length + 1, '#dc2626', 'text-red-600')}
+                       ${list('Mais converteram (todas as especialidades do recorte)', ranking.top, 1, BM.good, 'text-[#1E8A5F]')}
+                       ${list('Menos converteram (todas as especialidades do recorte)', ranking.bottom.slice().reverse(), ranking.eligible - ranking.bottom.length + 1, BM.bad, 'text-[#C63B2A]')}
                    </div>` : '';
             const meio = ranking.eligible - shown.length;
             let completo = '';
@@ -6038,7 +6081,7 @@
             // Botão do gestor: só existe com clínica filtrada, e fica fora da imagem/PDF (no-print).
             const outras = benchmarkClinicFilterActive && !benchmarkMedicosExpandAll ? `
                 <div class="no-print flex flex-wrap items-center gap-3">
-                    <button type="button" data-bm-others class="px-3 py-1.5 bg-white hover:bg-slate-50 text-violet-700 text-sm font-bold rounded-lg border border-violet-200 transition">${benchmarkIncludeOtherClinics ? 'Ocultar médicos de outras clínicas' : 'Mostrar médicos de outras clínicas'}</button>
+                    <button type="button" data-bm-others class="px-3 py-1.5 bg-white hover:bg-slate-50 text-[#2F6296] text-sm font-bold rounded-lg border border-[#B5CDE5] transition">${benchmarkIncludeOtherClinics ? 'Ocultar médicos de outras clínicas' : 'Mostrar médicos de outras clínicas'}</button>
                     <span class="text-sm font-medium text-slate-700">${benchmarkIncludeOtherClinics
                         ? 'Os médicos de outras clínicas aparecem só com o primeiro nome.'
                         : 'Mostrando só os médicos da clínica filtrada.'}</span>
@@ -6077,6 +6120,7 @@
         function setBenchmarkPrintMode(expandAll) {
             if (activeTab !== 'benchmark') return;
             benchmarkMedicosExpandAll = expandAll;
+            renderBenchmark();
             renderBenchmarkMedicos();
         }
 
@@ -6159,28 +6203,39 @@
             const kpisHtml = `
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     ${kpi('Conversão da(s) clínica(s)', `${total.mine.taxa}%`,
-                        `${total.mine.pacientes} paciente(s) atendido(s)`, 'text-violet-700')}
+                        `${total.mine.pacientes} paciente(s) atendido(s)`, 'text-[#2F6296]')}
                     ${total.best
-                        ? kpi('Melhor clínica da base', `${total.best.taxa}%`,
-                            total.best.isSelf ? benchmarkSelfLabel : 'referência entre todas as clínicas da base', 'text-emerald-700')
-                        : kpi('Melhor clínica da base', '—', `nenhuma clínica com ${BENCHMARK_MIN_PACIENTES}+ pacientes no período`)}
+                        ? kpi('Benchmark no período', `${total.best.taxa}%`,
+                            total.best.isSelf ? benchmarkSelfLabel : 'clínicas com melhor performance no período', 'text-[#DE4B29]')
+                        : kpi('Benchmark no período', '—', `nenhuma clínica com ${BENCHMARK_MIN_PACIENTES}+ pacientes no período`)}
                     ${kpi('Diferença', formatGapPP(total.gap),
                         total.gap === null ? 'sem referência para comparar'
-                            : total.gap >= 0 ? 'igual ou acima da melhor clínica' : 'abaixo da melhor clínica',
+                            : total.gap >= 0 ? 'igual ou acima do benchmark' : 'abaixo do benchmark',
                         gapColorClass(total.gap))}
                 </div>`;
 
-            const chartHeight = Math.max(260, benchmarkRows.length * 48 + 70);
-            const chartHtml = `<div class="relative" style="height:${chartHeight}px"><canvas id="chartBenchmark"></canvas></div>`;
+            // Colunas VERTICAIS (pedido do usuário, 2026-10-21). Por padrão o total e as 4
+            // especialidades principais (Catarata, Refrativa, Blefaroplastia e Retina, quando
+            // existem); as demais ficam atrás do botão "Ver demais especialidades". Com filtro de
+            // Especialidade, ou ao exportar/imprimir (benchmarkMedicosExpandAll), entra tudo. A
+            // tabela abaixo sempre traz todas as linhas.
+            const selQ = benchmarkLastQuery ? benchmarkLastQuery.sel : { specialties: [] };
+            const isMain = r => r.isTotal || BENCHMARK_ESPECIALIDADES_PRINCIPAIS.includes(normalizeSpecialtyKey(r.key));
+            const outrasEsp = benchmarkRows.filter(r => !isMain(r));
+            const showAll = selQ.specialties.length > 0 || benchmarkSpecsExpanded || benchmarkMedicosExpandAll;
+            const chartRows = showAll ? benchmarkRows : benchmarkRows.filter(isMain);
+            const toggleSpecs = outrasEsp.length && selQ.specialties.length === 0 && !benchmarkMedicosExpandAll
+                ? `<div class="no-print"><button type="button" data-bm-specs class="px-3 py-1.5 bg-white hover:bg-slate-50 text-[#2F6296] text-sm font-bold rounded-lg border border-[#B5CDE5] transition">${benchmarkSpecsExpanded ? 'Mostrar só as principais' : `Ver demais especialidades (${outrasEsp.length})`}</button></div>` : '';
+            const chartHtml = `<div class="relative" style="height:440px"><canvas id="chartBenchmark"></canvas></div>${toggleSpecs}`;
 
             const rowsHtml = benchmarkRows.map(r => `
-                <tr class="${r.isTotal ? 'bg-violet-50 font-bold' : ''}">
+                <tr class="${r.isTotal ? 'bg-[#EFF5FA] font-bold' : ''}">
                     <td class="p-3 font-semibold text-slate-900">${escapeHtml(r.label)}${smallSample(r)}</td>
                     <td class="p-3 text-center">${r.mine.pacientes}</td>
                     <td class="p-3 text-center">${r.mine.cirurgias}</td>
-                    <td class="p-3 text-center font-bold text-violet-700">${r.mine.taxa}%</td>
+                    <td class="p-3 text-center font-bold text-[#2F6296]">${r.mine.taxa}%</td>
                     <td class="p-3 text-center"${bestTitle(r)}>${r.best
-                        ? `<span class="font-bold text-emerald-700">${r.best.taxa}%</span>${bestName(r)}${bestTag(r)}`
+                        ? `<span class="font-bold text-[#203B5A]">${r.best.taxa}%</span>${bestName(r)}${bestTag(r)}`
                         : '<span class="font-medium text-slate-600">sem referência</span>'}</td>
                     <td class="p-3 text-center font-bold ${gapColorClass(r.gap)}">${formatGapPP(r.gap)}</td>
                 </tr>`).join('');
@@ -6194,7 +6249,7 @@
                                 <th class="p-3 text-center">Pacientes</th>
                                 <th class="p-3 text-center">Cirurgias</th>
                                 <th class="p-3 text-center">Conversão</th>
-                                <th class="p-3 text-center">Melhor da base</th>
+                                <th class="p-3 text-center">Benchmark no período</th>
                                 <th class="p-3 text-center">Diferença</th>
                             </tr>
                         </thead>
@@ -6205,16 +6260,16 @@
             const notesHtml = `
                 <ul class="text-sm font-medium text-slate-700 space-y-1 list-disc pl-5">
                     <li>Conversão = cirurgias realizadas ÷ pacientes atendidos. Cada olho/cirurgia conta, então a conversão pode passar de 100% (a linha tracejada marca 1 cirurgia por paciente).</li>
-                    <li>A melhor clínica considera todas as clínicas da planilha no mesmo período, sem o filtro de clínica, e só entre as que têm ${BENCHMARK_MIN_PACIENTES} ou mais pacientes na linha. Se a seleção filtrada superar todas elas (por exemplo, uma clínica com poucos pacientes e conversão alta), ela mesma passa a ser a referência e a diferença fica em 0 p.p., com o aviso "amostra pequena" quando for o caso. A melhor de cada linha pode ser uma clínica diferente. Marcar todas as clínicas equivale a não filtrar.</li>
-                    <li>O filtro de Especialidade vale para os dois lados. Os filtros de Clínica e de Médico valem só para a seleção: a melhor clínica continua sendo a melhor entre todas.</li>
+                    <li>O benchmark considera as clínicas com melhor performance no período: todas as clínicas da planilha, sem o filtro de clínica, e só entre as que têm ${BENCHMARK_MIN_PACIENTES} ou mais pacientes na linha. Se a seleção filtrada superar todas elas (por exemplo, uma clínica com poucos pacientes e conversão alta), ela mesma passa a ser a referência e a diferença fica em 0 p.p., com o aviso "amostra pequena" quando for o caso. O benchmark de cada linha pode vir de uma clínica diferente. Marcar todas as clínicas equivale a não filtrar.</li>
+                    <li>O filtro de Especialidade vale para os dois lados. Os filtros de Clínica e de Médico valem só para a seleção: o benchmark continua sendo calculado sobre todas as clínicas.</li>
                     <li>Sem clínica selecionada, a conversão mostrada é a média da rede.</li>
                 </ul>`;
 
             container.innerHTML = kpisHtml + chartHtml + tableHtml + notesHtml;
 
-            const labels = benchmarkRows.map(r => r.label.length > 30 ? r.label.substring(0, 30) + '...' : r.label);
-            const mineData = benchmarkRows.map(r => r.mine.taxa);
-            const bestData = benchmarkRows.map(r => r.best ? r.best.taxa : null);
+            const labels = chartRows.map(r => wrapChartLabel(r.label));
+            const mineData = chartRows.map(r => r.mine.taxa);
+            const bestData = chartRows.map(r => r.best ? r.best.taxa : null);
             const maxVal = Math.max(...mineData, ...bestData.filter(v => v !== null), 0);
 
             chartBenchmarkInstance = new Chart(document.getElementById('chartBenchmark'), {
@@ -6222,21 +6277,21 @@
                 data: {
                     labels,
                     datasets: [
-                        { label: 'Clínica(s) filtrada(s)', data: mineData, backgroundColor: '#7c3aed', borderRadius: 6 },
-                        { label: 'Melhor clínica da base', data: bestData, backgroundColor: '#059669', borderRadius: 6 }
+                        { label: 'Clínica(s) filtrada(s)', data: mineData, backgroundColor: BM.primary, borderRadius: 6 },
+                        { label: 'Benchmark no período', data: bestData, backgroundColor: BM.benchmark, borderRadius: 6 }
                     ]
                 },
                 options: {
-                    indexAxis: 'y',
+                    animation: false,
                     responsive: true,
                     maintainAspectRatio: false,
-                    layout: { padding: { right: 90 } },
+                    layout: { padding: { top: 26 } },
                     plugins: {
-                        legend: { position: 'top', labels: { color: '#334155', font: { size: 13, weight: 600 } } },
+                        legend: { position: 'top', labels: { color: BM.text, font: { size: 13, weight: 600 } } },
                         tooltip: {
                             callbacks: {
                                 label(ctx) {
-                                    const r = benchmarkRows[ctx.dataIndex];
+                                    const r = chartRows[ctx.dataIndex];
                                     if (ctx.datasetIndex === 0) {
                                         return `${ctx.dataset.label}: ${r.mine.taxa}% (${r.mine.cirurgias} cirurgia(s) / ${r.mine.pacientes} paciente(s))`;
                                     }
@@ -6248,17 +6303,19 @@
                         }
                     },
                     scales: {
-                        x: {
+                        y: {
                             beginAtZero: true,
-                            suggestedMax: Math.ceil((maxVal * 1.12) / 10) * 10,
-                            ticks: { color: '#475569', callback: v => `${v}%` },
-                            grid: { color: '#f1f5f9' }
+                            suggestedMax: Math.ceil((maxVal * 1.15) / 10) * 10,
+                            ticks: { color: BM.muted, callback: v => `${v}%` },
+                            grid: { color: BM.border }
                         },
-                        y: { ticks: { color: '#334155', font: { size: 12, weight: 600 } }, grid: { display: false } }
+                        x: { ticks: { color: BM.text, font: { size: 12, weight: 600 }, maxRotation: 0, autoSkip: false }, grid: { display: false } }
                     }
                 },
                 plugins: [benchmarkOverlayPlugin]
             });
+            // Exportar/imprimir captura o canvas logo depois do re-render: desenha já.
+            chartBenchmarkInstance.draw();
         }
 
         // ================================================================
@@ -6280,7 +6337,7 @@
             document.getElementById('navTabNps').className = `${base} ${activeTab === 'nps' ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
             document.getElementById('navTabFaturamento').className = `${base} ${activeTab === 'faturamento' ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
             document.getElementById('navTabGanho').className = `${base} ${activeTab === 'ganho' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
-            document.getElementById('navTabBenchmark').className = `${base} ${activeTab === 'benchmark' ? 'bg-violet-600 text-white shadow-md shadow-violet-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
+            document.getElementById('navTabBenchmark').className = `${base} ${activeTab === 'benchmark' ? 'bg-[#3874AF] text-white shadow-md shadow-[#3874AF]/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
             document.getElementById('exportBtnLabel').textContent = TAB_LABELS[activeTab];
 
             // O relatório completo é só de gráficos/indicadores, e Faturamento
@@ -6415,7 +6472,7 @@
             const isInsights = elementId === 'cardInsights';
             if (isInsights) setInsightsPrintMode(true);
             // Ranking de médicos: listas recolhidas (11º em diante) também precisam sair na imagem/PDF.
-            const isMedicos = elementId === 'cardBenchmarkMedicos';
+            const isMedicos = elementId === 'cardBenchmarkMedicos' || elementId === 'cardBenchmark';
             if (isMedicos) setBenchmarkPrintMode(true);
 
             try {
