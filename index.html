@@ -60,16 +60,16 @@
             border: 1px solid #e2e8f0;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
         }
-        /* Página Benchmark (e só ela): neutros puxados para o navy e sombra fria do design
-           system da Central da Visão — text-strong #203B5A, body #333C47, borda #E8ECF1. */
-        #tabBenchmark .white-card { border-color: #E8ECF1; box-shadow: 0 2px 6px rgba(32, 59, 90, 0.08); }
-        #tabBenchmark .text-slate-900, #tabBenchmark .text-slate-800 { color: #203B5A; }
-        #tabBenchmark .text-slate-700 { color: #333C47; }
-        #tabBenchmark .text-slate-600 { color: #4C5663; }
-        #tabBenchmark .bg-slate-50 { background-color: #F4F6F8; }
-        #tabBenchmark .bg-slate-100 { background-color: #E8ECF1; }
-        #tabBenchmark .border-slate-200, #tabBenchmark .border-slate-100 { border-color: #E8ECF1; }
-        #tabBenchmark .border-slate-300 { border-color: #D5DBE3; }
+        /* Páginas Benchmark e NPS (só elas): neutros puxados para o navy e sombra fria do design
+           system da CdV — text-strong #203B5A, body #333C47, borda #E8ECF1. */
+        #tabBenchmark .white-card, #tabNps .white-card { border-color: #E8ECF1; box-shadow: 0 2px 6px rgba(32, 59, 90, 0.08); }
+        #tabBenchmark .text-slate-900, #tabBenchmark .text-slate-800, #tabNps .text-slate-900, #tabNps .text-slate-800 { color: #203B5A; }
+        #tabBenchmark .text-slate-700, #tabNps .text-slate-700 { color: #333C47; }
+        #tabBenchmark .text-slate-600, #tabNps .text-slate-600 { color: #4C5663; }
+        #tabBenchmark .bg-slate-50, #tabNps .bg-slate-50 { background-color: #F4F6F8; }
+        #tabBenchmark .bg-slate-100, #tabNps .bg-slate-100 { background-color: #E8ECF1; }
+        #tabBenchmark .border-slate-200, #tabBenchmark .border-slate-100, #tabNps .border-slate-200, #tabNps .border-slate-100 { border-color: #E8ECF1; }
+        #tabBenchmark .border-slate-300, #tabNps .border-slate-300 { border-color: #D5DBE3; }
         .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -223,7 +223,7 @@
                 Carregar Planilha de Consultas (.xlsx/.csv)
                 <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" class="hidden">
             </label>
-            <label id="uploadNps" class="hidden cursor-pointer px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-lg flex items-center gap-1.5 transition shadow-md shadow-teal-600/20">
+            <label id="uploadNps" class="hidden cursor-pointer px-3 py-1.5 bg-[#C8457B] hover:bg-[#B03A6C] text-white text-sm font-semibold rounded-lg flex items-center gap-1.5 transition shadow-md shadow-[#C8457B]/20">
                 <i data-lucide="file-up" class="w-3.5 h-3.5"></i>
                 Carregar Planilha de NPS (.xlsx/.csv)
                 <input type="file" id="npsFileInput" accept=".xlsx, .xls, .csv" class="hidden">
@@ -670,7 +670,7 @@
 
         <div class="pt-4 border-t-2 border-dashed border-slate-200">
             <div class="flex items-center gap-3 mb-4">
-                <div class="w-9 h-9 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-md shadow-teal-600/20">
+                <div class="w-9 h-9 rounded-xl bg-[#3874AF] text-white flex items-center justify-center shadow-md shadow-[#3874AF]/20">
                     <i data-lucide="heart-handshake" class="w-5 h-5"></i>
                 </div>
                 <div>
@@ -681,17 +681,17 @@
         </div>
 
         <!-- NPS: Upload & Filtros (fixa logo abaixo da navegação de páginas) -->
-        <div class="white-card rounded-2xl p-3 space-y-2 border-teal-200 sticky z-30" style="top: calc(var(--header-h, 0px) + var(--tabnav-h, 0px));">
+        <div class="white-card rounded-2xl p-3 space-y-2 border-[#B5CDE5] sticky z-30" style="top: calc(var(--header-h, 0px) + var(--tabnav-h, 0px));">
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <i data-lucide="filter" class="w-3.5 h-3.5 text-teal-600"></i>
+                    <i data-lucide="filter" class="w-3.5 h-3.5 text-[#3874AF]"></i>
                     Filtros de NPS
                 </h3>
                 <!-- O upload de NPS agora fica no topo da página (botão contextual do
                      header), para existir um único lugar de carregar cada planilha. -->
                 <div class="flex items-center gap-2 no-print">
                     <div class="flex items-center gap-1.5 text-sm text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-medium">
-                        <i data-lucide="database" class="w-3 h-3 text-teal-600"></i>
+                        <i data-lucide="database" class="w-3 h-3 text-[#3874AF]"></i>
                         <span id="npsDataCountLabel">Nenhuma planilha de NPS carregada</span>
                     </div>
                 </div>
@@ -702,173 +702,169 @@
             <div class="filter-controls grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-0.5">Clínica</label>
-                    <div class="multi-select relative" id="npsFilterClinic" data-placeholder="Todas as Clínicas" data-accent="teal" data-onchange="npsApplyFilters"></div>
+                    <div class="multi-select relative" id="npsFilterClinic" data-placeholder="Todas as Clínicas" data-accent="violet" data-onchange="npsApplyFilters"></div>
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-0.5">Especialidade</label>
-                    <div class="multi-select relative" id="npsFilterSurgery" data-placeholder="Todas as Especialidades" data-accent="teal" data-onchange="npsApplyFilters"></div>
+                    <div class="multi-select relative" id="npsFilterSurgery" data-placeholder="Todas as Especialidades" data-accent="violet" data-onchange="npsApplyFilters"></div>
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-0.5">Médico</label>
-                    <div class="multi-select relative" id="npsFilterMedico" data-placeholder="Todos os Médicos" data-accent="teal" data-onchange="npsApplyFilters"></div>
+                    <div class="multi-select relative" id="npsFilterMedico" data-placeholder="Todos os Médicos" data-accent="violet" data-onchange="npsApplyFilters"></div>
                 </div>
                 <div class="col-span-2 sm:col-span-3 lg:col-span-2">
                     <label class="block text-sm font-semibold text-slate-700 mb-0.5">Período (Cirurgia)</label>
                     <div class="flex items-center gap-1">
-                        <input type="date" id="npsDateStart" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition">
+                        <input type="date" id="npsDateStart" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-[#00A4D0] focus:bg-white outline-none transition">
                         <span class="text-slate-600 text-sm shrink-0">até</span>
-                        <input type="date" id="npsDateEnd" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition">
+                        <input type="date" id="npsDateEnd" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-1.5 focus:ring-2 focus:ring-[#00A4D0] focus:bg-white outline-none transition">
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- NPS: KPI Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            <div class="white-card rounded-2xl p-5 relative overflow-hidden group">
-                <div class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-1">Avaliações no Período</div>
-                <div class="text-3xl font-extrabold text-slate-900" id="npsKpiTotal">0</div>
-                <div class="text-sm text-teal-600 font-semibold mt-2 flex items-center gap-1">
-                    <i data-lucide="clipboard-check" class="w-3.5 h-3.5"></i>
-                    Respostas de Pacientes
+        <!-- NPS: dois termômetros lado a lado — CdV + todas as clínicas x CdV + clínica filtrada -->
+        <div class="white-card rounded-2xl p-6 space-y-4 border-l-4 border-l-[#3874AF]" id="cardNpsGauge">
+            <div class="flex items-start justify-between gap-2">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-[#3874AF] text-white flex items-center justify-center shadow-md shadow-[#3874AF]/20">
+                        <i data-lucide="gauge" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Termômetro de NPS (Data da Cirurgia)</h3>
+                        <p class="text-sm font-medium text-slate-700">NPS da rede inteira ao lado do NPS da clínica filtrada, com a distribuição das avaliações e a avaliação por categoria logo abaixo</p>
+                    </div>
                 </div>
-            </div>
-            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-emerald-200 bg-emerald-50/30">
-                <div class="text-sm font-bold text-emerald-800 uppercase tracking-wider mb-1">Promotores (Nota 9-10)</div>
-                <div class="text-3xl font-extrabold text-emerald-600" id="npsKpiPromoters">0%</div>
-                <div class="text-sm text-emerald-700 font-semibold mt-2 flex items-center gap-1">
-                    <i data-lucide="thumbs-up" class="w-3.5 h-3.5"></i>
-                    Pacientes muito satisfeitos
-                </div>
-            </div>
-            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-amber-200 bg-amber-50/30">
-                <div class="text-sm font-bold text-amber-800 uppercase tracking-wider mb-1">Neutros (Nota 7-8)</div>
-                <div class="text-3xl font-extrabold text-amber-600" id="npsKpiPassives">0%</div>
-                <div class="text-sm text-amber-700 font-semibold mt-2 flex items-center gap-1">
-                    <i data-lucide="minus-circle" class="w-3.5 h-3.5"></i>
-                    Satisfação intermediária
-                </div>
-            </div>
-            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-rose-200 bg-rose-50/30">
-                <div class="text-sm font-bold text-rose-800 uppercase tracking-wider mb-1">Detratores (Nota 0-6)</div>
-                <div class="text-3xl font-extrabold text-rose-600" id="npsKpiDetractors">0%</div>
-                <div class="text-sm text-rose-700 font-semibold mt-2 flex items-center gap-1">
-                    <i data-lucide="thumbs-down" class="w-3.5 h-3.5"></i>
-                    Pacientes insatisfeitos
-                </div>
-            </div>
-            <div class="white-card rounded-2xl p-5 relative overflow-hidden group border-slate-300 bg-slate-100/60">
-                <div class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-1">Nota Ausente</div>
-                <div class="text-3xl font-extrabold text-slate-700" id="npsKpiNotaAusente">0</div>
-                <div class="text-sm text-slate-700 font-semibold mt-2 flex items-center gap-1">
-                    <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
-                    Com avaliação, sem nota
-                </div>
-            </div>
-        </div>
-        <p class="text-sm text-slate-600 font-medium -mt-2">Promotores/Neutros/Detratores são calculados apenas sobre as avaliações com nota preenchida (não entram no cálculo os registros "Nota Ausente").</p>
-
-        <!-- NPS: Gauge Geral + Ranking por Clínica -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="white-card rounded-2xl p-6 space-y-2 flex flex-col items-center" id="cardNpsGauge">
-                <div class="w-full flex items-start justify-between gap-2">
-                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                        <i data-lucide="gauge" class="w-5 h-5 text-teal-600"></i>
-                        NPS Geral (Data da Cirurgia)
-                    </h3>
-                    <div class="relative no-print shrink-0">
+                <div class="relative no-print shrink-0">
                         <button onclick="toggleExportMenu(event, 'menuNpsGauge')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-sm font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
                             <i data-lucide="download" class="w-3.5 h-3.5"></i>
                             Exportar como...
                             <i data-lucide="chevron-down" class="w-3 h-3"></i>
                         </button>
                         <div id="menuNpsGauge" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
-                            <button onclick="exportSectionAsPdf('cardNpsGauge','NPS_Geral')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                            <button onclick="exportSectionAsPdf('cardNpsGauge','NPS_Resumo')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
                                 <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
                             </button>
-                            <button onclick="exportSectionAsJpeg('cardNpsGauge','NPS_Geral')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
-                                <i data-lucide="image" class="w-3.5 h-3.5 text-teal-600"></i> Exportar como JPEG
+                            <button onclick="exportSectionAsJpeg('cardNpsGauge','NPS_Resumo')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                                <i data-lucide="image" class="w-3.5 h-3.5 text-[#3874AF]"></i> Exportar como JPEG
                             </button>
                         </div>
                     </div>
-                </div>
-                <div id="npsGaugeContainer" class="w-full flex items-center justify-center pt-2"></div>
             </div>
-
-            <div class="white-card rounded-2xl p-6 space-y-4" id="cardNpsClinics">
-                <div class="flex items-start justify-between gap-2">
-                    <div>
-                        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                            <i data-lucide="building-2" class="w-5 h-5 text-teal-600"></i>
-                            NPS por Clínica Parceira
-                        </h3>
-                        <p class="text-sm text-slate-700">Ranking de satisfação — não confundir com a distribuição de status acima</p>
-                    </div>
-                    <div class="relative no-print shrink-0">
-                        <button onclick="toggleExportMenu(event, 'menuNpsClinics')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-sm font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
-                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                            Exportar como...
-                            <i data-lucide="chevron-down" class="w-3 h-3"></i>
-                        </button>
-                        <div id="menuNpsClinics" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
-                            <button onclick="exportSectionAsPdf('cardNpsClinics','NPS_por_Clinica')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-                                <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
-                            </button>
-                            <button onclick="exportSectionAsJpeg('cardNpsClinics','NPS_por_Clinica')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
-                                <i data-lucide="image" class="w-3.5 h-3.5 text-teal-600"></i> Exportar como JPEG
-                            </button>
-                        </div>
+            <div id="npsGaugeGrid" class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <div id="npsGaugeRede" class="rounded-xl border border-slate-200 bg-slate-50 p-4 flex flex-col items-center min-w-0"></div>
+                <div id="npsGaugeClinica" class="rounded-xl border border-slate-200 bg-slate-50 p-4 flex flex-col items-center min-w-0"></div>
+            </div>
+            <p class="text-sm font-medium text-slate-700">O termômetro da rede considera todas as clínicas e respeita só os filtros de Especialidade e Período; o da clínica só aparece quando há clínica (ou médico) filtrado e considera todos os filtros. NPS = % de promotores − % de detratores.</p>
+            <!-- NPS: KPIs da distribuição, DENTRO do card dos termômetros (pedido do usuário, 2026-10-27: um
+                 KPI só — termômetros em cima, avaliações embaixo, cards menores). Mesma técnica de subgrid
+                 da fileira de Consultas: exatamente 3 filhos diretos por card. -->
+            <div class="kpi-row grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 lg:grid-rows-[auto_auto_auto]">
+                <div style="box-shadow:none" class="kpi-card white-card rounded-2xl p-3 relative overflow-hidden group  flex flex-col lg:grid lg:grid-rows-[subgrid] lg:row-span-3">
+                    <div class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-1">Avaliações no Período</div>
+                    <div class="text-2xl font-extrabold text-slate-900" id="npsKpiTotal">0</div>
+                    <div class="text-sm text-[#2F6296] font-semibold mt-1 flex items-start gap-1.5">
+                        <i data-lucide="clipboard-check" class="w-3.5 h-3.5 shrink-0 mt-0.5"></i>
+                        <span>Respostas de Pacientes</span>
                     </div>
                 </div>
-                <div class="relative min-h-[280px]">
-                    <canvas id="chartNpsClinics"></canvas>
+                <div style="box-shadow:none" class="kpi-card white-card rounded-2xl p-3 relative overflow-hidden group border-[#BFE3D2] bg-[#F0FAF5] flex flex-col lg:grid lg:grid-rows-[subgrid] lg:row-span-3">
+                    <div class="text-sm font-bold text-[#176B4A] uppercase tracking-wider mb-1">Promotores (Nota 9-10)</div>
+                    <div class="text-2xl font-extrabold text-[#1E8A5F]" id="npsKpiPromoters">0%</div>
+                    <div class="text-sm text-[#176B4A] font-semibold mt-1 flex items-start gap-1.5">
+                        <i data-lucide="thumbs-up" class="w-3.5 h-3.5 shrink-0 mt-0.5"></i>
+                        <span>Pacientes muito satisfeitos</span>
+                    </div>
+                </div>
+                <div style="box-shadow:none" class="kpi-card white-card rounded-2xl p-3 relative overflow-hidden group border-[#EBD39B] bg-[#FDF7E8] flex flex-col lg:grid lg:grid-rows-[subgrid] lg:row-span-3">
+                    <div class="text-sm font-bold text-[#7A5206] uppercase tracking-wider mb-1">Neutros (Nota 7-8)</div>
+                    <div class="text-2xl font-extrabold text-[#B77A0A]" id="npsKpiPassives">0%</div>
+                    <div class="text-sm text-[#7A5206] font-semibold mt-1 flex items-start gap-1.5">
+                        <i data-lucide="minus-circle" class="w-3.5 h-3.5 shrink-0 mt-0.5"></i>
+                        <span>Satisfação intermediária</span>
+                    </div>
+                </div>
+                <div style="box-shadow:none" class="kpi-card white-card rounded-2xl p-3 relative overflow-hidden group border-[#F0C4BD] bg-[#FDF3F1] flex flex-col lg:grid lg:grid-rows-[subgrid] lg:row-span-3">
+                    <div class="text-sm font-bold text-[#A82F20] uppercase tracking-wider mb-1">Detratores (Nota 0-6)</div>
+                    <div class="text-2xl font-extrabold text-[#C63B2A]" id="npsKpiDetractors">0%</div>
+                    <div class="text-sm text-[#A82F20] font-semibold mt-1 flex items-start gap-1.5">
+                        <i data-lucide="thumbs-down" class="w-3.5 h-3.5 shrink-0 mt-0.5"></i>
+                        <span>Pacientes insatisfeitos</span>
+                    </div>
+                </div>
+                <div style="box-shadow:none" class="kpi-card white-card rounded-2xl p-3 relative overflow-hidden group border-slate-300 bg-slate-100/60 flex flex-col lg:grid lg:grid-rows-[subgrid] lg:row-span-3">
+                    <div class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-1">Nota Ausente</div>
+                    <div class="text-2xl font-extrabold text-slate-700" id="npsKpiNotaAusente">0</div>
+                    <div class="text-sm text-slate-700 font-semibold mt-1 flex items-start gap-1.5">
+                        <i data-lucide="help-circle" class="w-3.5 h-3.5 shrink-0 mt-0.5"></i>
+                        <span>Com avaliação, sem nota</span>
+                    </div>
+                </div>
+            </div>
+            <p class="text-sm text-slate-600 font-medium">Promotores/Neutros/Detratores são calculados apenas sobre as avaliações com nota preenchida (não entram no cálculo os registros "Nota Ausente").</p>
+
+            <!-- NPS: Avaliação por Categoria, também DENTRO deste card (2026-10-27: termômetros,
+                 avaliações e categorias viram um KPI só). Cards menores; o container é preenchido
+                 por renderNpsCategories(). -->
+            <div class="border-t border-slate-100 pt-4 space-y-3">
+                <h4 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="list-checks" class="w-5 h-5 text-[#3874AF]"></i>
+                    Avaliação por Categoria (% "Gostei")
+                </h4>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" id="npsCategoryContainer">
+                    <!-- Populado via JS -->
                 </div>
             </div>
         </div>
 
-        <!-- NPS: Breakdown de Categorias -->
-        <div class="white-card rounded-2xl p-6 space-y-4" id="cardNpsCategories">
-            <div class="flex items-center justify-between gap-2">
-                <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                    <i data-lucide="list-checks" class="w-5 h-5 text-teal-600"></i>
-                    Avaliação por Categoria (% "Gostei")
-                </h3>
-                <div class="relative no-print shrink-0">
-                    <button onclick="toggleExportMenu(event, 'menuNpsCategories')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-sm font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                        Exportar como...
-                        <i data-lucide="chevron-down" class="w-3 h-3"></i>
-                    </button>
-                    <div id="menuNpsCategories" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
-                        <button onclick="exportSectionAsPdf('cardNpsCategories','NPS_Avaliacao_por_Categoria')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-                            <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
-                        </button>
-                        <button onclick="exportSectionAsJpeg('cardNpsCategories','NPS_Avaliacao_por_Categoria')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
-                            <i data-lucide="image" class="w-3.5 h-3.5 text-teal-600"></i> Exportar como JPEG
-                        </button>
+        <!-- NPS: Ranking de médicos e clínicas — logo abaixo do Termômetro (pedido do usuário,
+             2026-10-27; antes era um gráfico "NPS por Clínica Parceira" no topo e, numa 2ª
+             versão, um card no final da página). Médicos em cima, clínicas abaixo. -->
+        <div class="white-card rounded-2xl p-6 space-y-5 border-l-4 border-l-[#3874AF]" id="cardNpsRanking">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-[#3874AF] text-white flex items-center justify-center shadow-md shadow-[#3874AF]/20">
+                        <i data-lucide="trophy" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Ranking de NPS: médicos e clínicas</h3>
+                        <p class="text-base font-medium text-slate-900">Ranking de satisfação — não confundir com a distribuição de status da página de Consultas</p>
                     </div>
                 </div>
+                <div class="relative no-print shrink-0">
+                        <button onclick="toggleExportMenu(event, 'menuNpsRanking')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-sm font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            Exportar como...
+                            <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                        </button>
+                        <div id="menuNpsRanking" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
+                            <button onclick="exportSectionAsPdf('cardNpsRanking','NPS_Ranking')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
+                            </button>
+                            <button onclick="exportSectionAsJpeg('cardNpsRanking','NPS_Ranking')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                                <i data-lucide="image" class="w-3.5 h-3.5 text-[#3874AF]"></i> Exportar como JPEG
+                            </button>
+                        </div>
+                    </div>
             </div>
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4" id="npsCategoryContainer">
-                <!-- Populado via JS -->
-            </div>
+            <div id="npsRankingContent" class="space-y-5"></div>
         </div>
 
         <!-- NPS: Destaques Positivos (Promotores + Comentários Elogiosos).
              Vem ANTES do card de detratores por pedido do usuário (2026-09-22): a clínica
              lê primeiro o que deu certo, e os detratores em seguida como ponto de atenção. -->
-        <div class="white-card rounded-2xl p-6 space-y-4 border-l-4 border-l-emerald-500" id="cardNpsPositivos">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-600/20">
+        <div class="white-card rounded-2xl p-6 space-y-4 border-l-4 border-l-[#1E8A5F]" id="cardNpsPositivos">
+            <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-3 min-w-0 flex-1 basis-80">
+                    <div class="w-9 h-9 shrink-0 rounded-xl bg-[#1E8A5F] text-white flex items-center justify-center shadow-md shadow-[#1E8A5F]/20">
                         <i data-lucide="thumbs-up" class="w-5 h-5"></i>
                     </div>
                     <div>
                         <h3 class="text-base font-bold text-slate-900">Destaques Positivos</h3>
-                        <p class="text-sm text-slate-700">Promotores (nota 9 ou 10) e respostas com sinais de satisfação, identificados por um filtro de palavras-chave — o que a clínica está acertando</p>
+                        <p class="text-sm text-slate-700">Promotores (nota 9 ou 10) e respostas com sinais de satisfação, identificados por um filtro de palavras-chave — o que a clínica está acertando. Avaliação positiva com comentário negativo fica no topo, marcada com "!" (ponto de atenção)</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 shrink-0">
                     <div class="relative no-print shrink-0">
                         <button onclick="toggleExportMenu(event, 'menuNpsPositivos')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-sm font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
                             <i data-lucide="download" class="w-3.5 h-3.5"></i>
@@ -880,14 +876,14 @@
                                 <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
                             </button>
                             <button onclick="exportSectionAsJpeg('cardNpsPositivos','NPS_Destaques_Positivos')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
-                                <i data-lucide="image" class="w-3.5 h-3.5 text-teal-600"></i> Exportar como JPEG
+                                <i data-lucide="image" class="w-3.5 h-3.5 text-[#3874AF]"></i> Exportar como JPEG
                             </button>
                         </div>
                     </div>
-                    <span class="text-sm text-slate-600 font-medium" id="npsPositivosCountLabel">0 destaque(s)</span>
+                    <span class="text-sm text-slate-600 font-medium whitespace-nowrap" id="npsPositivosCountLabel">0 destaque(s)</span>
                 </div>
             </div>
-            <!-- `export-expand`: mesma razão do card de detratores — sem isso o html2canvas
+            <!-- export-expand: mesma razão do card de detratores — sem isso o html2canvas
                  capturaria só os ~420px visíveis e cortaria o resto da lista em silêncio. -->
             <div class="space-y-2 max-h-[420px] overflow-y-auto custom-scrollbar pr-1 export-expand" id="npsPositivosContainer">
                 <!-- Populado via JS -->
@@ -895,10 +891,10 @@
         </div>
 
         <!-- NPS: Destaques (Detratores + Comentários Negativos) -->
-        <div class="white-card rounded-2xl p-6 space-y-4 border-l-4 border-l-rose-500" id="cardNpsDestaques">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center shadow-md shadow-rose-600/20">
+        <div class="white-card rounded-2xl p-6 space-y-4 border-l-4 border-l-[#C63B2A]" id="cardNpsDestaques">
+            <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-3 min-w-0 flex-1 basis-80">
+                    <div class="w-9 h-9 shrink-0 rounded-xl bg-[#C63B2A] text-white flex items-center justify-center shadow-md shadow-[#C63B2A]/20">
                         <i data-lucide="alert-triangle" class="w-5 h-5"></i>
                     </div>
                     <div>
@@ -906,7 +902,7 @@
                         <p class="text-sm text-slate-700">Detratores (nota até 6) e respostas com sinais de insatisfação, identificados por um filtro de palavras-chave — base para os futuros insights de IA desta página</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 shrink-0">
                     <div class="relative no-print shrink-0">
                         <button onclick="toggleExportMenu(event, 'menuNpsDestaques')" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-600 text-sm font-bold rounded-lg flex items-center gap-1.5 border border-slate-200 transition">
                             <i data-lucide="download" class="w-3.5 h-3.5"></i>
@@ -918,14 +914,14 @@
                                 <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
                             </button>
                             <button onclick="exportSectionAsJpeg('cardNpsDestaques','NPS_Destaques_Atencao')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
-                                <i data-lucide="image" class="w-3.5 h-3.5 text-teal-600"></i> Exportar como JPEG
+                                <i data-lucide="image" class="w-3.5 h-3.5 text-[#3874AF]"></i> Exportar como JPEG
                             </button>
                         </div>
                     </div>
-                    <span class="text-sm text-slate-600 font-medium" id="npsDestaquesCountLabel">0 destaque(s)</span>
+                    <span class="text-sm text-slate-600 font-medium whitespace-nowrap" id="npsDestaquesCountLabel">0 destaque(s)</span>
                 </div>
             </div>
-            <!-- `export-expand` = na exportação em imagem esta caixa precisa crescer
+            <!-- export-expand = na exportação em imagem esta caixa precisa crescer
                  para mostrar a lista inteira; sem isso o html2canvas capturaria só
                  os ~420px visíveis e cortaria os destaques que ficam na rolagem. -->
             <div class="space-y-2 max-h-[420px] overflow-y-auto custom-scrollbar pr-1 export-expand" id="npsDestaquesContainer">
@@ -938,13 +934,13 @@
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                        <i data-lucide="file-text" class="w-5 h-5 text-teal-600"></i>
+                        <i data-lucide="file-text" class="w-5 h-5 text-[#3874AF]"></i>
                         Avaliações Detalhadas (Base para Envio à Clínica)
                     </h3>
-                    <p class="text-sm text-slate-700">Filtre por clínica e período acima para gerar o relatório de NPS individual daquela unidade</p>
+                    <p class="text-sm text-slate-700">Filtre por clínica e período acima para gerar o relatório de NPS individual daquela unidade. Detratores e comentários negativos ficam no topo, marcados como ponto de atenção (a planilha exportada também sai nessa ordem e leva o comentário do paciente).</p>
                 </div>
                 <div class="relative no-print shrink-0">
-                    <button onclick="toggleExportMenu(event, 'menuNpsTable')" class="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-lg flex items-center gap-1.5 transition shadow-sm whitespace-nowrap">
+                    <button onclick="toggleExportMenu(event, 'menuNpsTable')" class="px-3 py-1.5 bg-[#3874AF] hover:bg-[#2F6296] text-white text-sm font-bold rounded-lg flex items-center gap-1.5 transition shadow-sm whitespace-nowrap">
                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
                         Exportar como...
                         <i data-lucide="chevron-down" class="w-3 h-3"></i>
@@ -971,6 +967,7 @@
                             <th class="p-3">Clínica</th>
                             <th class="p-3">Médico</th>
                             <th class="p-3 text-center">Nota</th>
+                            <th class="p-3">Ponto de Atenção</th>
                             <th class="p-3">Data da Cirurgia</th>
                             <th class="p-3">Data da Avaliação</th>
                         </tr>
@@ -990,6 +987,7 @@
             </div>
             <p class="hidden print:block text-sm text-slate-700 font-medium pt-2" id="npsPrintCount"></p>
         </div>
+
 
         </div>
         <!-- FIM PÁGINA 2 -->
@@ -1490,7 +1488,6 @@
         let chartStatusInstance = null;
         let chartSurgeriesInstance = null;
         let chartClinicsInstance = null;
-        let chartNpsClinicsInstance = null;
 
         // Paleta de cores compartilhada pelos gráficos de status
         const STATUS_COLORS = [
@@ -2892,6 +2889,7 @@
                 document.getElementById(id).addEventListener('change', applyGanhoFilters);
             });
             document.getElementById('benchmarkMedicosContent').addEventListener('click', handleBenchmarkMedicosToggle);
+            document.getElementById('npsRankingContent').addEventListener('click', handleNpsRankingClick);
             document.getElementById('benchmarkContent').addEventListener('click', e => {
                 if (!e.target.closest('[data-bm-specs]')) return;
                 benchmarkSpecsExpanded = !benchmarkSpecsExpanded;
@@ -4626,6 +4624,10 @@
             'Médico': 'medicos',
             'Clínica': 'clinicas',
             'Especialidade': 'especialidades',
+            // Export de NPS de 2026-10-27: a coluna de especialidade passou a se chamar
+            // `nome_grupo_especialidade` (e ganhou `Depoimento`, o comentário do paciente).
+            // Sem este alias o filtro de Especialidade do NPS ficava vazio.
+            'nome_grupo_especialidade': 'especialidades',
 
             // --- Layout "1 linha = 1 procedimento" (export novo do Metabase) ---
             // Só os campos de nível CONSULTA entram aqui. Os de nível
@@ -4924,6 +4926,53 @@
 
         const NPS_AVAL_FIELDS = Object.keys(NPS_AVAL_LABELS);
 
+        function npsComputeStats(items) {
+            let total = 0, promoters = 0, passives = 0, detractors = 0;
+            items.forEach(item => {
+                const nota = npsGetNota(item);
+                if (nota === null) return;
+                total++;
+                if (nota >= 9) promoters++;
+                else if (nota >= 7) passives++;
+                else detractors++;
+            });
+            return {
+                total, promoters, passives, detractors,
+                score: total ? Math.round((promoters / total) * 100 - (detractors / total) * 100) : null
+            };
+        }
+
+        // Base "da rede" (termômetro 1 e ranking): todas as clínicas e todos os médicos, mas
+        // respeitando Especialidade e Período — comparar um trimestre da clínica com o ano
+        // inteiro da rede não seria comparação justa. Mesma convenção da página Benchmark.
+        function npsGetNetworkData() {
+            const surgeries = getMultiSelectValues('npsFilterSurgery');
+            const dateStart = getPeriodFilterValue('npsDateStart');
+            const dateEnd = getPeriodFilterValue('npsDateEnd');
+            return npsRawData.filter(item =>
+                matchesMultiSelect(surgeries, npsGetEspecialidade(item))
+                && isWithinPeriod(parseFlexibleDate(getItemProp(item, ['Data da Cirurgia'])), dateStart, dateEnd));
+        }
+
+        // Marcar TODAS as clínicas equivale a não filtrar (mesma regra do Benchmark).
+        function npsClinicFilterActive() {
+            const sel = getMultiSelectValues('npsFilterClinic');
+            const st = multiSelectState['npsFilterClinic'];
+            return sel.length > 0 && !!st && sel.length < st.options.length;
+        }
+
+        // Nome do recorte do 2º termômetro; null = sem clínica nem médico filtrado.
+        function npsFilterScopeLabel() {
+            const clinics = getMultiSelectValues('npsFilterClinic');
+            const medicos = getMultiSelectValues('npsFilterMedico');
+            if (npsClinicFilterActive()) {
+                const base = clinics.length === 1 ? clinics[0] : `${clinics.length} clínicas filtradas`;
+                return medicos.length ? `${base} (médico filtrado)` : base;
+            }
+            if (medicos.length) return medicos.length === 1 ? medicos[0] : `${medicos.length} médicos filtrados`;
+            return null;
+        }
+
         function npsUpdateDashboard() {
             document.getElementById('npsDataCountLabel').textContent = npsRawData.length > 0
                 ? `${npsFilteredData.length} avaliação(ões) no filtro`
@@ -4942,137 +4991,145 @@
             // Regra de negócio: quando falta a Nota mas há avaliação qualitativa
             // preenchida, o registro entra num cálculo separado ("Nota Ausente")
             // e NÃO conta no total de Promotores/Neutros/Detratores.
-            const notas = [];
             let notaAusente = 0;
             npsFilteredData.forEach(item => {
-                const nota = npsGetNota(item);
-                if (nota !== null) {
-                    notas.push(nota);
-                    return;
-                }
-                const hasAvalData = NPS_AVAL_FIELDS.some(f => getItemProp(item, [f]) !== '');
-                if (hasAvalData) notaAusente++;
+                if (npsGetNota(item) !== null) return;
+                if (NPS_AVAL_FIELDS.some(f => getItemProp(item, [f]) !== '')) notaAusente++;
             });
 
-            const total = notas.length;
-            const promoters = notas.filter(n => n >= 9).length;
-            const passives = notas.filter(n => n >= 7 && n < 9).length;
-            const detractors = notas.filter(n => n < 7).length;
-
-            const pctPromoters = total ? Math.round((promoters / total) * 100) : 0;
-            const pctPassives = total ? Math.round((passives / total) * 100) : 0;
-            const pctDetractors = total ? Math.round((detractors / total) * 100) : 0;
-            const npsScore = total ? Math.round((promoters / total) * 100 - (detractors / total) * 100) : 0;
+            const st = npsComputeStats(npsFilteredData);
+            const pct = n => st.total ? Math.round((n / st.total) * 100) : 0;
 
             document.getElementById('npsKpiTotal').textContent = npsFilteredData.length.toLocaleString('pt-BR');
             document.getElementById('npsKpiNotaAusente').textContent = notaAusente.toLocaleString('pt-BR');
-            document.getElementById('npsKpiPromoters').textContent = `${pctPromoters}%`;
-            document.getElementById('npsKpiPassives').textContent = `${pctPassives}%`;
-            document.getElementById('npsKpiDetractors').textContent = `${pctDetractors}%`;
+            document.getElementById('npsKpiPromoters').textContent = `${pct(st.promoters)}%`;
+            document.getElementById('npsKpiPassives').textContent = `${pct(st.passives)}%`;
+            document.getElementById('npsKpiDetractors').textContent = `${pct(st.detractors)}%`;
 
-            renderNpsGauge(npsScore);
-            renderNpsClinicsChart();
+            renderNpsGauges();
             renderNpsCategories();
             renderNpsPositivos();
             renderNpsDestaques();
             renderNpsTable();
+            renderNpsRanking();
         }
 
-        // Gauge semicircular em SVG puro (0-100), com faixas de cor e ponteiro
-        function renderNpsGauge(value) {
-            const container = document.getElementById('npsGaugeContainer');
-            // v (clampado 0-100) só posiciona o ponteiro/arcos na escala visual da régua;
-            // o número exibido no centro usa `value` sem clamp, senão um NPS negativo
-            // (possível pela fórmula %promotores - %detratores) aparece como "0,00",
-            // indistinguível de um NPS realmente neutro.
-            const v = Math.max(0, Math.min(100, value));
-            const cx = 150, cy = 145, r = 110, sw = 26;
+        // Paleta do termômetro e das barras: verde/vermelho do design system (só para
+        // bom/ruim) e um âmbar para a faixa intermediária (o sistema não define um).
+        const NPS_ZONE_COLORS = { bad: '#C63B2A', mid: '#E3A72F', good: '#1E8A5F' };
+        const NPS_ZONE_TEXT = { bad: 'text-[#C63B2A]', mid: 'text-[#9A6A0B]', good: 'text-[#1E8A5F]' };
+        const NPS_ZONE_LIMITS = { mid: 70, good: 90 }; // <70 ruim · 70-89 intermediário · 90+ bom
+        function npsZoneOf(score) { return score >= NPS_ZONE_LIMITS.good ? 'good' : score >= NPS_ZONE_LIMITS.mid ? 'mid' : 'bad'; }
 
-            function polar(angleDeg, radius) {
+        // Termômetro semicircular em SVG puro (0-100). Layout pensado para nada vazar:
+        // viewBox com folga nas laterais para os rótulos da régua (que ficam FORA do arco) e o
+        // número grande ABAIXO do eixo do ponteiro — antes ele ficava dentro do arco e o
+        // ponteiro passava por cima dele; "70,00" e "100,00" encostavam/saíam do desenho.
+        // `value` null = sem dado (arco sem ponteiro, "—"). O número exibido não é clampado:
+        // um NPS negativo (possível pela fórmula) aparece como é, só o ponteiro fica na régua.
+        function npsGaugeSvg(value) {
+            const has = value !== null && value !== undefined;
+            const v = has ? Math.max(0, Math.min(100, value)) : 0;
+            const cx = 180, cy = 160, r = 118, sw = 26;
+
+            const polar = (angleDeg, radius) => {
                 const rad = angleDeg * Math.PI / 180;
                 return { x: cx + radius * Math.cos(rad), y: cy + radius * Math.sin(rad) };
-            }
-            function arcPath(a0, a1, radius) {
+            };
+            const arcPath = (a0, a1, radius) => {
                 const p0 = polar(a0, radius);
                 const p1 = polar(a1, radius);
                 const largeArc = (a1 - a0) > 180 ? 1 : 0;
                 return `M ${p0.x} ${p0.y} A ${radius} ${radius} 0 ${largeArc} 1 ${p1.x} ${p1.y}`;
-            }
+            };
 
             const zones = [
-                { from: 0, to: 70, color: '#ef4444' },
-                { from: 70, to: 90, color: '#f59e0b' },
-                { from: 90, to: 100, color: '#10b981' }
+                { from: 0, to: NPS_ZONE_LIMITS.mid, color: NPS_ZONE_COLORS.bad },
+                { from: NPS_ZONE_LIMITS.mid, to: NPS_ZONE_LIMITS.good, color: NPS_ZONE_COLORS.mid },
+                { from: NPS_ZONE_LIMITS.good, to: 100, color: NPS_ZONE_COLORS.good }
             ];
-
             const arcs = zones.map(z => {
                 const a0 = 180 + (z.from / 100) * 180;
                 const a1 = 180 + (z.to / 100) * 180;
                 return `<path d="${arcPath(a0, a1, r)}" stroke="${z.color}" stroke-width="${sw}" fill="none" stroke-linecap="butt"/>`;
             }).join('');
 
-            const needleAngle = 180 + (v / 100) * 180;
-            const needleTip = polar(needleAngle, r - sw - 6);
-            const needleBase1 = polar(needleAngle - 90, 7);
-            const needleBase2 = polar(needleAngle + 90, 7);
-
-            const ticks = [0, 70, 90, 100].map(t => {
-                const a = 180 + (t / 100) * 180;
-                const p = polar(a, r + 20);
-                return `<text x="${p.x}" y="${p.y}" font-size="12" font-weight="600" fill="#64748b" text-anchor="middle" dominant-baseline="middle">${t.toFixed(2).replace('.', ',')}</text>`;
+            const ticks = [0, NPS_ZONE_LIMITS.mid, NPS_ZONE_LIMITS.good, 100].map(t => {
+                const p = polar(180 + (t / 100) * 180, r + sw / 2 + 16);
+                return `<text x="${p.x.toFixed(1)}" y="${p.y.toFixed(1)}" font-size="14" font-weight="700" fill="#4C5663" text-anchor="middle" dominant-baseline="middle">${t}</text>`;
             }).join('');
 
-            container.innerHTML = `
-                <svg viewBox="0 0 300 190" class="w-full max-w-[380px]">
+            let needle = '';
+            if (has) {
+                const needleAngle = 180 + (v / 100) * 180;
+                const tip = polar(needleAngle, r - sw / 2 - 8);
+                const b1 = polar(needleAngle - 90, 7);
+                const b2 = polar(needleAngle + 90, 7);
+                needle = `
+                    <line x1="${b1.x}" y1="${b1.y}" x2="${tip.x}" y2="${tip.y}" stroke="#203B5A" stroke-width="4" stroke-linecap="round"/>
+                    <line x1="${b2.x}" y1="${b2.y}" x2="${tip.x}" y2="${tip.y}" stroke="#203B5A" stroke-width="4" stroke-linecap="round"/>
+                    <circle cx="${cx}" cy="${cy}" r="9" fill="#203B5A"/>`;
+            }
+            const shown = has ? (value < 0 ? `−${Math.abs(value)}` : String(value)) : '—';
+            const valueColor = has ? NPS_ZONE_COLORS[npsZoneOf(value)] : '#8A95A3';
+
+            return `
+                <svg viewBox="0 0 360 232" class="w-full max-w-[380px]" role="img" aria-label="Termômetro de NPS: ${shown}">
                     ${arcs}
                     ${ticks}
-                    <line x1="${needleBase1.x}" y1="${needleBase1.y}" x2="${needleTip.x}" y2="${needleTip.y}" stroke="#334155" stroke-width="4" stroke-linecap="round"/>
-                    <line x1="${needleBase2.x}" y1="${needleBase2.y}" x2="${needleTip.x}" y2="${needleTip.y}" stroke="#334155" stroke-width="4" stroke-linecap="round"/>
-                    <circle cx="${cx}" cy="${cy}" r="9" fill="#334155"/>
-                    <text x="${cx}" y="${cy - 34}" font-size="34" font-weight="800" fill="#0f172a" text-anchor="middle">${value.toFixed(2).replace('.', ',')}</text>
-                </svg>
-            `;
+                    ${needle}
+                    <text x="${cx}" y="${cy + 58}" font-size="42" font-weight="800" fill="${valueColor}" text-anchor="middle">${shown}</text>
+                </svg>`;
         }
 
-        function renderNpsClinicsChart() {
-            const clinicNotas = {};
-            npsFilteredData.forEach(item => {
-                const cl = npsGetClinica(item) || 'Sem Clínica';
-                const nota = npsGetNota(item);
-                if (nota === null) return;
-                if (!clinicNotas[cl]) clinicNotas[cl] = [];
-                clinicNotas[cl].push(nota);
+        function npsGaugePanel(targetId, { title, subtitle, stats, footer = '' }) {
+            const has = !!stats && stats.total > 0;
+            document.getElementById(targetId).innerHTML = `
+                <h4 class="text-base font-bold text-slate-900 text-center break-words max-w-full">${escapeHtml(title)}</h4>
+                <p class="text-sm font-medium text-slate-700 text-center">${subtitle}</p>
+                ${npsGaugeSvg(has ? stats.score : null)}
+                ${footer}`;
+        }
+
+        function npsGaugeSubtitle(stats) {
+            if (!stats || !stats.total) return 'Sem avaliações com nota neste recorte';
+            const p = n => Math.round((n / stats.total) * 100);
+            return `${stats.total} avaliação(ões) com nota · ${p(stats.promoters)}% promotores · ${p(stats.detractors)}% detratores`;
+        }
+
+        function renderNpsGauges() {
+            const rede = npsComputeStats(npsGetNetworkData());
+            npsGaugePanel('npsGaugeRede', {
+                title: 'CdV + todas as clínicas',
+                subtitle: npsGaugeSubtitle(rede),
+                stats: rede
             });
 
-            const clinicScores = Object.entries(clinicNotas).map(([clinic, notas]) => {
-                const promoters = notas.filter(n => n >= 9).length;
-                const detractors = notas.filter(n => n < 7).length;
-                const score = Math.round((promoters / notas.length) * 100 - (detractors / notas.length) * 100);
-                return { clinic, score, count: notas.length };
-            }).sort((a, b) => b.score - a.score).slice(0, 10);
-
-            if (chartNpsClinicsInstance) chartNpsClinicsInstance.destroy();
-            chartNpsClinicsInstance = new Chart(document.getElementById('chartNpsClinics'), {
-                type: 'bar',
-                data: {
-                    labels: clinicScores.map(c => c.clinic.length > 30 ? c.clinic.substring(0, 30) + '...' : c.clinic),
-                    datasets: [{
-                        label: 'NPS por Clínica',
-                        data: clinicScores.map(c => c.score),
-                        backgroundColor: clinicScores.map(c => c.score >= 90 ? '#10b981' : c.score >= 70 ? '#f59e0b' : '#ef4444'),
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { min: -100, max: 100, ticks: { color: '#475569' }, grid: { color: '#f1f5f9' } },
-                        y: { ticks: { color: '#334155', font: { size: 10, weight: 600 } }, grid: { display: false } }
-                    }
-                }
+            const scope = npsFilterScopeLabel();
+            // Sem clínica (nem médico) filtrado o 2º termômetro SOME (pedido do usuário,
+            // 2026-10-27) e o da rede fica sozinho, centralizado — um 2º termômetro igual ao
+            // primeiro, ou vazio, só ocuparia espaço.
+            const clinicPanel = document.getElementById('npsGaugeClinica');
+            const grid = document.getElementById('npsGaugeGrid');
+            const single = scope === null;
+            clinicPanel.classList.toggle('hidden', single);
+            grid.classList.toggle('lg:grid-cols-2', !single);
+            ['max-w-xl', 'mx-auto', 'w-full'].forEach(c => grid.classList.toggle(c, single));
+            if (single) { clinicPanel.innerHTML = ''; return; }
+            const sel = npsComputeStats(npsFilteredData);
+            let footer = '';
+            if (sel.total && rede.total) {
+                const diff = sel.score - rede.score;
+                const [txt, cls] = diff > 0 ? [`${diff} p.p. acima da rede`, 'text-[#1E8A5F]']
+                    : diff < 0 ? [`${Math.abs(diff)} p.p. abaixo da rede`, 'text-[#C63B2A]']
+                    : ['igual ao NPS da rede', 'text-slate-700'];
+                footer = `<p class="text-base font-bold ${cls} text-center">${txt}</p>`;
+            }
+            npsGaugePanel('npsGaugeClinica', {
+                title: `CdV + ${scope}`,
+                subtitle: npsGaugeSubtitle(sel),
+                stats: sel,
+                footer
             });
         }
 
@@ -5082,6 +5139,12 @@
             const gostei = values.filter(v => String(v).toLowerCase().includes('gostei') && !String(v).toLowerCase().includes('não') && !String(v).toLowerCase().includes('nao')).length;
             return Math.round((gostei / total) * 100);
         }
+
+        const NPS_CATEGORY_TONES = {
+            good: { border: 'border-[#BFE3D2]', bg: 'bg-[#F0FAF5]', title: 'text-[#176B4A]', num: 'text-[#1E8A5F]', bar: '#1E8A5F' },
+            mid:  { border: 'border-[#EBD39B]', bg: 'bg-[#FDF7E8]', title: 'text-[#7A5206]', num: 'text-[#B77A0A]', bar: '#E3A72F' },
+            bad:  { border: 'border-[#F0C4BD]', bg: 'bg-[#FDF3F1]', title: 'text-[#A82F20]', num: 'text-[#C63B2A]', bar: '#C63B2A' }
+        };
 
         function renderNpsCategories() {
             const categories = [
@@ -5094,16 +5157,16 @@
             const container = document.getElementById('npsCategoryContainer');
             container.innerHTML = categories.map(cat => {
                 const pct = npsFilteredData.length ? npsCategoryStats(cat.field) : 0;
-                const color = pct >= 90 ? 'emerald' : pct >= 70 ? 'amber' : 'rose';
+                const tone = NPS_CATEGORY_TONES[pct >= 90 ? 'good' : pct >= 70 ? 'mid' : 'bad'];
                 return `
-                    <div class="p-4 rounded-xl border border-${color}-200 bg-${color}-50/40 space-y-2">
-                        <div class="flex items-center gap-2 text-sm font-bold text-${color}-800">
-                            <i data-lucide="${cat.icon}" class="w-3.5 h-3.5"></i>
+                    <div class="p-3 rounded-xl border ${tone.border} ${tone.bg} space-y-1.5">
+                        <div class="flex items-center gap-2 text-sm font-bold ${tone.title}">
+                            <i data-lucide="${cat.icon}" class="w-3.5 h-3.5 shrink-0"></i>
                             ${cat.label}
                         </div>
-                        <div class="text-2xl font-extrabold text-${color}-600">${pct}%</div>
+                        <div class="text-xl font-extrabold ${tone.num}">${pct}%</div>
                         <div class="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                            <div class="h-full rounded-full bg-${color}-500" style="width:${pct}%"></div>
+                            <div class="h-full rounded-full" style="width:${pct}%;background:${tone.bar}"></div>
                         </div>
                         <p class="text-sm text-slate-700 font-medium">Marcaram "Gostei"</p>
                     </div>
@@ -5129,6 +5192,7 @@
             'nao retornaram', 'nao me atenderam', 'ninguem me atendeu', 'nao me atenderam bem',
             'infeccao', 'inflamacao', 'complicacao', 'complicou',
             'nao recomendo', 'pessimo', 'pessima', 'horrivel', 'terrivel',
+            'nao achei atencios', 'faltou atencao', 'falta de atencao',
             'descaso', 'desrespeito', 'grosseria', 'grosseiro', 'grosseira', 'mal educado', 'mal educada',
             'demorou muito', 'demora demais', 'cancelaram', 'cancelamento', 'reclamacao',
             'insatisfeito', 'insatisfeita', 'decepcionado', 'decepcionada', 'arrependido', 'arrependida'
@@ -5173,7 +5237,10 @@
         // Aplicado SÓ na varredura positiva: a lista negativa já traz as negações escritas
         // por extenso ("nao recomendo", "nao estou enxergando"), então o mesmo filtro ali
         // anularia justamente os termos que devem casar.
-        const NPS_NEGACOES_RE = /(?:^|\s)(?:NAO|NUNCA|NEM|JAMAIS)\s+$/;
+        // Aceita até 2 palavras entre a negação e o termo ("não dei nota 10", "não achei
+        // atencioso" — comentário real de nota 9 que virava elogio), mas sem cruzar pontuação
+        // ("não tive dor, voltei a enxergar" continua positivo).
+        const NPS_NEGACOES_RE = /(?:^|\s)(?:NAO|NUNCA|NEM|JAMAIS)\s+(?:[^\s.,;:!?]+\s+){0,2}$/;
 
         // Campos que sabidamente não são texto livre — pular na varredura evita
         // falso positivo (ex: um CEP ou telefone batendo por acaso com um número).
@@ -5224,7 +5291,7 @@
                     // Percorre TODAS as ocorrências: a 1ª pode estar negada ("não
                     // recomendo") e uma seguinte não ("recomendo muito").
                     for (let i = text.indexOf(alvo); i !== -1; i = text.indexOf(alvo, i + 1)) {
-                        if (ignoreNegated && NPS_NEGACOES_RE.test(text.slice(Math.max(0, i - 12), i))) continue;
+                        if (ignoreNegated && NPS_NEGACOES_RE.test(text.slice(Math.max(0, i - 40), i))) continue;
                         found.push(kw);
                         break;
                     }
@@ -5260,15 +5327,20 @@
                 const isPromotor = nota !== null && nota >= 9;
                 const keywords = findPositiveKeywords(item);
                 if (isPromotor || keywords.length > 0) {
-                    highlights.push({ item, nota, isPromotor, keywords });
+                    // Ponto de atenção (2026-10-27, pedido do usuário): nota positiva, mas o
+                    // comentário traz sinal negativo. Fica no card — a avaliação é positiva —
+                    // porém marcado com "!" e no TOPO da lista (e da imagem/PDF exportado).
+                    const att = npsAttentionInfo(item);
+                    highlights.push({ item, nota, isPromotor, keywords, att, attention: att.label !== '' });
                 }
             });
 
-            // Elogio COM texto vale mais que promotor sem comentário: é o que a clínica
-            // consegue mostrar/usar. Por isso quem tem palavra-chave sobe, e dentro disso
-            // a nota maior primeiro.
+            // Ponto de atenção primeiro. Depois, elogio COM texto vale mais que promotor sem
+            // comentário: é o que a clínica consegue mostrar/usar. Por isso quem tem
+            // palavra-chave sobe, e dentro disso a nota maior primeiro.
             highlights.sort((a, b) =>
-                (b.keywords.length > 0) - (a.keywords.length > 0)
+                (b.attention - a.attention)
+                || (b.keywords.length > 0) - (a.keywords.length > 0)
                 || (b.nota ?? 0) - (a.nota ?? 0)
             );
 
@@ -5288,34 +5360,45 @@
                 const positivas = npsGetCategoriasPositivas(h.item);
 
                 const tags = [];
+                if (h.attention) {
+                    tags.push(`<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-sm font-bold bg-[#FBEFD0] text-[#7A5206] border border-[#E8C676] whitespace-nowrap"><span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#B77A0A] text-white text-sm leading-none font-extrabold">!</span>PONTO DE ATENÇÃO</span>`);
+                }
                 if (h.isPromotor) {
-                    tags.push(`<span class="px-2 py-0.5 rounded-full text-sm font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 whitespace-nowrap">PROMOTOR (nota ${h.nota})</span>`);
+                    tags.push(`<span class="px-2 py-0.5 rounded-full text-sm font-bold bg-[#DCF3E7] text-[#176B4A] border border-[#9FD4BC] whitespace-nowrap">PROMOTOR (nota ${h.nota})</span>`);
                 }
                 h.keywords.forEach(kw => {
-                    tags.push(`<span class="px-2 py-0.5 rounded-full text-sm font-bold bg-teal-100 text-teal-800 border border-teal-300 whitespace-nowrap">"${escapeHtml(kw)}"</span>`);
+                    tags.push(`<span class="px-2 py-0.5 rounded-full text-sm font-bold bg-[#E3EDF7] text-[#2F6296] border border-[#B5CDE5] whitespace-nowrap">"${escapeHtml(kw)}"</span>`);
                 });
 
                 // Sem telefone aqui, ao contrário do card negativo: elogio não gera
                 // acionamento do paciente, então não há motivo pra expor contato num
                 // card que vai impresso/exportado pra clínica parceira.
                 const blocoComentario = comentario
-                    ? `<div class="mt-2 pt-2 border-t border-emerald-200/70">
-                           <p class="text-sm font-bold text-emerald-700 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    ? `<div class="mt-2 pt-2 border-t border-[#BFE3D2]">
+                           <p class="text-sm font-bold text-[#176B4A] uppercase tracking-wider mb-1 flex items-center gap-1">
                                <i data-lucide="message-square-quote" class="w-3 h-3"></i> Comentário do paciente
                            </p>
                            <p class="text-sm text-slate-800 italic leading-relaxed">"${escapeHtml(comentario)}"</p>
                        </div>`
                     : (positivas.length
-                        ? `<div class="mt-2 pt-2 border-t border-emerald-200/70">
+                        ? `<div class="mt-2 pt-2 border-t border-[#BFE3D2]">
                                <p class="text-sm text-slate-600">
-                                   <span class="font-bold text-emerald-700">Elogiou:</span> ${escapeHtml(positivas.join(' · '))}
+                                   <span class="font-bold text-[#176B4A]">Elogiou:</span> ${escapeHtml(positivas.join(' · '))}
                                </p>
                                <p class="text-sm text-slate-600 mt-0.5">Esta planilha não traz campo de comentário — detalhe vindo das avaliações por categoria.</p>
                            </div>`
                         : '');
 
+                // Explica o "!": nota positiva, mas o comentário tem sinal negativo.
+                const blocoAtencao = h.attention
+                    ? `<p class="mt-2 text-sm font-semibold text-[#7A5206]">
+                           ! Mesmo com nota positiva, o comentário traz um sinal negativo${h.att.keywords.length ? ': ' + escapeHtml(h.att.keywords.slice(0, 3).map(k => `"${k}"`).join(' · ')) : ''}.
+                       </p>`
+                    : '';
+
+                const cardCls = h.attention ? 'border-[#E8C676] bg-[#FDF7E8]' : 'border-[#BFE3D2] bg-[#F0FAF5]';
                 return `
-                    <div class="p-3 rounded-xl border border-emerald-200 bg-emerald-50/40">
+                    <div class="p-3 rounded-xl border ${cardCls}">
                         <div class="flex flex-wrap items-start justify-between gap-2">
                             <div class="text-sm">
                                 <span class="font-bold text-slate-900">${escapeHtml(nome)}</span>
@@ -5323,6 +5406,7 @@
                             </div>
                             <div class="flex flex-wrap gap-1.5">${tags.join('')}</div>
                         </div>
+                        ${blocoAtencao}
                         ${blocoComentario}
                     </div>
                 `;
@@ -5339,6 +5423,10 @@
                 const nota = npsGetNota(item);
                 const isDetrator = nota !== null && nota < 7;
                 const keywords = findNegativeKeywords(item);
+                // Promotor (9-10) com comentário negativo já aparece nos Destaques Positivos,
+                // marcado com "!" (ponto de atenção) — não repete aqui (pedido do usuário,
+                // 2026-10-27). Neutros (7-8) com comentário negativo continuam neste card.
+                if (nota !== null && nota >= 9) return;
                 if (isDetrator || keywords.length > 0) {
                     highlights.push({ item, nota, isDetrator, keywords });
                 }
@@ -5362,10 +5450,10 @@
 
                 const tags = [];
                 if (h.isDetrator) {
-                    tags.push(`<span class="px-2 py-0.5 rounded-full text-sm font-bold bg-rose-100 text-rose-800 border border-rose-300 whitespace-nowrap">DETRATOR (nota ${h.nota})</span>`);
+                    tags.push(`<span class="px-2 py-0.5 rounded-full text-sm font-bold bg-[#FBE4E0] text-[#A82F20] border border-[#F0C4BD] whitespace-nowrap">DETRATOR (nota ${h.nota})</span>`);
                 }
                 h.keywords.forEach(kw => {
-                    tags.push(`<span class="px-2 py-0.5 rounded-full text-sm font-bold bg-amber-100 text-amber-800 border border-amber-300 whitespace-nowrap">"${escapeHtml(kw)}"</span>`);
+                    tags.push(`<span class="px-2 py-0.5 rounded-full text-sm font-bold bg-[#FBEFD0] text-[#7A5206] border border-[#E8C676] whitespace-nowrap">"${escapeHtml(kw)}"</span>`);
                 });
 
                 // O comentário é o que dá contexto para acionar o paciente, então recebe
@@ -5373,27 +5461,27 @@
                 // (caso do export atual do Farol), mostramos ao menos QUAIS categorias o
                 // paciente marcou como "não gostei" — é o detalhe acionável disponível.
                 const blocoComentario = comentario
-                    ? `<div class="mt-2 pt-2 border-t border-rose-200/70">
-                           <p class="text-sm font-bold text-rose-700 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    ? `<div class="mt-2 pt-2 border-t border-[#F0C4BD]">
+                           <p class="text-sm font-bold text-[#A82F20] uppercase tracking-wider mb-1 flex items-center gap-1">
                                <i data-lucide="message-square-quote" class="w-3 h-3"></i> Comentário do paciente
                            </p>
                            <p class="text-sm text-slate-800 italic leading-relaxed">"${escapeHtml(comentario)}"</p>
                        </div>`
                     : (negativas.length
-                        ? `<div class="mt-2 pt-2 border-t border-rose-200/70">
+                        ? `<div class="mt-2 pt-2 border-t border-[#F0C4BD]">
                                <p class="text-sm text-slate-600">
-                                   <span class="font-bold text-rose-700">Não gostou de:</span> ${escapeHtml(negativas.join(' · '))}
+                                   <span class="font-bold text-[#A82F20]">Não gostou de:</span> ${escapeHtml(negativas.join(' · '))}
                                </p>
                                <p class="text-sm text-slate-600 mt-0.5">Esta planilha não traz campo de comentário — detalhe vindo das avaliações por categoria.</p>
                            </div>`
                         : '');
 
                 return `
-                    <div class="p-3 rounded-xl border border-rose-200 bg-rose-50/40">
+                    <div class="p-3 rounded-xl border border-[#F0C4BD] bg-[#FDF3F1]">
                         <div class="flex flex-wrap items-start justify-between gap-2">
                             <div class="text-sm">
                                 <span class="font-bold text-slate-900">${escapeHtml(nome)}</span>
-                                ${telefone ? `<span class="ml-2 inline-flex items-center gap-1 text-sm font-semibold text-slate-700 bg-white px-2 py-0.5 rounded-md border border-slate-200 whitespace-nowrap"><i data-lucide="phone" class="w-3 h-3 text-rose-600"></i>${escapeHtml(telefone)}</span>` : ''}
+                                ${telefone ? `<span class="ml-2 inline-flex items-center gap-1 text-sm font-semibold text-slate-700 bg-white px-2 py-0.5 rounded-md border border-slate-200 whitespace-nowrap"><i data-lucide="phone" class="w-3 h-3 text-[#C63B2A]"></i>${escapeHtml(telefone)}</span>` : ''}
                                 <div class="text-slate-700 mt-1">${escapeHtml(clinica || 'Sem Clínica')}${medico ? ' · ' + escapeHtml(medico) : ''}</div>
                             </div>
                             <div class="flex flex-wrap gap-1.5">${tags.join('')}</div>
@@ -5407,9 +5495,44 @@
             lucide.createIcons();
         }
 
+        // ================================================================
+        // PONTO DE ATENÇÃO DA TABELA DE AVALIAÇÕES (2026-10-27, pedido do usuário)
+        // ----------------------------------------------------------------
+        // Detrator (nota 0-6) OU comentário com sinal negativo — este último vale MESMO
+        // com nota neutra/positiva: um promotor que escreveu "dor forte" continua sendo um
+        // caso a acionar. A ordem da tabela (e da planilha exportada, mesma fonte) é:
+        //   0 detratores (nota menor primeiro) → 1 comentário negativo com nota 7+ ou sem nota
+        //   → 2 neutros → 3 promotores → 4 sem nota e sem sinal. Empate mantém a ordem da planilha.
+        // Cache por registro: a varredura de palavras-chave percorre todos os campos de texto.
+        // ================================================================
+        const npsAttentionCache = new WeakMap();
+        function npsAttentionInfo(item) {
+            let info = npsAttentionCache.get(item);
+            if (info) return info;
+            const nota = npsGetNota(item);
+            const detrator = nota !== null && nota < 7;
+            const keywords = findNegativeKeywords(item);
+            const rank = detrator ? 0 : keywords.length ? 1 : nota === null ? 4 : nota < 9 ? 2 : 3;
+            const label = detrator && keywords.length ? 'Detrator + comentário negativo'
+                : detrator ? 'Detrator'
+                : keywords.length ? 'Comentário negativo' : '';
+            info = { nota, detrator, keywords, rank, label };
+            npsAttentionCache.set(item, info);
+            return info;
+        }
+
+        // Fonte única da ordem: tela e exportação.
+        function getNpsSortedData() {
+            return npsFilteredData.slice().sort((a, b) => {
+                const ia = npsAttentionInfo(a), ib = npsAttentionInfo(b);
+                return ia.rank - ib.rank || (ia.nota ?? 99) - (ib.nota ?? 99);
+            });
+        }
+
         function renderNpsTable(exportAll = false) {
             const tbody = document.getElementById('npsTableBody');
-            const p = paginate(npsFilteredData, npsCurrentPage, pageSize, exportAll);
+            const sorted = getNpsSortedData();
+            const p = paginate(sorted, npsCurrentPage, pageSize, exportAll);
             npsCurrentPage = p.page;
 
             tbody.innerHTML = p.pageData.map(item => {
@@ -5417,20 +5540,31 @@
                 const telefone = npsFormatTelefone(npsGetTelefone(item));
                 const clinica = npsGetClinica(item);
                 const medico = npsGetMedico(item);
-                const nota = npsGetNota(item);
+                const att = npsAttentionInfo(item);
+                const nota = att.nota;
 
                 const dCirurgia = parseFlexibleDate(getItemProp(item, ['Data da Cirurgia']));
                 const dAval = parseFlexibleDate(getItemProp(item, ['Data da Aval.']));
 
                 let notaColor = 'bg-slate-100 text-slate-700 border-slate-200';
                 if (nota !== null) {
-                    if (nota >= 9) notaColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
-                    else if (nota >= 7) notaColor = 'bg-amber-100 text-amber-800 border-amber-300';
-                    else notaColor = 'bg-rose-100 text-rose-800 border-rose-300';
+                    if (nota >= 9) notaColor = 'bg-[#DCF3E7] text-[#176B4A] border-[#9FD4BC]';
+                    else if (nota >= 7) notaColor = 'bg-[#FBEFD0] text-[#7A5206] border-[#E8C676]';
+                    else notaColor = 'bg-[#FBE4E0] text-[#A82F20] border-[#F0C4BD]';
                 }
 
+                // Detrator = vermelho; comentário negativo com nota boa = âmbar.
+                const rowCls = att.detrator ? 'bg-[#FDF3F1] border-l-4 border-l-[#C63B2A]'
+                    : att.keywords.length ? 'bg-[#FDF7E8] border-l-4 border-l-[#E3A72F]'
+                    : 'border-l-4 border-l-transparent';
+                const badgeCls = att.detrator ? 'bg-[#FBE4E0] text-[#A82F20] border-[#F0C4BD]' : 'bg-[#FBEFD0] text-[#7A5206] border-[#E8C676]';
+                const atencao = att.label
+                    ? `<span class="badge-pill ${badgeCls} inline-flex items-center gap-1"><i data-lucide="alert-triangle" class="w-3.5 h-3.5 shrink-0"></i>${escapeHtml(att.label)}</span>`
+                      + (att.keywords.length ? `<div class="text-sm font-medium text-slate-700 mt-1">${escapeHtml(att.keywords.slice(0, 3).map(k => `"${k}"`).join(' · '))}</div>` : '')
+                    : '<span class="text-slate-600">-</span>';
+
                 return `
-                    <tr class="hover:bg-slate-50 transition">
+                    <tr class="hover:bg-slate-50 transition ${rowCls}">
                         <td class="p-3 font-bold text-slate-900">${escapeHtml(nome)}</td>
                         <td class="p-3 text-slate-700 text-sm font-medium whitespace-nowrap">${escapeHtml(telefone) || '-'}</td>
                         <td class="p-3 text-slate-700 text-sm font-medium">${escapeHtml(clinica) || '-'}</td>
@@ -5438,16 +5572,186 @@
                         <td class="p-3 text-center">
                             <span class="badge-pill ${notaColor}">${nota !== null ? nota : '-'}</span>
                         </td>
+                        <td class="p-3">${atencao}</td>
                         <td class="p-3 text-slate-600 font-medium">${dCirurgia ? dCirurgia.toLocaleDateString('pt-BR') : '-'}</td>
                         <td class="p-3 text-slate-600 font-medium">${dAval ? dAval.toLocaleDateString('pt-BR') : '-'}</td>
                     </tr>
                 `;
-            }).join('') || '<tr><td colspan="7" class="p-4 text-center text-slate-600">Carregue a planilha de NPS para visualizar as avaliações.</td></tr>';
+            }).join('') || '<tr><td colspan="8" class="p-4 text-center text-slate-600">Carregue a planilha de NPS para visualizar as avaliações.</td></tr>';
 
             document.getElementById('npsPrintCount').textContent = `Relatório com ${p.totalRecords} avaliação(ões) — filtro atual aplicado no momento da exportação.`;
+            lucide.createIcons();
 
             if (exportAll) return;
             updatePaginationFooter('npsPaginationInfo', 'npsPrevPageBtn', 'npsNextPageBtn', p, 'avaliação(ões)');
+        }
+
+        // ================================================================
+        // RANKING DE NPS: CLÍNICAS E MÉDICOS (2026-10-27, pedido do usuário)
+        // ----------------------------------------------------------------
+        // Fica no FINAL da página (substituiu o gráfico "NPS por Clínica Parceira" do topo).
+        // Mesmas convenções da página Benchmark, porque este card também é exportado e
+        // enviado a clínicas parceiras:
+        //  - Base = a da REDE (npsGetNetworkData): ignora Clínica e Médico, respeita
+        //    Especialidade e Período. Senão o ranking de uma clínica filtrada teria 1 linha.
+        //  - Com clínica filtrada, as OUTRAS clínicas saem sem nome ("Outra clínica da rede")
+        //    e só os médicos da clínica aparecem — o botão do gestor (fora da imagem/PDF)
+        //    revela as demais; aí médico de fora sai só com o primeiro nome.
+        //  - Só entra quem tem NPS_RANKING_MIN_AVALIACOES avaliações com nota: NPS de 1-2
+        //    respostas vira +100 ou -100 e distorce o ranking.
+        //  - Médico = nome canônico (canonicalMedico), somando clínicas.
+        // ================================================================
+        const NPS_RANKING_MIN_AVALIACOES = 5;
+        const NPS_RANKING_VISIVEIS = 10;
+        let npsRankingShowOthers = false;
+        let npsRankingExpandAll = false;
+        const npsRankingExpanded = new Set();
+
+        function npsRankEntries(items, keyFn, ownFn) {
+            const map = new Map();
+            items.forEach(item => {
+                const nota = npsGetNota(item);
+                const key = keyFn(item);
+                if (nota === null || !key) return;
+                let e = map.get(key);
+                if (!e) { e = { name: key, notas: [], own: false }; map.set(key, e); }
+                e.notas.push(nota);
+                if (ownFn(item)) e.own = true;
+            });
+            const eligible = [];
+            map.forEach(e => {
+                if (e.notas.length < NPS_RANKING_MIN_AVALIACOES) return;
+                const st = npsComputeStats(e.notas.map(n => ({ Nota: n })));
+                eligible.push({ name: e.name, own: e.own, count: e.notas.length, score: st.score });
+            });
+            eligible.sort((a, b) => b.score - a.score || b.count - a.count || a.name.localeCompare(b.name, 'pt-BR'));
+            return { total: map.size, eligible };
+        }
+
+        function npsRankRow(rank, e, label, highlight) {
+            const zone = npsZoneOf(e.score);
+            const width = Math.max(2, Math.min(100, Math.round((e.score + 100) / 2)));
+            return `
+                <div class="flex items-center gap-3 rounded-lg px-2 py-1 ${highlight ? 'bg-[#EFF5FA]' : ''}">
+                    <span class="w-9 shrink-0 text-right text-sm font-bold text-slate-600">${rank}º</span>
+                    <span class="flex-1 min-w-0 text-sm font-semibold text-slate-900 break-words">${label}</span>
+                    <div class="w-28 shrink-0 h-2.5 rounded-full bg-slate-100 overflow-hidden">
+                        <div class="h-full rounded-full" style="width:${width}%;background:${NPS_ZONE_COLORS[zone]}"></div>
+                    </div>
+                    <div class="w-20 shrink-0 text-right">
+                        <div class="text-sm font-extrabold ${NPS_ZONE_TEXT[zone]}">${e.score}</div>
+                        ${e.own ? `<div class="text-sm font-medium text-slate-600 whitespace-nowrap">${e.count} aval.</div>` : ''}
+                    </div>
+                </div>`;
+        }
+
+        function npsRankToggleButton(key, label) {
+            return `<button type="button" data-nps-toggle="${escapeHtml(key)}" class="no-print px-3 py-1.5 bg-white hover:bg-slate-50 text-[#2F6296] text-sm font-bold rounded-lg border border-[#B5CDE5] transition">${label}</button>`;
+        }
+
+        function npsRankBlock(key, title, subtitle, ranked, labelFn, clinicActive, onlyOwn = false) {
+            const list = ranked.eligible;
+            if (!list.length) {
+                return `<div class="rounded-xl border border-slate-200 p-4 space-y-2">
+                    <h4 class="text-base font-bold text-slate-900">${title}</h4>
+                    <p class="text-sm font-medium text-slate-700">Nenhum item com ${NPS_RANKING_MIN_AVALIACOES} ou mais avaliações com nota neste recorte.</p>
+                </div>`;
+            }
+            const open = npsRankingExpandAll || npsRankingExpanded.has(key);
+            // Recolhido: os 10 primeiros + as linhas "suas" que ficaram abaixo, com a posição
+            // real (nunca pular posição sem sinalizar — o ranking cortado sem aviso foi um bug
+            // do Benchmark).
+            // onlyOwn (outras unidades ocultas): só as linhas da seleção, com a posição REAL na rede
+            // e sem "· · ·" — o salto não deve denunciar que existem outras linhas.
+            const idxs = list.map((_, i) => i).filter(i => onlyOwn ? list[i].own : (open || i < NPS_RANKING_VISIVEIS || (clinicActive && list[i].own)));
+            let rows = '';
+            idxs.forEach((i, k) => {
+                if (!onlyOwn && k > 0 && i !== idxs[k - 1] + 1) rows += '<div class="text-sm font-bold text-slate-600 pl-12">· · ·</div>';
+                rows += npsRankRow(i + 1, list[i], labelFn(list[i]), clinicActive && list[i].own);
+            });
+            const hidden = list.length - idxs.length;
+            const toggle = !onlyOwn && !npsRankingExpandAll && list.length > NPS_RANKING_VISIVEIS
+                ? `<div>${npsRankToggleButton(key, open ? `Mostrar só os ${NPS_RANKING_VISIVEIS} primeiros` : `Ver ranking completo (${list.length})`)}</div>` : '';
+            return `
+                <div class="rounded-xl border border-slate-200 p-4 space-y-3 min-w-0">
+                    <div>
+                        <h4 class="text-base font-bold text-slate-900">${title}</h4>
+                        <p class="text-sm font-medium text-slate-700">${subtitle(list.length)}${!onlyOwn && hidden > 0 && !open ? ` · ${hidden} posição(ões) abaixo não aparecem` : ''}</p>
+                    </div>
+                    <div class="space-y-1.5">${rows}</div>
+                    ${toggle}
+                </div>`;
+        }
+
+        function renderNpsRanking() {
+            const box = document.getElementById('npsRankingContent');
+            if (!box) return;
+            if (!npsRawData.length) { box.innerHTML = '<p class="text-base font-medium text-slate-900">Carregue a planilha de NPS para ver o ranking.</p>'; return; }
+
+            const network = npsGetNetworkData();
+            const active = npsClinicFilterActive();
+            const selClinics = getMultiSelectValues('npsFilterClinic');
+            const showOthers = npsRankingShowOthers;
+            const clinicOf = item => (npsGetClinica(item) || '').trim();
+            const isOwnClinic = item => !active || selClinics.includes(clinicOf(item));
+
+            const clinicRank = npsRankEntries(network, clinicOf, isOwnClinic);
+            // Ranking de médicos: com clínica filtrada, por padrão SÓ os médicos dela; o botão do
+            // gestor (opção do usuário, 2026-10-27) liga/desliga outras clínicas E médicos de outras
+            // unidades. Sem filtro de clínica, a rede toda.
+            const medicoItems = active && !showOthers ? network.filter(isOwnClinic) : network;
+            const medicoRank = npsRankEntries(medicoItems, item => canonicalMedico(npsGetMedico(item)), isOwnClinic);
+
+            const chip = active ? ' <span class="ml-1 text-sm font-semibold text-[#2F6296] bg-[#EFF5FA] border border-[#B5CDE5] rounded px-1.5 whitespace-nowrap">sua clínica</span>' : '';
+            const clinicLabel = e => e.own ? escapeHtml(e.name) + chip : (showOthers ? escapeHtml(e.name) : 'Outra clínica da rede');
+            // Médico de outra unidade (só com o botão do gestor ligado): primeiro nome, sem `title`
+            // com o nome completo (o hover revelaria o que se quer esconder).
+            const medicoLabel = e => e.own ? escapeHtml(e.name) + (active && showOthers ? chip : '') : escapeHtml(medicoFirstName(e.name));
+            const hideOthers = active && !showOthers;
+
+            const outras = active && !npsRankingExpandAll ? `
+                <div class="no-print flex flex-wrap items-center gap-3">
+                    <button type="button" data-nps-others class="px-3 py-1.5 bg-white hover:bg-slate-50 text-[#2F6296] text-sm font-bold rounded-lg border border-[#B5CDE5] transition">${showOthers ? 'Ocultar outras clínicas e médicos de outras unidades' : 'Mostrar outras clínicas e médicos de outras unidades'}</button>
+                    <span class="text-sm font-medium text-slate-700">${showOthers
+                        ? 'Outras clínicas aparecem com o nome e os médicos de outras unidades só com o primeiro nome.'
+                        : 'Mostrando só a clínica filtrada e os médicos dela (posição real na rede).'}</span>
+                </div>` : '';
+
+            box.innerHTML = outras + `
+                <div class="grid grid-cols-1 gap-5">
+                    ${npsRankBlock('medicos', 'Médicos', n => `${n} médico(s) comparado(s)`, medicoRank, medicoLabel, active && showOthers, false)}
+                    ${npsRankBlock('clinicas', 'Clínicas', n => hideOthers ? `posição real entre ${n} clínicas da rede` : `${n} clínica(s) comparada(s)`, clinicRank, clinicLabel, active, hideOthers)}
+                </div>
+                <ul class="text-sm font-medium text-slate-700 space-y-1 list-disc pl-5">
+                    <li>NPS = % de promotores − % de detratores, sobre as avaliações com nota (−100 a 100). Barra: de −100 (vazia) a 100 (cheia); cores iguais às do termômetro.</li>
+                    <li>${active
+                        ? (showOthers ? 'Os rankings incluem as outras clínicas e os médicos de outras unidades (estes só com o primeiro nome).' : 'Os rankings mostram só a clínica filtrada e os médicos dela; as posições são reais, calculadas sobre toda a rede.')
+                        : 'Sem clínica filtrada, os dois rankings consideram a rede toda.'} Respeita os filtros de Especialidade e Período; o filtro de Médico não restringe a base. Entram clínicas e médicos com ${NPS_RANKING_MIN_AVALIACOES} ou mais avaliações com nota${clinicRank.total - clinicRank.eligible.length > 0 ? ` (${clinicRank.total - clinicRank.eligible.length} clínica(s) ficaram de fora por terem menos)` : ''}.</li>
+                    <li>${active
+                        ? 'Com clínica filtrada, sua clínica aparece destacada mesmo quando está abaixo dos 10 primeiros.'
+                        : 'Sem clínica filtrada, todas aparecem com o nome completo.'} O nome do médico é o que vem antes do primeiro " - " no campo da planilha.</li>
+                </ul>`;
+        }
+
+        function handleNpsRankingClick(e) {
+            if (e.target.closest('[data-nps-others]')) {
+                npsRankingShowOthers = !npsRankingShowOthers;
+                renderNpsRanking();
+                return;
+            }
+            const btn = e.target.closest('[data-nps-toggle]');
+            if (!btn) return;
+            const key = btn.dataset.npsToggle;
+            if (npsRankingExpanded.has(key)) npsRankingExpanded.delete(key); else npsRankingExpanded.add(key);
+            renderNpsRanking();
+        }
+
+        // Imprimir/exportar: as posições recolhidas não estão no DOM, então expande tudo
+        // enquanto a captura/impressão acontece (mesmo padrão do Benchmark).
+        function setNpsPrintMode(expandAll) {
+            if (activeTab !== 'nps') return;
+            npsRankingExpandAll = expandAll;
+            renderNpsRanking();
         }
 
         // ================================================================
@@ -5473,7 +5777,7 @@
         //    decisão de negócio, não de código. Fica só no tooltip/hover na tela (que não
         //    entra na imagem/PDF). Para mostrar sempre, BENCHMARK_NOME_MELHOR_VISIVEL = true.
         // ================================================================
-        // Paleta da página Benchmark = design system da Central da Visão (pedido do usuário,
+        // Paleta da página Benchmark = design system da CdV (pedido do usuário,
         // 2026-10-21; SÓ esta página): azul da marca para "a sua clínica", salmão (a "faixa de
         // comparação" do sistema) para o benchmark do período, verde/vermelho de status só
         // para bom/ruim. Laranja de CTA (#F9623E) não é usado: no sistema ele é só botão.
@@ -6334,7 +6638,7 @@
         function updateTabNav() {
             const base = 'px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2';
             document.getElementById('navTabConsultas').className = `${base} ${activeTab === 'consultas' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
-            document.getElementById('navTabNps').className = `${base} ${activeTab === 'nps' ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
+            document.getElementById('navTabNps').className = `${base} ${activeTab === 'nps' ? 'bg-[#C8457B] text-white shadow-md shadow-[#C8457B]/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
             document.getElementById('navTabFaturamento').className = `${base} ${activeTab === 'faturamento' ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
             document.getElementById('navTabGanho').className = `${base} ${activeTab === 'ganho' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
             document.getElementById('navTabBenchmark').className = `${base} ${activeTab === 'benchmark' ? 'bg-[#3874AF] text-white shadow-md shadow-[#3874AF]/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
@@ -6406,8 +6710,8 @@
             renderAIInsights();
         }
 
-        window.addEventListener('beforeprint', () => { setTablesPrintMode(true); setInsightsPrintMode(true); setBenchmarkPrintMode(true); });
-        window.addEventListener('afterprint', () => { setTablesPrintMode(false); setInsightsPrintMode(false); setBenchmarkPrintMode(false); }); // volta à visualização paginada/recolhida em tela
+        window.addEventListener('beforeprint', () => { setTablesPrintMode(true); setInsightsPrintMode(true); setBenchmarkPrintMode(true); setNpsPrintMode(true); });
+        window.addEventListener('afterprint', () => { setTablesPrintMode(false); setInsightsPrintMode(false); setBenchmarkPrintMode(false); setNpsPrintMode(false); }); // volta à visualização paginada/recolhida em tela
 
         // ================================================================
         // EXPORTAÇÃO GRANULAR POR SEÇÃO
@@ -6474,6 +6778,9 @@
             // Ranking de médicos: listas recolhidas (11º em diante) também precisam sair na imagem/PDF.
             const isMedicos = elementId === 'cardBenchmarkMedicos' || elementId === 'cardBenchmark';
             if (isMedicos) setBenchmarkPrintMode(true);
+            // Ranking de NPS: posições recolhidas também precisam sair na imagem/PDF.
+            const isNpsRanking = elementId === 'cardNpsRanking';
+            if (isNpsRanking) setNpsPrintMode(true);
 
             try {
                 // Seção sem dimensão = está dentro de uma aba oculta (display:none).
@@ -6525,6 +6832,7 @@
             } finally {
                 if (isInsights) setInsightsPrintMode(false);
                 if (isMedicos) setBenchmarkPrintMode(false);
+                if (isNpsRanking) setNpsPrintMode(false);
             }
         }
 
@@ -6860,8 +7168,10 @@
         // Usa npsFilteredData (base própria do NPS) e npsGetNota — as mesmas
         // fontes da tabela em tela, incluindo todo o filtro atual.
         function buildNpsExportRows() {
-            return npsFilteredData.map(item => {
-                const nota = npsGetNota(item);
+            // Mesma ordem da tela (detratores e comentários negativos primeiro).
+            return getNpsSortedData().map(item => {
+                const att = npsAttentionInfo(item);
+                const nota = att.nota;
                 const dCirurgia = parseFlexibleDate(getItemProp(item, ['Data da Cirurgia']));
                 const dAval = parseFlexibleDate(getItemProp(item, ['Data da Aval.']));
                 const negativas = npsGetCategoriasNegativas(item);
@@ -6874,8 +7184,15 @@
                     // (detrator) e confundiria quem lê a planilha.
                     'Nota': nota !== null ? nota : '',
                     'Classificação': nota === null ? 'Nota Ausente' : (nota >= 9 ? 'Promotor' : (nota >= 7 ? 'Neutro' : 'Detrator')),
+                    // "Ponto de atenção" = detrator e/ou comentário com sinal negativo (vale
+                    // mesmo com nota neutra/positiva). Vazio = sem ponto de atenção.
+                    'Ponto de Atenção': att.label,
+                    'Sinais Negativos no Comentário': att.keywords.join(' · '),
                     'Não Gostou De': negativas.join(' · '),
-                    'Comentário': npsGetComentario(item),
+                    // Comentário do paciente SEMPRE vai na exportação (a coluna existe mesmo
+                    // vazia), embora a tabela em tela não o mostre. Vem preenchido quando a
+                    // planilha de NPS traz um campo de comentário (ver NPS_COMMENT_FIELDS).
+                    'Comentário do Paciente': npsGetComentario(item),
                     'Data da Cirurgia': dCirurgia ? dCirurgia.toLocaleDateString('pt-BR') : '',
                     'Data da Avaliação': dAval ? dAval.toLocaleDateString('pt-BR') : ''
                 };
