@@ -31,6 +31,8 @@
          2 bibliotecas: a versão livre do SheetJS não grava cor de célula ao escrever .xlsx
          (é recurso pago da versão Pro); ExcelJS é gratuita, madura e feita pra isso. -->
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js" integrity="sha384-Pqp51FUN2/qzfxZxBCtF0stpc9ONI6MYZpVqmo8m20SoaQCzf+arZvACkLkirlPz" crossorigin="anonymous"></script>
+    <!-- JSZip — só para a página "Baixar relatórios" (gera o .zip com uma pasta por clínica no navegador). -->
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" integrity="sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG" crossorigin="anonymous"></script>
 
     <script>
         tailwind.config = {
@@ -266,6 +268,10 @@
                 <i data-lucide="heart-handshake" class="w-3.5 h-3.5"></i>
                 NPS
             </button>
+            <button id="navTabRelatorios" onclick="switchTab('relatorios')" class="px-3 py-1.5 rounded-lg text-sm font-bold transition flex items-center gap-1.5 ml-auto">
+                <i data-lucide="folder-down" class="w-3.5 h-3.5"></i>
+                Baixar relatórios
+            </button>
         </div>
 
         <!-- ================================================================ -->
@@ -334,7 +340,7 @@
              números na mesma linha do olho, independentemente de o título ou a
              legenda ocuparem 1 ou 2 linhas. Premissa/ressalva NUNCA entra dentro do
              card (empurra o número e desalinha a fileira) — vai no rodapé abaixo. -->
-        <div class="space-y-2">
+        <div class="space-y-2" id="cardKpisConsultas">
         <div class="kpi-row grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 lg:grid-rows-[auto_auto_auto]">
             <!-- Total Compareceram -->
             <div class="kpi-card white-card rounded-2xl p-5 relative overflow-hidden group flex flex-col lg:grid lg:grid-rows-[subgrid] lg:row-span-3">
@@ -991,6 +997,103 @@
 
         </div>
         <!-- FIM PÁGINA 2 -->
+
+        <!-- ================================================================ -->
+        <!-- PÁGINA 6: BAIXAR RELATÓRIOS (2026-10-27, pedido do usuário)        -->
+        <!-- Menu para escolher páginas/blocos e gerar UM .zip com uma pasta    -->
+        <!-- por clínica (+ pasta "comparação"). Tudo roda no navegador.        -->
+        <!-- ================================================================ -->
+        <div id="tabRelatorios" class="space-y-6 hidden no-print">
+
+            <div class="pt-4 border-t-2 border-dashed border-slate-200">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-9 h-9 rounded-xl bg-[#203B5A] text-white flex items-center justify-center shadow-md shadow-[#203B5A]/20">
+                        <i data-lucide="folder-down" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 tracking-tight">Baixar relatórios</h2>
+                        <p class="text-sm text-slate-700">Escolha as clínicas e os blocos de cada página e baixe tudo de uma vez em um arquivo .zip, com uma pasta por clínica</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 1) Clínicas + formato -->
+            <div class="white-card rounded-2xl p-5 space-y-5">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <h3 class="text-base font-bold text-slate-900">1. Clínicas</h3>
+                        <div class="multi-select relative" id="reportsClinic" data-placeholder="Todas as clínicas" data-accent="indigo" data-onchange="updateReportsSummary"></div>
+                        <p class="text-sm text-slate-700">Sem nenhuma marcada, entram todas as clínicas. Período, especialidade, médico e status seguem os filtros que estão aplicados em cada página.</p>
+                    </div>
+                    <div class="space-y-3">
+                        <h3 class="text-base font-bold text-slate-900">2. Formato e opções</h3>
+                        <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+                            <span class="text-sm font-semibold text-slate-800">Gráficos e cards:</span>
+                            <label class="flex items-center gap-2 text-sm font-semibold text-slate-800 cursor-pointer">
+                                <input type="radio" name="reportsFormat" value="jpeg" class="accent-indigo-600" checked> JPEG
+                            </label>
+                            <label class="flex items-center gap-2 text-sm font-semibold text-slate-800 cursor-pointer">
+                                <input type="radio" name="reportsFormat" value="pdf" class="accent-indigo-600"> PDF
+                            </label>
+                        </div>
+                        <p class="text-sm text-slate-700">Listas e relatórios saem sempre em planilha (.xlsx), com as mesmas cores da tela.</p>
+                        <label class="flex items-start gap-2 text-sm font-semibold text-slate-800 cursor-pointer">
+                            <input type="checkbox" id="reportsIncludeCompare" class="mt-0.5 accent-indigo-600">
+                            <span>Incluir a pasta "comparação"<span class="block font-medium text-slate-700">Blocos que comparam as clínicas entre si (marcados com "comparação" abaixo) saem uma vez só, nessa pasta. Desmarque para o arquivo ficar mais leve.</span></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2) Catálogo de blocos por página -->
+            <div class="white-card rounded-2xl p-5 space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">3. O que baixar</h3>
+                        <p class="text-sm text-slate-700">Marque a página inteira ou só os blocos que quiser. Páginas sem planilha carregada ficam desabilitadas.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" id="reportsSelectAll" class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 text-sm font-bold rounded-lg border border-slate-300 transition">Selecionar tudo</button>
+                        <button type="button" id="reportsClearAll" class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 text-sm font-bold rounded-lg border border-slate-300 transition">Limpar</button>
+                    </div>
+                </div>
+                <div id="reportsCatalog" class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start"></div>
+            </div>
+
+            <!-- 3) Resumo + gerar -->
+            <div class="white-card rounded-2xl p-5 border-l-4 border-l-[#203B5A] space-y-3">
+                <p class="text-base font-bold text-slate-900" id="reportsSummary">Nenhum bloco selecionado.</p>
+                <p class="text-sm text-slate-700" id="reportsSummaryNote"></p>
+                <div class="flex flex-wrap items-center gap-3">
+                    <button type="button" id="reportsGenerate" class="px-4 py-2 bg-[#203B5A] hover:bg-[#2F6296] text-white text-sm font-bold rounded-lg flex items-center gap-2 transition shadow-md shadow-[#203B5A]/20 disabled:opacity-50">
+                        <i data-lucide="folder-down" class="w-4 h-4"></i>
+                        Gerar e baixar .zip
+                    </button>
+                    <span class="text-sm text-slate-700">Durante a geração o painel troca de página sozinho: mantenha esta aba do navegador aberta e em primeiro plano.</span>
+                </div>
+            </div>
+
+            <div id="reportsResult" class="space-y-3"></div>
+        </div>
+        <!-- FIM PÁGINA 6 -->
+
+        <!-- Tela de progresso da geração do .zip (cobre as páginas enquanto o painel as percorre) -->
+        <div id="reportsOverlay" class="hidden fixed inset-0 z-[100] bg-slate-900/70 flex items-center justify-center p-6 no-print">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-4">
+                <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="loader" class="w-5 h-5 text-indigo-600"></i>
+                    Gerando relatórios…
+                </h3>
+                <div class="w-full h-3 rounded-full bg-slate-100 overflow-hidden">
+                    <div id="reportsProgressBar" class="h-full rounded-full bg-[#3874AF]" style="width:0%"></div>
+                </div>
+                <p class="text-base font-semibold text-slate-900" id="reportsProgressText">Preparando…</p>
+                <p class="text-sm text-slate-700" id="reportsProgressDetail"></p>
+                <p class="text-sm text-slate-700">Não troque de aba do navegador nem minimize a janela até terminar.</p>
+                <button type="button" id="reportsCancel" class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 text-sm font-bold rounded-lg border border-slate-300 transition">Cancelar</button>
+            </div>
+        </div>
+
 
         <!-- ================================================================ -->
         <!-- PÁGINA 3: PENDÊNCIAS DE FATURAMENTO (baseado no campo "lock")     -->
@@ -2890,6 +2993,7 @@
             });
             document.getElementById('benchmarkMedicosContent').addEventListener('click', handleBenchmarkMedicosToggle);
             document.getElementById('npsRankingContent').addEventListener('click', handleNpsRankingClick);
+            initReportsPage();
             document.getElementById('benchmarkContent').addEventListener('click', e => {
                 if (!e.target.closest('[data-bm-specs]')) return;
                 benchmarkSpecsExpanded = !benchmarkSpecsExpanded;
@@ -6623,6 +6727,470 @@
         }
 
         // ================================================================
+        // PÁGINA "BAIXAR RELATÓRIOS" (2026-10-27, pedido do usuário)
+        // ----------------------------------------------------------------
+        // Um menu para escolher páginas e BLOCOS (cards em imagem/PDF e listas em planilha)
+        // e gerar UM .zip: uma pasta por clínica + uma pasta "comparação" (opcional) com os
+        // blocos que comparam as clínicas entre si. Tudo no navegador (JSZip), sem servidor.
+        //
+        // Como funciona (e por que é assim):
+        //  - Reaproveita os MESMOS geradores da tela (captureSectionCanvas para os cards,
+        //    build*ExportRows/getSearched*Data para as listas): o arquivo sai igual ao que a
+        //    pessoa veria clicando em "Exportar como..." — nada de lógica duplicada de dados.
+        //  - Para cada clínica o painel marca o filtro de Clínica de cada página, aplica, troca
+        //    de aba (html2canvas não captura elemento oculto) e captura. No fim restaura TODOS
+        //    os filtros que a pessoa tinha (clínica, especialidade, médico, status).
+        //  - Período, especialidade, médico e status NÃO têm campo aqui: valem os filtros que já
+        //    estão aplicados em cada página (cada página tem a sua data). Só Clínica é daqui.
+        //  - ⚠️ A cascata da Clínica (syncClinicDependentFilters) descarta uma seleção de
+        //    especialidade/médico que não existe na clínica da vez — por isso, depois de
+        //    aplicar a clínica, as seleções do usuário são RE-aplicadas. Se nenhuma delas existe
+        //    na clínica, a página é pulada (seleção vazia = "sem filtro", que traria TUDO).
+        //  - Página sem nenhum registro no filtro da clínica é pulada e anotada no LEIAME.txt.
+        // ================================================================
+        const REPORT_PAGES = {
+            consultas: { title: 'Consultas', folder: 'Consultas', tab: 'consultas', needs: 'planilha de Consultas',
+                data: () => rawData.length > 0, count: () => filteredData.length,
+                clinicId: 'filterClinic', surgeryId: 'filterSurgery', medicoId: 'filterMedico', statusId: 'filterStatus',
+                apply: () => applyFilters() },
+            ganho: { title: 'Potencial de Ganho', folder: 'Potencial de Ganho', tab: 'ganho', needs: 'planilha de Consultas',
+                data: () => rawData.length > 0, count: () => ganhoFilteredData.length,
+                clinicId: 'ganhoFilterClinic', surgeryId: 'ganhoFilterSurgery', medicoId: 'ganhoFilterMedico', statusId: 'ganhoFilterStatus',
+                apply: () => applyGanhoFilters() },
+            benchmark: { title: 'Benchmark', folder: 'Benchmark', tab: 'benchmark', needs: 'planilha de Consultas',
+                data: () => rawData.length > 0, count: () => (benchmarkRows[0] ? benchmarkRows[0].mine.pacientes : 0),
+                clinicId: 'benchmarkFilterClinic', surgeryId: 'benchmarkFilterSurgery', medicoId: 'benchmarkFilterMedico', statusId: null,
+                apply: () => applyBenchmarkFilters() },
+            faturamento: { title: 'Faturamento', folder: 'Faturamento', tab: 'faturamento', needs: 'planilha de Consultas',
+                data: () => rawData.length > 0, count: () => faturamentoFilteredRecords.length,
+                clinicId: 'faturamentoFilterClinic', surgeryId: 'faturamentoFilterSurgery', medicoId: 'faturamentoFilterMedico', statusId: null,
+                apply: () => applyFaturamentoFilters() },
+            nps: { title: 'NPS', folder: 'NPS', tab: 'nps', needs: 'planilha de NPS',
+                data: () => npsRawData.length > 0, count: () => npsFilteredData.length,
+                clinicId: 'npsFilterClinic', surgeryId: 'npsFilterSurgery', medicoId: 'npsFilterMedico', statusId: null,
+                apply: () => npsApplyFilters() }
+        };
+
+        // kind 'card' = imagem/PDF do card; 'table' = planilha .xlsx. `compare: true` = bloco que
+        // compara as clínicas entre si: sai UMA vez na pasta "comparação", não em cada clínica.
+        const REPORT_ITEMS = [
+            { id: 'cons-kpis', page: 'consultas', kind: 'card', card: 'cardKpisConsultas', file: 'KPIs_Consultas', label: 'KPIs do topo (atendidos, status, cirurgias)' },
+            { id: 'cons-insights', page: 'consultas', kind: 'card', card: 'cardInsights', file: 'Insights', label: 'Insights (ações prioritárias)' },
+            { id: 'cons-funil', page: 'consultas', kind: 'card', card: 'cardFunilStatus', file: 'Funil_e_Distribuicao_de_Status', label: 'Funil e Distribuição de Status da Jornada' },
+            { id: 'cons-cirurgia', page: 'consultas', kind: 'card', card: 'cardSurgeryDist', file: 'Distribuicao_por_Tipo_de_Cirurgia', label: 'Distribuição por Tipo de Cirurgia' },
+            { id: 'cons-lista', page: 'consultas', kind: 'table', file: 'Lista_Detalhada_dos_Pacientes', sheet: 'Pacientes', label: 'Lista Detalhada dos Pacientes',
+                colored: () => ({ items: getSearchedPatientData(), rowBuilder: buildPatientExportRow }) },
+            { id: 'cons-perf', page: 'consultas', kind: 'card', card: 'cardClinicPerf', file: 'Performance_por_Clinica', label: 'Performance por Clínica', compare: true },
+            { id: 'cons-consolidado', page: 'consultas', kind: 'table', file: 'Relatorio_Consolidado_das_Clinicas', sheet: 'Consolidado Clinicas', label: 'Relatório Consolidado das Clínicas', compare: true,
+                rows: () => buildClinicExportRows() },
+
+            { id: 'ganho-cartoes', page: 'ganho', kind: 'card', card: 'cardGanhoCards', file: 'Potencial_de_Ganho_Cirurgico', label: 'Potencial de Ganho Cirúrgico (cartões por especialidade)' },
+            { id: 'ganho-pacientes', page: 'ganho', kind: 'table', file: 'Pacientes_Potenciais_para_Operar', sheet: 'Pacientes Convertiveis', label: 'Pacientes Potenciais para Operar',
+                colored: () => ({ items: getSearchedGanhoPatientData(), rowBuilder: buildGanhoPatientExportRow }) },
+            { id: 'ganho-valorbase', page: 'ganho', kind: 'table', file: 'Configuracao_de_Valor_Base', sheet: 'Valor Base', label: 'Configuração de Valor Base',
+                rows: () => buildValorBaseExportRows() },
+
+            { id: 'bm-conversao', page: 'benchmark', kind: 'card', card: 'cardBenchmark', file: 'Benchmark_de_Conversao', label: 'Benchmark de Conversão Cirúrgica' },
+            { id: 'bm-mediana', page: 'benchmark', kind: 'card', card: 'cardBenchmarkMediana', file: 'Benchmark_de_Mediana', label: 'Benchmark de Mediana (dias até a 1ª cirurgia)' },
+            { id: 'bm-medicos', page: 'benchmark', kind: 'card', card: 'cardBenchmarkMedicos', file: 'Ranking_de_Medicos_Conversao', label: 'Médicos que mais e que menos converteram' },
+
+            { id: 'fat-fee', page: 'faturamento', kind: 'card', card: 'cardFaturamentoFee', file: 'Estimativa_de_Repasse_FEE', label: 'Estimativa de valores a receber (FEE)' },
+            { id: 'fat-lista', page: 'faturamento', kind: 'table', file: 'Pendencias_de_Repasse', sheet: 'Pendencias Repasse', label: 'Pendências de repasse (lista)',
+                rows: () => buildFaturamentoExportRows() },
+
+            { id: 'nps-resumo', page: 'nps', kind: 'card', card: 'cardNpsGauge', file: 'NPS_Resumo', label: 'Resumo: termômetros, avaliações e categorias' },
+            { id: 'nps-ranking', page: 'nps', kind: 'card', card: 'cardNpsRanking', file: 'NPS_Ranking', label: 'Ranking de NPS: médicos e clínicas' },
+            { id: 'nps-positivos', page: 'nps', kind: 'card', card: 'cardNpsPositivos', file: 'NPS_Destaques_Positivos', label: 'Destaques Positivos' },
+            { id: 'nps-atencao', page: 'nps', kind: 'card', card: 'cardNpsDestaques', file: 'NPS_Destaques_de_Atencao', label: 'Destaques que Precisam de Atenção' },
+            { id: 'nps-lista', page: 'nps', kind: 'table', file: 'Avaliacoes_Detalhadas_NPS', sheet: 'Avaliacoes NPS', label: 'Avaliações Detalhadas de NPS',
+                rows: () => buildNpsExportRows() }
+        ];
+
+        const REPORTS_PREFS_KEY = 'cdv_reportsPrefs';
+        // Padrão: TUDO desmarcado (nenhum bloco, sem pasta "comparação", todas as clínicas). Formato = JPEG
+        // (um dos dois precisa estar marcado). A última escolha da pessoa fica no localStorage.
+        const reportsState = { selected: new Set(), clinics: [], format: 'jpeg', includeCompare: false, running: false, cancel: false, lastResult: null };
+
+        function loadReportsPrefs() {
+            try {
+                const p = JSON.parse(localStorage.getItem(REPORTS_PREFS_KEY) || 'null');
+                if (!p) return;
+                const known = new Set(REPORT_ITEMS.map(i => i.id));
+                reportsState.selected = new Set((p.selected || []).filter(id => known.has(id)));
+                if (p.format === 'pdf' || p.format === 'jpeg') reportsState.format = p.format;
+                if (typeof p.includeCompare === 'boolean') reportsState.includeCompare = p.includeCompare;
+                if (Array.isArray(p.clinics)) reportsState.clinics = p.clinics.filter(c => typeof c === 'string');
+            } catch (e) { /* sem localStorage: segue com o padrão */ }
+        }
+        function saveReportsPrefs() {
+            try {
+                localStorage.setItem(REPORTS_PREFS_KEY, JSON.stringify({
+                    selected: Array.from(reportsState.selected), clinics: reportsState.clinics, format: reportsState.format, includeCompare: reportsState.includeCompare
+                }));
+            } catch (e) { /* preferência de visualização: sem localStorage não perde nada essencial */ }
+        }
+
+        // Clínicas disponíveis = união das clínicas de todas as páginas com planilha carregada.
+        function getReportClinicOptions() {
+            const set = new Set();
+            Object.values(REPORT_PAGES).forEach(p => {
+                if (!p.data()) return;
+                const st = multiSelectState[p.clinicId];
+                if (st) st.options.forEach(c => set.add(c));
+            });
+            return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        }
+
+        function getReportClinics() {
+            const sel = getMultiSelectValues('reportsClinic');
+            return sel.length ? sel : multiSelectState['reportsClinic'].options.slice();
+        }
+
+        function getReportsPlan() {
+            const active = REPORT_ITEMS.filter(i => reportsState.selected.has(i.id) && REPORT_PAGES[i.page].data());
+            return {
+                perClinic: active.filter(i => !i.compare),
+                compare: reportsState.includeCompare ? active.filter(i => i.compare) : [],
+                compareSkipped: reportsState.includeCompare ? 0 : active.filter(i => i.compare).length,
+                clinics: getReportClinics()
+            };
+        }
+
+        function refreshReportsPage() {
+            populateMultiSelect('reportsClinic', getReportClinicOptions());
+            setMultiSelectSilently('reportsClinic', reportsState.clinics); // última escolha (só as que existem nas planilhas atuais)
+            document.getElementById('reportsIncludeCompare').checked = reportsState.includeCompare;
+            document.querySelectorAll('input[name="reportsFormat"]').forEach(r => { r.checked = r.value === reportsState.format; });
+            renderReportsCatalog();
+        }
+
+        function renderReportsCatalog() {
+            const box = document.getElementById('reportsCatalog');
+            box.innerHTML = Object.entries(REPORT_PAGES).map(([key, p]) => {
+                const items = REPORT_ITEMS.filter(i => i.page === key);
+                const hasData = p.data();
+                const allOn = hasData && items.every(i => reportsState.selected.has(i.id));
+                const rows = items.map(i => {
+                    const on = hasData && reportsState.selected.has(i.id);
+                    const badges = [
+                        `<span class="px-2 py-0.5 rounded-full text-sm font-semibold ${i.kind === 'card' ? 'bg-[#E3EDF7] text-[#2F6296]' : 'bg-[#DCF3E7] text-[#176B4A]'} whitespace-nowrap">${i.kind === 'card' ? (reportsState.format === 'pdf' ? 'PDF' : 'JPEG') : 'Planilha'}</span>`,
+                        i.compare ? '<span class="px-2 py-0.5 rounded-full text-sm font-semibold bg-[#FBEFD0] text-[#7A5206] whitespace-nowrap">comparação</span>' : ''
+                    ].join(' ');
+                    return `<label class="flex items-start gap-2.5 px-2 py-1.5 rounded-lg ${hasData ? 'hover:bg-slate-50 cursor-pointer' : 'opacity-60 cursor-not-allowed'}">
+                        <input type="checkbox" data-report-item="${i.id}" class="mt-1 w-4 h-4 shrink-0 accent-indigo-600" ${on ? 'checked' : ''} ${hasData ? '' : 'disabled'}>
+                        <span class="text-sm font-medium text-slate-800 leading-snug flex-1 min-w-0">${escapeHtml(i.label)}</span>
+                        <span class="shrink-0 flex flex-wrap gap-1 justify-end">${badges}</span>
+                    </label>`;
+                }).join('');
+                return `<div class="rounded-xl border border-slate-200 p-3 space-y-1">
+                    <label class="flex items-center gap-2.5 px-2 py-1 ${hasData ? 'cursor-pointer' : 'cursor-not-allowed'}">
+                        <input type="checkbox" data-report-page="${key}" class="w-4 h-4 shrink-0 accent-indigo-600" ${allOn ? 'checked' : ''} ${hasData ? '' : 'disabled'}>
+                        <span class="text-base font-bold text-slate-900">${p.title}</span>
+                        ${hasData ? '' : `<span class="text-sm font-medium text-slate-700">carregue a ${p.needs}</span>`}
+                    </label>
+                    <div class="space-y-0.5 border-t border-slate-100 pt-1">${rows}</div>
+                </div>`;
+            }).join('');
+            updateReportsSummary();
+        }
+
+        function updateReportsSummary() {
+            const el = document.getElementById('reportsSummary');
+            if (!el) return;
+            // Grava a escolha de clínicas (só com planilha carregada: sem opções não há o que gravar).
+            if (multiSelectState['reportsClinic'].options.length && !reportsState.running) {
+                reportsState.clinics = getMultiSelectValues('reportsClinic');
+                saveReportsPrefs();
+            }
+            const { perClinic, compare, compareSkipped, clinics } = getReportsPlan();
+            const note = document.getElementById('reportsSummaryNote');
+            const btn = document.getElementById('reportsGenerate');
+            const total = perClinic.length + compare.length;
+            btn.disabled = total === 0 || reportsState.running;
+            if (total === 0) {
+                el.textContent = 'Nenhum bloco selecionado.';
+                note.textContent = compareSkipped ? 'Os blocos de comparação selecionados não entram porque a pasta "comparação" está desmarcada.' : '';
+                return;
+            }
+            const files = perClinic.length * clinics.length + compare.length;
+            const imgs = (list) => list.filter(i => i.kind === 'card').length;
+            const secs = clinics.length * (imgs(perClinic) * 4 + (perClinic.length - imgs(perClinic)) * 0.5) + imgs(compare) * 5 + (compare.length - imgs(compare)) * 0.5;
+            const tempo = secs < 60 ? 'menos de 1 minuto' : `cerca de ${Math.round(secs / 60)} min`;
+            el.textContent = `${perClinic.length} bloco(s) × ${clinics.length} clínica(s)` + (compare.length ? ` + ${compare.length} na pasta "comparação"` : '') + ` = até ${files} arquivo(s)`;
+            note.textContent = `Tempo estimado: ${tempo} (os gráficos são a parte lenta).` + (compareSkipped ? ` ${compareSkipped} bloco(s) de comparação ficam de fora porque a pasta "comparação" está desmarcada.` : '');
+        }
+
+        function handleReportsChange(e) {
+            const t = e.target;
+            if (t.matches('[data-report-item]')) {
+                if (t.checked) reportsState.selected.add(t.dataset.reportItem); else reportsState.selected.delete(t.dataset.reportItem);
+            } else if (t.matches('[data-report-page]')) {
+                REPORT_ITEMS.filter(i => i.page === t.dataset.reportPage).forEach(i => {
+                    if (t.checked) reportsState.selected.add(i.id); else reportsState.selected.delete(i.id);
+                });
+            } else if (t.name === 'reportsFormat') {
+                reportsState.format = t.value;
+            } else if (t.id === 'reportsIncludeCompare') {
+                reportsState.includeCompare = t.checked;
+            } else return;
+            saveReportsPrefs();
+            renderReportsCatalog();
+        }
+
+        function handleReportsClick(e) {
+            if (e.target.closest('#reportsSelectAll')) {
+                REPORT_ITEMS.filter(i => REPORT_PAGES[i.page].data()).forEach(i => reportsState.selected.add(i.id));
+                saveReportsPrefs(); renderReportsCatalog();
+            } else if (e.target.closest('#reportsClearAll')) {
+                reportsState.selected.clear();
+                saveReportsPrefs(); renderReportsCatalog();
+            } else if (e.target.closest('#reportsGenerate')) {
+                generateReportsZip();
+            }
+        }
+
+        function initReportsPage() {
+            loadReportsPrefs();
+            const root = document.getElementById('tabRelatorios');
+            root.addEventListener('change', handleReportsChange);
+            root.addEventListener('click', handleReportsClick);
+            document.getElementById('reportsCancel').addEventListener('click', () => { reportsState.cancel = true; });
+        }
+
+        // ---------- filtros: marcar a clínica, reaplicar as escolhas do usuário, restaurar ----------
+        function setMultiSelectSilently(id, values) {
+            const st = multiSelectState[id];
+            if (!st) return;
+            st.selected.clear();
+            values.forEach(v => { if (st.options.includes(v)) st.selected.add(v); });
+            renderMultiSelectOptions(id);
+            updateMultiSelectLabel(id);
+        }
+
+        function snapshotReportFilters() {
+            const snap = {};
+            Object.values(REPORT_PAGES).forEach(p => {
+                [p.clinicId, p.surgeryId, p.medicoId, p.statusId].filter(Boolean).forEach(id => { snap[id] = getMultiSelectValues(id); });
+            });
+            return snap;
+        }
+
+        function restoreReportFilters(snap) {
+            Object.values(REPORT_PAGES).forEach(p => {
+                if (!p.data()) return;
+                setMultiSelectSilently(p.clinicId, snap[p.clinicId] || []);
+                p.apply(); // a cascata repopula especialidade/médico para a clínica restaurada
+                [p.surgeryId, p.medicoId, p.statusId].filter(Boolean).forEach(id => setMultiSelectSilently(id, snap[id] || []));
+                p.apply();
+            });
+        }
+
+        // Marca `clinics` na página e reaplica as escolhas do usuário. Devolve false quando a
+        // página não tem como ter dados para essas clínicas (clínica ausente da planilha ou
+        // especialidade/médico/status escolhido que não existe nelas).
+        function prepareReportPage(page, clinics, snap) {
+            const wanted = clinics.filter(c => multiSelectState[page.clinicId].options.includes(c));
+            if (!wanted.length) return false;
+            setMultiSelectSilently(page.clinicId, wanted);
+            page.apply();
+            let ok = true;
+            [page.surgeryId, page.medicoId, page.statusId].filter(Boolean).forEach(id => {
+                const saved = snap[id] || [];
+                if (!saved.length) return;
+                setMultiSelectSilently(id, saved);
+                if (!getMultiSelectValues(id).length) ok = false;
+            });
+            page.apply();
+            return ok;
+        }
+
+        const reportsSleep = ms => new Promise(r => setTimeout(r, ms));
+        async function reportsSettle() {
+            // Gráficos desenhados com a aba oculta têm largura 0: reajusta e redesenha sem animação.
+            if (window.Chart && Chart.instances) {
+                Object.values(Chart.instances).forEach(c => { try { c.resize(); c.update('none'); c.draw(); } catch (e) { /* gráfico sem canvas visível */ } });
+            }
+            await reportsSleep(250);
+        }
+
+        const reportsSafeName = s => String(s).replace(/[\\/:*?"<>|]/g, '-').replace(/\s+/g, ' ').trim().slice(0, 80) || 'sem-nome';
+
+        // Gera o arquivo de UM bloco. Devolve { data, ext } ou null (lista sem registros).
+        async function buildReportFile(item) {
+            if (item.kind === 'card') {
+                const canvas = await captureSectionCanvas(item.card);
+                if (reportsState.format === 'pdf') return { data: buildPdfFromCanvas(canvas).output('blob'), ext: 'pdf' };
+                const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.92));
+                return { data: blob, ext: 'jpg' };
+            }
+            if (item.colored) {
+                const { items, rowBuilder } = item.colored();
+                if (!items.length) return null;
+                const buffer = await buildColoredPatientWorkbook(items, rowBuilder, item.sheet);
+                return { data: buffer, ext: 'xlsx' };
+            }
+            const rows = item.rows();
+            if (!rows.length) return null;
+            return { data: buildPlainXlsxBytes(rows, item.sheet), ext: 'xlsx' };
+        }
+
+        function setReportsProgress(done, total, text, detail = '') {
+            document.getElementById('reportsProgressBar').style.width = (total ? Math.round(done / total * 100) : 0) + '%';
+            document.getElementById('reportsProgressText').textContent = text;
+            document.getElementById('reportsProgressDetail').textContent = detail;
+        }
+
+        async function generateReportsZip() {
+            if (reportsState.running) return;
+            if (typeof JSZip === 'undefined') { alert('A biblioteca de ZIP não carregou (sem internet?). Recarregue a página e tente de novo.'); return; }
+            const { perClinic, compare, clinics } = getReportsPlan();
+            if (!perClinic.length && !compare.length) return;
+
+            reportsState.running = true;
+            reportsState.cancel = false;
+            document.getElementById('reportsOverlay').classList.remove('hidden');
+            lucide.createIcons();
+
+            const zip = new JSZip();
+            const snap = snapshotReportFilters();
+            const originalTab = activeTab;
+            const done = [];      // linhas "Pasta/arquivo"
+            const skipped = [];   // avisos para o LEIAME
+            const total = perClinic.length * clinics.length + compare.length;
+            let step = 0;
+            let cancelled = false;
+
+            // Gera os blocos de uma página (já filtrada) dentro de `folder`.
+            const runItems = async (page, items, folder, label) => {
+                if (page.count() === 0) {
+                    skipped.push(`${label} › ${page.title}: sem registros no filtro`);
+                    step += items.length;
+                    return;
+                }
+                switchTab(page.tab);
+                await reportsSettle();
+                for (const item of items) {
+                    if (reportsState.cancel) throw new Error('CANCELADO');
+                    setReportsProgress(step, total, label, `${page.title} › ${item.label}`);
+                    try {
+                        const file = await buildReportFile(item);
+                        if (file) {
+                            const path = `${folder}/${reportsSafeName(page.folder)}/${item.file}.${file.ext}`;
+                            zip.file(path, file.data);
+                            done.push(path);
+                        } else {
+                            skipped.push(`${label} › ${page.title} › ${item.label}: lista sem registros`);
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        skipped.push(`${label} › ${page.title} › ${item.label}: erro (${err.message})`);
+                    }
+                    step++;
+                    await reportsSleep(0); // deixa a barra de progresso pintar
+                }
+            };
+
+            try {
+                // 1) uma pasta por clínica
+                for (const clinic of (perClinic.length ? clinics : [])) {
+                    const folder = reportsSafeName(clinic);
+                    const byPage = {};
+                    perClinic.forEach(i => { (byPage[i.page] = byPage[i.page] || []).push(i); });
+                    for (const [key, items] of Object.entries(byPage)) {
+                        if (reportsState.cancel) throw new Error('CANCELADO');
+                        const page = REPORT_PAGES[key];
+                        if (!prepareReportPage(page, [clinic], snap)) {
+                            skipped.push(`${clinic} › ${page.title}: sem dados para esta clínica no filtro atual`);
+                            step += items.length;
+                            continue;
+                        }
+                        await runItems(page, items, folder, clinic);
+                    }
+                }
+                // 2) pasta "comparação": todas as clínicas escolhidas juntas, uma vez
+                if (compare.length) {
+                    const byPage = {};
+                    compare.forEach(i => { (byPage[i.page] = byPage[i.page] || []).push(i); });
+                    for (const [key, items] of Object.entries(byPage)) {
+                        if (reportsState.cancel) throw new Error('CANCELADO');
+                        const page = REPORT_PAGES[key];
+                        if (!prepareReportPage(page, clinics, snap)) {
+                            skipped.push(`comparação › ${page.title}: sem dados no filtro atual`);
+                            step += items.length;
+                            continue;
+                        }
+                        await runItems(page, items, 'comparação', 'comparação');
+                    }
+                }
+
+                if (reportsState.cancel) throw new Error('CANCELADO');
+                zip.file('LEIAME.txt', buildReportsReadme(clinics, perClinic, compare, done, skipped));
+                setReportsProgress(total, total, 'Compactando o arquivo…', '');
+                const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' }, meta => {
+                    setReportsProgress(total, total, 'Compactando o arquivo…', `${Math.round(meta.percent)}%`);
+                });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `Relatorios_${todayStamp()}.zip`;
+                link.click();
+                setTimeout(() => URL.revokeObjectURL(link.href), 10000);
+                reportsState.lastResult = { files: done.length, skipped, size: blob.size, clinics: clinics.length };
+            } catch (err) {
+                if (err.message === 'CANCELADO') { cancelled = true; reportsState.lastResult = { cancelled: true }; }
+                else { console.error(err); reportsState.lastResult = { error: err.message }; }
+            } finally {
+                // Devolve o painel exatamente como a pessoa deixou.
+                try { restoreReportFilters(snap); } catch (e) { console.error(e); }
+                reportsState.running = false;
+                document.getElementById('reportsOverlay').classList.add('hidden');
+                switchTab(originalTab === 'relatorios' ? 'relatorios' : originalTab);
+                renderReportsResult();
+                updateReportsSummary();
+            }
+            return cancelled;
+        }
+
+        function buildReportsReadme(clinics, perClinic, compare, done, skipped) {
+            const L = [];
+            L.push('RELATÓRIOS GERADOS PELO PAINEL');
+            L.push(`Data: ${new Date().toLocaleString('pt-BR')}`);
+            L.push(`Clínicas (${clinics.length}): ${clinics.join('; ')}`);
+            L.push(`Formato dos gráficos/cards: ${reportsState.format === 'pdf' ? 'PDF' : 'JPEG'}; listas em planilha (.xlsx)`);
+            L.push('Período, especialidade, médico e status: os filtros aplicados em cada página do painel no momento da geração.');
+            L.push('');
+            L.push(`Blocos por clínica: ${perClinic.map(i => i.label).join('; ') || '-'}`);
+            L.push(`Pasta "comparação": ${compare.map(i => i.label).join('; ') || 'não incluída'}`);
+            L.push('');
+            L.push(`Arquivos gerados: ${done.length}`);
+            if (skipped.length) {
+                L.push('');
+                L.push(`Itens não gerados (${skipped.length}):`);
+                skipped.forEach(s => L.push(' - ' + s));
+            }
+            return L.join('\r\n');
+        }
+
+        function renderReportsResult() {
+            const box = document.getElementById('reportsResult');
+            const r = reportsState.lastResult;
+            if (!box || !r) return;
+            if (r.cancelled) {
+                box.innerHTML = '<div class="white-card rounded-2xl p-5"><p class="text-base font-bold text-slate-900">Geração cancelada. Nenhum arquivo foi baixado.</p></div>';
+                return;
+            }
+            if (r.error) {
+                box.innerHTML = `<div class="white-card rounded-2xl p-5 border-l-4 border-l-[#C63B2A]"><p class="text-base font-bold text-slate-900">Não foi possível gerar o arquivo.</p><p class="text-sm text-slate-700">${escapeHtml(r.error)}</p></div>`;
+                return;
+            }
+            const mb = (r.size / 1048576).toFixed(1).replace('.', ',');
+            box.innerHTML = `<div class="white-card rounded-2xl p-5 border-l-4 border-l-[#1E8A5F] space-y-2">
+                <p class="text-base font-bold text-slate-900">Arquivo gerado: ${r.files} arquivo(s) de ${r.clinics} clínica(s), ${mb} MB.</p>
+                ${r.skipped.length ? `<details class="text-sm text-slate-700"><summary class="font-semibold cursor-pointer">${r.skipped.length} item(ns) não gerado(s) — veja o motivo</summary><ul class="list-disc pl-5 mt-1 space-y-0.5">${r.skipped.map(s => `<li>${escapeHtml(s)}</li>`).join('')}</ul></details>` : '<p class="text-sm text-slate-700">Todos os blocos escolhidos foram gerados.</p>'}
+                <p class="text-sm text-slate-700">A lista completa também está no LEIAME.txt dentro do .zip.</p>
+            </div>`;
+        }
+
+        // ================================================================
         // NAVEGAÇÃO POR PÁGINA (Consultas / NPS) + EXPORTAÇÃO/IMPRESSÃO
         // ================================================================
         let activeTab = 'consultas';
@@ -6632,7 +7200,8 @@
             nps: 'Imprimir Painel de NPS',
             faturamento: '', // ver updateTabNav(): o botão não aparece aqui
             ganho: 'Imprimir Painel de Potencial de Ganho',
-            benchmark: 'Imprimir Painel de Benchmark'
+            benchmark: 'Imprimir Painel de Benchmark',
+            relatorios: '' // ver updateTabNav(): o botão não aparece aqui
         };
 
         function updateTabNav() {
@@ -6642,6 +7211,7 @@
             document.getElementById('navTabFaturamento').className = `${base} ${activeTab === 'faturamento' ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
             document.getElementById('navTabGanho').className = `${base} ${activeTab === 'ganho' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
             document.getElementById('navTabBenchmark').className = `${base} ${activeTab === 'benchmark' ? 'bg-[#3874AF] text-white shadow-md shadow-[#3874AF]/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
+            document.getElementById('navTabRelatorios').className = `${base} ml-auto ${activeTab === 'relatorios' ? 'bg-[#203B5A] text-white shadow-md shadow-[#203B5A]/20' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-300'}`;
             document.getElementById('exportBtnLabel').textContent = TAB_LABELS[activeTab];
 
             // O relatório completo é só de gráficos/indicadores, e Faturamento
@@ -6649,13 +7219,15 @@
             // botão ali geraria um PDF em branco, então ele fica escondido —
             // a lista sai pelo "Exportar como..." do próprio card, em planilha,
             // CSV ou PDF de tabela real (o formato certo para lista).
-            document.getElementById('exportReportBtn').classList.toggle('hidden', activeTab === 'faturamento');
+            document.getElementById('exportReportBtn').classList.toggle('hidden', activeTab === 'faturamento' || activeTab === 'relatorios');
 
             // Cada página mostra o botão de upload da SUA planilha. Faturamento usa a
             // mesma base de Consultas, por isso compartilha o mesmo botão.
+            // Na página "Baixar relatórios" os DOIS botões aparecem: ela usa as duas bases.
             const ehNps = activeTab === 'nps';
+            const ehRelatorios = activeTab === 'relatorios';
             document.getElementById('uploadConsultas').classList.toggle('hidden', ehNps);
-            document.getElementById('uploadNps').classList.toggle('hidden', !ehNps);
+            document.getElementById('uploadNps').classList.toggle('hidden', !(ehNps || ehRelatorios));
         }
 
         function switchTab(tab) {
@@ -6665,6 +7237,7 @@
             document.getElementById('tabFaturamento').classList.toggle('hidden', tab !== 'faturamento');
             document.getElementById('tabGanho').classList.toggle('hidden', tab !== 'ganho');
             document.getElementById('tabBenchmark').classList.toggle('hidden', tab !== 'benchmark');
+            document.getElementById('tabRelatorios').classList.toggle('hidden', tab !== 'relatorios');
             updateTabNav();
             updateStickyOffsets();
             // O gráfico foi desenhado com a aba oculta (largura 0): reajusta ao mostrar.
@@ -6672,6 +7245,7 @@
             // O valor base é editado na página Potencial de Ganho: recalcula o FEE ao
             // entrar no Faturamento para não mostrar a estimativa com preço antigo.
             if (tab === 'faturamento') renderFaturamentoFeeKpi();
+            if (tab === 'relatorios') refreshReportsPage();
         }
 
         // Relatório completo da página = indicadores + insights + gráficos.
@@ -6850,53 +7424,58 @@
             }
         }
 
+        // Monta o PDF (A4) de uma captura. Extraído de exportSectionAsPdf para a página
+        // "Baixar relatórios" gerar o mesmo PDF em memória, sem baixar nada.
+        function buildPdfFromCanvas(canvas) {
+            const { jsPDF } = window.jspdf;
+            const orientation = canvas.width >= canvas.height ? 'l' : 'p';
+            const pdf = new jsPDF({ orientation, unit: 'pt', format: 'a4' });
+            const margin = 24;
+            const pageWidth = pdf.internal.pageSize.getWidth() - margin * 2;
+            const pageHeight = pdf.internal.pageSize.getHeight() - margin * 2;
+
+            // A seção sempre ocupa a largura da página; a escala sai daí.
+            const scale = pageWidth / canvas.width;
+            const fullHeight = canvas.height * scale;
+
+            if (fullHeight <= pageHeight) {
+                // Cabe em uma página: centraliza verticalmente.
+                pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', margin, margin, pageWidth, fullHeight);
+            } else {
+                // Seção mais alta que a página (acontece com a janela estreita,
+                // quando os cards empilham). Aqui NÃO encolhemos para caber em
+                // uma página só — isso deixaria o texto ilegível, que é
+                // justamente o problema do PDF único e gigante que essa
+                // exportação por seção veio resolver. Em vez disso, recortamos
+                // a captura em fatias do tamanho da página.
+                const sliceHeightPx = pageHeight / scale;
+                const slice = document.createElement('canvas');
+                const ctx = slice.getContext('2d');
+                let y = 0;
+                let firstPage = true;
+
+                while (y < canvas.height) {
+                    const h = Math.min(sliceHeightPx, canvas.height - y);
+                    slice.width = canvas.width;
+                    slice.height = h;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, slice.width, slice.height);
+                    ctx.drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
+
+                    if (!firstPage) pdf.addPage();
+                    pdf.addImage(slice.toDataURL('image/jpeg', 0.95), 'JPEG', margin, margin, pageWidth, h * scale);
+                    firstPage = false;
+                    y += h;
+                }
+            }
+            return pdf;
+        }
+
         async function exportSectionAsPdf(elementId, filenameBase) {
             closeExportMenus();
             try {
                 const canvas = await captureSectionCanvas(elementId);
-                const { jsPDF } = window.jspdf;
-                const orientation = canvas.width >= canvas.height ? 'l' : 'p';
-                const pdf = new jsPDF({ orientation, unit: 'pt', format: 'a4' });
-                const margin = 24;
-                const pageWidth = pdf.internal.pageSize.getWidth() - margin * 2;
-                const pageHeight = pdf.internal.pageSize.getHeight() - margin * 2;
-
-                // A seção sempre ocupa a largura da página; a escala sai daí.
-                const scale = pageWidth / canvas.width;
-                const fullHeight = canvas.height * scale;
-
-                if (fullHeight <= pageHeight) {
-                    // Cabe em uma página: centraliza verticalmente.
-                    pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', margin, margin, pageWidth, fullHeight);
-                } else {
-                    // Seção mais alta que a página (acontece com a janela estreita,
-                    // quando os cards empilham). Aqui NÃO encolhemos para caber em
-                    // uma página só — isso deixaria o texto ilegível, que é
-                    // justamente o problema do PDF único e gigante que essa
-                    // exportação por seção veio resolver. Em vez disso, recortamos
-                    // a captura em fatias do tamanho da página.
-                    const sliceHeightPx = pageHeight / scale;
-                    const slice = document.createElement('canvas');
-                    const ctx = slice.getContext('2d');
-                    let y = 0;
-                    let firstPage = true;
-
-                    while (y < canvas.height) {
-                        const h = Math.min(sliceHeightPx, canvas.height - y);
-                        slice.width = canvas.width;
-                        slice.height = h;
-                        ctx.fillStyle = '#ffffff';
-                        ctx.fillRect(0, 0, slice.width, slice.height);
-                        ctx.drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
-
-                        if (!firstPage) pdf.addPage();
-                        pdf.addImage(slice.toDataURL('image/jpeg', 0.95), 'JPEG', margin, margin, pageWidth, h * scale);
-                        firstPage = false;
-                        y += h;
-                    }
-                }
-
-                pdf.save(`${filenameBase}_${todayStamp()}.pdf`);
+                buildPdfFromCanvas(canvas).save(`${filenameBase}_${todayStamp()}.pdf`);
             } catch (err) {
                 console.error(err);
                 alert('Não foi possível gerar o PDF desta seção.\n\n' + err.message);
@@ -6922,6 +7501,14 @@
                 return false;
             }
             return true;
+        }
+
+        // .xlsx em memória (bytes) — usado também pela página "Baixar relatórios".
+        function buildPlainXlsxBytes(rows, sheetName) {
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            return XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
         }
 
         function exportRowsAsSpreadsheet(rows, sheetName, filenameBase) {
@@ -6982,48 +7569,55 @@
         // items = registros originais (não as linhas já achatadas) — precisa deles pra
         // recalcular o `group` de status via buildStatusJourneyCell(), a mesma fonte única
         // de verdade usada na tela; rowBuilder é buildPatientExportRow/buildGanhoPatientExportRow.
+        // Monta o .xlsx colorido em memória (devolve os bytes). Extraído de
+        // exportPatientRowsAsColoredSpreadsheet para a página "Baixar relatórios" gerar o MESMO
+        // arquivo sem baixar nada.
+        async function buildColoredPatientWorkbook(items, rowBuilder, sheetName) {
+            const rows = items.map(rowBuilder);
+            const wb = new ExcelJS.Workbook();
+            const ws = wb.addWorksheet(sheetName);
+            const headers = Object.keys(rows[0]);
+            const headerRow = ws.addRow(headers);
+            headerRow.eachCell(cell => {
+                cell.font = { bold: true, color: { argb: excelArgb('FFFFFF') } };
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: excelArgb('4F46E5') } };
+            });
+            const colorPairs = PATIENT_EXPORT_COLOR_PAIRS.map(p => ({
+                ...p,
+                statusColIdx: headers.indexOf(p.statusCol) + 1,
+                obsColIdx: headers.indexOf(p.obsCol) + 1
+            }));
+            items.forEach((item, i) => {
+                const row = rows[i];
+                const excelRow = ws.addRow(headers.map(h => row[h]));
+                colorPairs.forEach(({ statusColIdx, obsColIdx, obsCol, groupOf }) => {
+                    if (statusColIdx > 0) {
+                        const fill = EXPORT_STATUS_FILL[groupOf(item)];
+                        if (fill) {
+                            const cell = excelRow.getCell(statusColIdx);
+                            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: excelArgb(fill.bg) } };
+                            cell.font = { bold: true, color: { argb: excelArgb(fill.fg) } };
+                        }
+                    }
+                    if (obsColIdx > 0) {
+                        const fill = EXPORT_DATE_OBS_FILL[row[obsCol]];
+                        if (fill) {
+                            const cell = excelRow.getCell(obsColIdx);
+                            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: excelArgb(fill.bg) } };
+                            cell.font = { bold: true, color: { argb: excelArgb(fill.fg) } };
+                        }
+                    }
+                });
+            });
+            ws.columns.forEach(col => { col.width = 20; });
+            return wb.xlsx.writeBuffer();
+        }
+
         async function exportPatientRowsAsColoredSpreadsheet(items, rowBuilder, sheetName, filenameBase) {
             closeExportMenus();
-            const rows = items.map(rowBuilder);
-            if (!hasRowsToExport(rows)) return;
+            if (!hasRowsToExport(items)) return;
             try {
-                const wb = new ExcelJS.Workbook();
-                const ws = wb.addWorksheet(sheetName);
-                const headers = Object.keys(rows[0]);
-                const headerRow = ws.addRow(headers);
-                headerRow.eachCell(cell => {
-                    cell.font = { bold: true, color: { argb: excelArgb('FFFFFF') } };
-                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: excelArgb('4F46E5') } };
-                });
-                const colorPairs = PATIENT_EXPORT_COLOR_PAIRS.map(p => ({
-                    ...p,
-                    statusColIdx: headers.indexOf(p.statusCol) + 1,
-                    obsColIdx: headers.indexOf(p.obsCol) + 1
-                }));
-                items.forEach((item, i) => {
-                    const row = rows[i];
-                    const excelRow = ws.addRow(headers.map(h => row[h]));
-                    colorPairs.forEach(({ statusColIdx, obsColIdx, obsCol, groupOf }) => {
-                        if (statusColIdx > 0) {
-                            const fill = EXPORT_STATUS_FILL[groupOf(item)];
-                            if (fill) {
-                                const cell = excelRow.getCell(statusColIdx);
-                                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: excelArgb(fill.bg) } };
-                                cell.font = { bold: true, color: { argb: excelArgb(fill.fg) } };
-                            }
-                        }
-                        if (obsColIdx > 0) {
-                            const fill = EXPORT_DATE_OBS_FILL[row[obsCol]];
-                            if (fill) {
-                                const cell = excelRow.getCell(obsColIdx);
-                                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: excelArgb(fill.bg) } };
-                                cell.font = { bold: true, color: { argb: excelArgb(fill.fg) } };
-                            }
-                        }
-                    });
-                });
-                ws.columns.forEach(col => { col.width = 20; });
-                const buffer = await wb.xlsx.writeBuffer();
+                const buffer = await buildColoredPatientWorkbook(items, rowBuilder, sheetName);
                 const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
