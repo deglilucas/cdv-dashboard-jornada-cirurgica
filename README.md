@@ -28,7 +28,7 @@ Página principal — é aqui que você sobe a planilha de consultas. Mostra:
 - Lista detalhada de cada paciente (telefone, data de nascimento quando disponível, e o status de cada procedimento com a data e se está atrasado — o 1º e o 2º aparecem em colunas separadas, para que a cirurgia já feita não "suma" quando o paciente avança para a seguinte), **ordenada do caso mais quente para conversão ao mais frio** — a mesma ordem sai na planilha e no PDF
 
 ### 2. NPS
-Tem upload próprio (planilha separada de avaliações). Mostra a nota de satisfação geral e por clínica, o detalhamento por categoria avaliada (atendimento, acompanhamento, clínica, médico) e uma lista de destaques que precisam de atenção — comentários ou avaliações negativas, com telefone do paciente para contato.
+Tem upload próprio (planilha separada de avaliações). Mostra dois termômetros de NPS lado a lado (a rede toda e a clínica filtrada), o detalhamento por categoria avaliada (atendimento, acompanhamento, clínica, médico) e um ranking de NPS de médicos e clínicas — com uma clínica filtrada, as outras unidades ficam ocultas por padrão. Em seguida vêm os destaques positivos (o que a clínica está acertando) e a lista de destaques que precisam de atenção — comentários ou avaliações negativas, com telefone do paciente para contato. A tabela de avaliações sai ordenada por ponto de atenção: detratores primeiro, depois comentários negativos mesmo com nota boa.
 
 ### 3. Faturamento
 Usa a mesma planilha de Consultas (não precisa subir de novo). Lista as cirurgias já realizadas para a conferência financeira mensal: primeiro as que ainda não foram trancadas (não localizadas no relatório financeiro da clínica), da mais antiga para a mais recente, e no fim as já trancadas. Mostra também a estimativa do repasse a receber dessas pendências (ver regra 6).
@@ -60,7 +60,9 @@ Existem três arranjos possíveis para os procedimentos, e o painel aceita os tr
 
 ## Exportação
 
-Todo card de gráfico/indicador pode ser exportado em PDF ou JPEG; toda lista detalhada, em Planilha, CSV ou PDF. O botão "Imprimir Painel" no topo gera um PDF só dos gráficos e indicadores (sem as listas longas).
+Todo card de gráfico/indicador pode ser exportado em PDF ou JPEG; toda lista detalhada, em Planilha, CSV ou PDF. O botão "Imprimir Painel" no topo gera um PDF só dos gráficos e indicadores (sem as listas longas). O PDF de cada lista traz a data e a hora em que foi gerado.
+
+A aba **Baixar relatórios** monta de uma vez um arquivo `.zip` com uma pasta por clínica: você marca as clínicas e os blocos de cada página (cards em JPEG ou PDF, listas em planilha) e o painel gera tudo no próprio navegador, usando os filtros de período, especialidade, médico e status já aplicados em cada página. Os blocos que comparam clínicas entre si saem numa pasta "comparação" opcional, e um `LEIAME.txt` lista os filtros usados e o que não pôde ser gerado. A última escolha de blocos e clínicas fica salva no navegador.
 
 ## Regras de negócio
 
