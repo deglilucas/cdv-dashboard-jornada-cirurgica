@@ -878,7 +878,13 @@
                             <i data-lucide="chevron-down" class="w-3 h-3"></i>
                         </button>
                         <div id="menuNpsPositivos" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
-                            <button onclick="exportSectionAsPdf('cardNpsPositivos','NPS_Destaques_Positivos')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                            <button onclick="exportNpsPositivosAsSpreadsheet()" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i> Exportar como Planilha
+                            </button>
+                            <button onclick="exportNpsPositivosAsCSV()" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                                <i data-lucide="file-type" class="w-3.5 h-3.5 text-slate-700"></i> Exportar como CSV
+                            </button>
+                            <button onclick="exportSectionAsPdf('cardNpsPositivos','NPS_Destaques_Positivos')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
                                 <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
                             </button>
                             <button onclick="exportSectionAsJpeg('cardNpsPositivos','NPS_Destaques_Positivos')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
@@ -916,7 +922,13 @@
                             <i data-lucide="chevron-down" class="w-3 h-3"></i>
                         </button>
                         <div id="menuNpsDestaques" class="export-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
-                            <button onclick="exportSectionAsPdf('cardNpsDestaques','NPS_Destaques_Atencao')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                            <button onclick="exportNpsDestaquesAsSpreadsheet()" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i> Exportar como Planilha
+                            </button>
+                            <button onclick="exportNpsDestaquesAsCSV()" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
+                                <i data-lucide="file-type" class="w-3.5 h-3.5 text-slate-700"></i> Exportar como CSV
+                            </button>
+                            <button onclick="exportSectionAsPdf('cardNpsDestaques','NPS_Destaques_Atencao')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
                                 <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-500"></i> Exportar como PDF
                             </button>
                             <button onclick="exportSectionAsJpeg('cardNpsDestaques','NPS_Destaques_Atencao')" class="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100">
@@ -5422,8 +5434,10 @@
         // Espelha renderNpsDestaques() de propósito (mesma estrutura de item, mesma
         // paleta invertida) — a clínica lê os dois cards em sequência, elogio primeiro.
         // ================================================================
-        function renderNpsPositivos() {
-            const container = document.getElementById('npsPositivosContainer');
+        // Seleção + ordem dos destaques positivos. Fonte única: tela (renderNpsPositivos) e
+        // exportação em planilha/CSV (buildNpsPositivosExportRows) — a planilha traz a lista
+        // COMPLETA, sem o teto de 50 itens da tela.
+        function collectNpsPositivos() {
             const highlights = [];
 
             npsFilteredData.forEach(item => {
@@ -5447,6 +5461,12 @@
                 || (b.keywords.length > 0) - (a.keywords.length > 0)
                 || (b.nota ?? 0) - (a.nota ?? 0)
             );
+            return highlights;
+        }
+
+        function renderNpsPositivos() {
+            const container = document.getElementById('npsPositivosContainer');
+            const highlights = collectNpsPositivos();
 
             document.getElementById('npsPositivosCountLabel').textContent = `${highlights.length} destaque(s)`;
 
@@ -5519,8 +5539,8 @@
             lucide.createIcons();
         }
 
-        function renderNpsDestaques() {
-            const container = document.getElementById('npsDestaquesContainer');
+        // Seleção dos destaques de atenção — fonte única da tela e da planilha/CSV.
+        function collectNpsDestaques() {
             const highlights = [];
 
             npsFilteredData.forEach(item => {
@@ -5535,6 +5555,12 @@
                     highlights.push({ item, nota, isDetrator, keywords });
                 }
             });
+            return highlights;
+        }
+
+        function renderNpsDestaques() {
+            const container = document.getElementById('npsDestaquesContainer');
+            const highlights = collectNpsDestaques();
 
             document.getElementById('npsDestaquesCountLabel').textContent = `${highlights.length} destaque(s)`;
 
@@ -7693,6 +7719,8 @@
             patients: { build: () => buildPatientExportRows(), sheet: 'Pacientes', file: 'Lista_Detalhada_Pacientes', title: 'Lista Detalhada dos Pacientes' },
             clinicSummary: { build: () => buildClinicExportRows(), sheet: 'Consolidado Clínicas', file: 'Relatorio_Consolidado_Clinicas', title: 'Relatório Consolidado para Envio à Gestão das Clínicas' },
             nps: { build: () => buildNpsExportRows(), sheet: 'Avaliacoes NPS', file: 'Avaliacoes_NPS', title: 'Avaliações Detalhadas de NPS (Base para Envio à Clínica)' },
+            npsPositivos: { build: () => buildNpsPositivosExportRows(), sheet: 'Destaques Positivos', file: 'NPS_Destaques_Positivos_Lista', title: 'NPS — Destaques Positivos' },
+            npsDestaques: { build: () => buildNpsDestaquesExportRows(), sheet: 'Destaques de Atencao', file: 'NPS_Destaques_de_Atencao_Lista', title: 'NPS — Destaques que Precisam de Atenção' },
             faturamento: { build: () => buildFaturamentoExportRows(), sheet: 'Pendencias Repasse', file: 'Pendencias_Repasse', title: 'Pendências de repasse — cirurgias no Farol ainda não trancadas (trancadas no fim)' },
             valorBase: { build: () => buildValorBaseExportRows(), sheet: 'Valor Base', file: 'Configuracao_Valor_Base', title: 'Configuração de Valor Base por Clínica e Especialidade' },
             ganhoPatients: { build: () => buildGanhoPatientExportRows(), sheet: 'Pacientes Convertiveis', file: 'Pacientes_Potencial_Ganho', title: 'Pacientes Convertíveis — Potencial de Ganho' },
@@ -7804,6 +7832,41 @@
         function exportNpsAsSpreadsheet() { exportAs('nps', 'spreadsheet'); }
         function exportNpsAsCSV() { exportAs('nps', 'csv'); }
         function exportNpsAsPdf() { exportAs('nps', 'pdf'); }
+
+        // --- PÁGINA NPS: Destaques Positivos e Destaques que Precisam de Atenção ---
+        // Mesma lista e mesma ordem dos cards em tela (collectNps*), mas sem o teto de 50.
+        // Sem telefone nos positivos, igual ao card: elogio não gera acionamento do paciente.
+        function buildNpsPositivosExportRows() {
+            return collectNpsPositivos().map(h => ({
+                'Paciente': npsGetPaciente(h.item) || 'Sem Nome',
+                'Clínica': npsGetClinica(h.item) || '-',
+                'Médico': npsGetMedico(h.item) || '-',
+                'Nota': h.nota !== null ? h.nota : '',
+                'Classificação': h.nota === null ? 'Nota Ausente' : (h.nota >= 9 ? 'Promotor' : (h.nota >= 7 ? 'Neutro' : 'Detrator')),
+                'Ponto de Atenção': h.att.label,
+                'Sinais Negativos no Comentário': h.att.keywords.join(' · '),
+                'Palavras-chave Positivas': h.keywords.join(' · '),
+                'Elogiou': npsGetCategoriasPositivas(h.item).join(' · '),
+                'Comentário do Paciente': npsGetComentario(h.item)
+            }));
+        }
+        function buildNpsDestaquesExportRows() {
+            return collectNpsDestaques().map(h => ({
+                'Paciente': npsGetPaciente(h.item) || 'Sem Nome',
+                'Telefone': npsFormatTelefone(npsGetTelefone(h.item)),
+                'Clínica': npsGetClinica(h.item) || '-',
+                'Médico': npsGetMedico(h.item) || '-',
+                'Nota': h.nota !== null ? h.nota : '',
+                'Classificação': h.nota === null ? 'Nota Ausente' : (h.nota >= 9 ? 'Promotor' : (h.nota >= 7 ? 'Neutro' : 'Detrator')),
+                'Sinais Negativos no Comentário': h.keywords.join(' · '),
+                'Não Gostou De': npsGetCategoriasNegativas(h.item).join(' · '),
+                'Comentário do Paciente': npsGetComentario(h.item)
+            }));
+        }
+        function exportNpsPositivosAsSpreadsheet() { exportAs('npsPositivos', 'spreadsheet'); }
+        function exportNpsPositivosAsCSV() { exportAs('npsPositivos', 'csv'); }
+        function exportNpsDestaquesAsSpreadsheet() { exportAs('npsDestaques', 'spreadsheet'); }
+        function exportNpsDestaquesAsCSV() { exportAs('npsDestaques', 'csv'); }
 
         // --- PÁGINA FATURAMENTO: Pendências ---
         // faturamentoFilteredRecords já vem pronto de applyFaturamentoFilters().
